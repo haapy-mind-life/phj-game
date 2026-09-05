@@ -106,7 +106,7 @@ function Index() {
 
         if (
           g.obstacles.length === 0 ||
-          g.obstacles[g.obstacles.length - 1].x < W - 260 - Math.random() * 240
+          g.obstacles[g.obstacles.length - 1]!.x < W - 260 - Math.random() * 240
         ) {
           const h = 32 + Math.random() * 46;
           g.obstacles.push({ x: W + 40, w: 20 + Math.random() * 22, h });
