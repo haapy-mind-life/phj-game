@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   activateMushroom,
   fireProjectile,
+  openMysteryBox,
   resolveEnemyContact,
   resolveProjectileHits,
 } from "./combat.ts";
@@ -12,6 +13,8 @@ const base: PlayerCombatState = {
   armor: 1,
   bullets: 12,
   arrows: 6,
+  bananas: 0,
+  disguised: false,
   giantTimer: 0,
 };
 
@@ -80,4 +83,36 @@ test("contact without giant or armor is fatal", () => {
 
 test("mushroom activates giant timer", () => {
   assert.equal(activateMushroom(base).giantTimer, 480);
+});
+
+test("banana shot consumes one banana and creates a banana projectile", () => {
+  const result = fireProjectile({ ...base, bananas: 5 }, "banana", 140, 200);
+  assert.equal(result.state.bananas, 4);
+  assert.equal(result.projectile?.weapon, "banana");
+});
+
+test("banana does not fire with zero bananas", () => {
+  const result = fireProjectile({ ...base, bananas: 0 }, "banana", 140, 200);
+  assert.equal(result.projectile, null);
+});
+
+test("banana kill awards 100 points", () => {
+  const enemies: Enemy[] = [{ id: 7, kind: "ground", x: 200, y: 240, w: 30, h: 40, alive: true }];
+  const shots: Projectile[] = [{ id: 9, weapon: "banana", x: 205, y: 250, vx: 11, w: 20, h: 14 }];
+  const result = resolveProjectileHits(enemies, shots);
+  assert.equal(result.scoreDelta, 100);
+  assert.equal(result.enemies.length, 0);
+});
+
+test("permanent disguise defeats enemy contact without consuming armor", () => {
+  const result = resolveEnemyContact({ ...base, disguised: true });
+  assert.equal(result.survives, true);
+  assert.equal(result.consumeEnemy, true);
+  assert.equal(result.state.armor, 1);
+});
+
+test("mystery box permanently enables disguise and adds five bananas", () => {
+  const result = openMysteryBox({ ...base, bananas: 2 });
+  assert.equal(result.disguised, true);
+  assert.equal(result.bananas, 7);
 });
