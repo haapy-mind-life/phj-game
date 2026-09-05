@@ -15,6 +15,7 @@ const base: PlayerCombatState = {
   arrows: 6,
   bananas: 0,
   disguised: false,
+  flying: false,
   giantTimer: 0,
 };
 
@@ -106,6 +107,13 @@ test("banana kill awards 100 points", () => {
 
 test("permanent disguise defeats enemy contact without consuming armor", () => {
   const result = resolveEnemyContact({ ...base, disguised: true });
+  assert.equal(result.survives, true);
+  assert.equal(result.consumeEnemy, true);
+  assert.equal(result.state.armor, 1);
+});
+
+test("permanent flight defeats enemy contact without consuming armor", () => {
+  const result = resolveEnemyContact({ ...base, flying: true });
   assert.equal(result.survives, true);
   assert.equal(result.consumeEnemy, true);
   assert.equal(result.state.armor, 1);
