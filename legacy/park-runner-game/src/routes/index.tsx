@@ -227,12 +227,47 @@ function Index() {
 
 
       // draw
+      const pal = ((game.current.level - 1) % 4) + 1;
       ctx.clearRect(0, 0, W, H);
       const sky = ctx.createLinearGradient(0, 0, 0, H);
-      sky.addColorStop(0, tok("--game-sky-top", "#101a2e"));
-      sky.addColorStop(1, tok("--game-sky-bottom", "#233657"));
+      sky.addColorStop(0, tok(`--game-sky${pal}-top`, "#101a2e"));
+      sky.addColorStop(1, tok(`--game-sky${pal}-bottom`, "#233657"));
       ctx.fillStyle = sky;
       ctx.fillRect(0, 0, W, H);
+
+      // sun / moon
+      ctx.fillStyle = tok("--game-orb", "#ffe6a7");
+      ctx.globalAlpha = 0.85;
+      ctx.beginPath();
+      ctx.arc(760, 72, 30, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // clouds
+      ctx.fillStyle = tok("--game-cloud", "#f4f7ff");
+      for (const c of game.current.clouds) {
+        ctx.globalAlpha = 0.75;
+        const r = 20 * c.s;
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, r, 0, Math.PI * 2);
+        ctx.arc(c.x + r * 0.9, c.y + r * 0.15, r * 0.8, 0, Math.PI * 2);
+        ctx.arc(c.x - r * 0.9, c.y + r * 0.2, r * 0.7, 0, Math.PI * 2);
+        ctx.arc(c.x + r * 0.1, c.y - r * 0.55, r * 0.65, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
+      // birds
+      ctx.strokeStyle = tok("--game-bird", "#e8eefc");
+      ctx.lineWidth = 2.2;
+      for (const b of game.current.birds) {
+        const flap = Math.sin(b.f) * 5;
+        ctx.beginPath();
+        ctx.moveTo(b.x - 10, b.y);
+        ctx.quadraticCurveTo(b.x - 5, b.y - 5 - flap, b.x, b.y);
+        ctx.quadraticCurveTo(b.x + 5, b.y - 5 - flap, b.x + 10, b.y);
+        ctx.stroke();
+      }
 
       // parallax hills
       ctx.fillStyle = tok("--game-hill", "#1b2b47");
@@ -242,6 +277,7 @@ function Index() {
         ctx.arc(x, GROUND + 40, 130, Math.PI, 0);
         ctx.fill();
       }
+
 
       ctx.fillStyle = tok("--game-ground", "#0d1524");
       ctx.fillRect(0, GROUND + 46, W, H - GROUND);
