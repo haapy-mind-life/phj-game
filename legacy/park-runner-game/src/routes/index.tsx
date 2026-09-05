@@ -1078,15 +1078,21 @@ function Index() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-4 py-8">
       <header className="text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">박현준 러너</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+          박현준 러너
+        </h1>
         <p className="mt-2 text-sm font-semibold text-muted-foreground">
           조작은 하나뿐! 게임 화면을 탭하세요
         </p>
       </header>
 
       <div className="flex w-full max-w-[900px] flex-wrap items-center justify-between gap-2 text-sm font-semibold text-foreground">
-        <span>점수 {score} / {GOAL}</span>
-        <span className="rounded-full bg-accent px-3 py-1 text-accent-foreground">{stageLabel}</span>
+        <span>
+          점수 {score} / {GOAL}
+        </span>
+        <span className="rounded-full bg-accent px-3 py-1 text-accent-foreground">
+          {stageLabel}
+        </span>
         <span className="text-muted-foreground">최고 {best}</span>
       </div>
 
@@ -1097,12 +1103,18 @@ function Index() {
         <span className="rounded-full bg-muted px-3 py-1">활 {arrows}</span>
         <span className="rounded-full bg-muted px-3 py-1">바나나 {bananas}</span>
         {disguised && !flying && (
-          <span className="rounded-full bg-accent px-3 py-1 text-accent-foreground">변장 ON · 무적</span>
+          <span className="rounded-full bg-accent px-3 py-1 text-accent-foreground">
+            변장 ON · 무적
+          </span>
         )}
         {flying && (
-          <span className="rounded-full bg-primary px-3 py-1 text-primary-foreground">날기 변신 · 완전 무적</span>
+          <span className="rounded-full bg-primary px-3 py-1 text-primary-foreground">
+            날기 변신 · 완전 무적
+          </span>
         )}
-        {giant && <span className="rounded-full bg-accent px-3 py-1 text-accent-foreground">버섯 파워</span>}
+        {giant && (
+          <span className="rounded-full bg-accent px-3 py-1 text-accent-foreground">버섯 파워</span>
+        )}
       </div>
 
       <div className="h-2 w-full max-w-[900px] overflow-hidden rounded-full bg-muted">
@@ -1134,7 +1146,11 @@ function Index() {
 
         {state !== "playing" && (
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 bg-foreground/55 text-center backdrop-blur-[2px]">
-            <img src={heroAsset.url} alt="러너 캐릭터" className="h-24 w-auto drop-shadow-lg sm:h-32" />
+            <img
+              src={heroAsset.url}
+              alt="러너 캐릭터"
+              className="h-24 w-auto drop-shadow-lg sm:h-32"
+            />
             <p className="max-w-md px-4 text-lg font-bold text-background">
               {state === "ready"
                 ? "화면을 탭하면 모험 시작! 200점마다 새로운 세계가 열려요."
@@ -1151,7 +1167,8 @@ function Index() {
       </div>
 
       <p className="max-w-[900px] text-center text-xs text-muted-foreground">
-        0~199 달리기 · 200~399 자동 전투 · 400~599 사다리와 돈 · 600~799 날기 변신과 크레인 · 800~999 챔피언 코스
+        0~199 달리기 · 200~399 자동 전투 · 400~599 사다리와 돈 · 600~799 날기 변신과 크레인 ·
+        800~999 챔피언 코스
       </p>
     </main>
   );
