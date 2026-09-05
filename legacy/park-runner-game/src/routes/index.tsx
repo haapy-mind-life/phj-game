@@ -32,12 +32,32 @@ const W = 900;
 const H = 340;
 const GROUND = 280;
 
-const levelOf = (s: number) => Math.min(8, Math.floor(s / 50) + 1);
+const GOAL = 1000;
+const levelOf = (s: number) => Math.min(20, Math.floor(s / 50) + 1);
+
+const makeClouds = (): Cloud[] =>
+  Array.from({ length: 6 }, (_, i) => ({
+    x: (i * 170 + Math.random() * 80) % W,
+    y: 30 + Math.random() * 90,
+    s: 0.6 + Math.random() * 0.8,
+    sp: 0.25 + Math.random() * 0.5,
+  }));
+
+const makeBirds = (): Bird[] =>
+  Array.from({ length: 3 }, (_, i) => ({
+    x: i * 320 + Math.random() * 200,
+    y: 40 + Math.random() * 90,
+    sp: 1.1 + Math.random() * 1.1,
+    f: Math.random() * 10,
+  }));
 
 function Index() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const heroImg = useRef<HTMLImageElement | null>(null);
-  const [state, setState] = useState<"ready" | "playing" | "over">("ready");
+  const [state, setState] = useState<"ready" | "playing" | "over" | "clear">(
+    "ready",
+  );
+
 
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(0);
