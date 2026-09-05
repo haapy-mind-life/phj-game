@@ -89,6 +89,11 @@ test("banana shot consumes one banana and creates a banana projectile", () => {
   assert.equal(result.projectile?.weapon, "banana");
 });
 
+test("banana does not fire with zero bananas", () => {
+  const result = fireProjectile({ ...base, bananas: 0 } as PlayerCombatState, "banana" as never, 140, 200);
+  assert.equal(result.projectile, null);
+});
+
 test("banana kill awards 100 points", () => {
   const enemies: Enemy[] = [{ id: 7, kind: "ground", x: 200, y: 240, w: 30, h: 40, alive: true }];
   const shots = [
@@ -106,6 +111,12 @@ test("permanent disguise defeats enemy contact without consuming armor", () => {
   assert.equal(result.state.armor, 1);
 });
 
-test("combat module exposes mystery box reward behavior", () => {
-  assert.equal(typeof (combat as unknown as { openMysteryBox?: unknown }).openMysteryBox, "function");
+test("mystery box permanently enables disguise and adds five bananas", () => {
+  const fn = (combat as unknown as {
+    openMysteryBox?: (state: PlayerCombatState & { bananas: number; disguised: boolean }) =>
+      PlayerCombatState & { bananas: number; disguised: boolean };
+  }).openMysteryBox;
+  const result = typeof fn === "function" ? fn({ ...base, bananas: 2, disguised: false }) : null;
+  assert.equal(result?.disguised, true);
+  assert.equal(result?.bananas, 7);
 });
