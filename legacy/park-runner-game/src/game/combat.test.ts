@@ -98,9 +98,7 @@ test("banana does not fire with zero bananas", () => {
 
 test("banana kill awards 100 points", () => {
   const enemies: Enemy[] = [{ id: 7, kind: "ground", x: 200, y: 240, w: 30, h: 40, alive: true }];
-  const shots: Projectile[] = [
-    { id: 9, weapon: "banana", x: 205, y: 250, vx: 11, w: 20, h: 14 },
-  ];
+  const shots: Projectile[] = [{ id: 9, weapon: "banana", x: 205, y: 250, vx: 11, w: 20, h: 14 }];
   const result = resolveProjectileHits(enemies, shots);
   assert.equal(result.scoreDelta, 100);
   assert.equal(result.enemies.length, 0);

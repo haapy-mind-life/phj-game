@@ -8,13 +8,7 @@ import {
   resolveEnemyContact,
   resolveProjectileHits,
 } from "@/game/combat";
-import type {
-  Enemy,
-  Mushroom,
-  MysteryBox,
-  Projectile,
-  WeaponKind,
-} from "@/game/types";
+import type { Enemy, Mushroom, MysteryBox, Projectile, WeaponKind } from "@/game/types";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -238,8 +232,7 @@ function Index() {
     let raf = 0;
 
     const css = getComputedStyle(document.documentElement);
-    const tok = (name: string, fallback: string) =>
-      css.getPropertyValue(name).trim() || fallback;
+    const tok = (name: string, fallback: string) => css.getPropertyValue(name).trim() || fallback;
 
     const saveBest = (nextScore: number) =>
       setBest((currentBest) => {
@@ -313,10 +306,7 @@ function Index() {
         const playerBox = { x: px, y: g.y, w: pw, h: 46 };
 
         const lastPlat = g.plats[g.plats.length - 1];
-        if (
-          (!lastPlat || lastPlat.x + lastPlat.w < W - 260) &&
-          Math.random() < 0.02
-        ) {
+        if ((!lastPlat || lastPlat.x + lastPlat.w < W - 260) && Math.random() < 0.02) {
           g.plats.push({
             x: W + 60,
             y: 110 + Math.random() * 60,
@@ -342,10 +332,7 @@ function Index() {
         }
 
         const lastObstacle = g.obstacles[g.obstacles.length - 1];
-        if (
-          (!lastObstacle || lastObstacle.x < W - 340) &&
-          Math.random() < 0.012
-        ) {
+        if ((!lastObstacle || lastObstacle.x < W - 340) && Math.random() < 0.012) {
           g.obstacles.push({
             x: W + 50,
             w: 24 + Math.random() * 10,
@@ -379,12 +366,7 @@ function Index() {
         });
         g.springs = g.springs.filter((spring) => spring.x > -60);
         for (const spring of g.springs) {
-          if (
-            px + pw > spring.x - 22 &&
-            px < spring.x + 22 &&
-            g.vy >= 0 &&
-            g.y > GROUND - 34
-          ) {
+          if (px + pw > spring.x - 22 && px < spring.x + 22 && g.vy >= 0 && g.y > GROUND - 34) {
             spring.c = 12;
             g.vy = -21;
             g.y = GROUND - 34;
@@ -392,10 +374,7 @@ function Index() {
         }
 
         const lastRainCloud = g.rainClouds[g.rainClouds.length - 1];
-        if (
-          (!lastRainCloud || lastRainCloud.x < W - 420) &&
-          Math.random() < 0.008
-        ) {
+        if ((!lastRainCloud || lastRainCloud.x < W - 420) && Math.random() < 0.008) {
           g.rainClouds.push({
             x: W + 80,
             y: 40 + Math.random() * 40,
@@ -406,10 +385,7 @@ function Index() {
         g.rainClouds = g.rainClouds.filter((cloud) => cloud.x + cloud.w > -60);
 
         const lastUmbrella = g.umbrellas[g.umbrellas.length - 1];
-        if (
-          (!lastUmbrella || lastUmbrella.x < W - 420) &&
-          Math.random() < 0.008
-        ) {
+        if ((!lastUmbrella || lastUmbrella.x < W - 420) && Math.random() < 0.008) {
           g.umbrellas.push({
             x: W + 60,
             y: 120 + Math.random() * 90,
@@ -417,9 +393,7 @@ function Index() {
           });
         }
         g.umbrellas.forEach((umbrella) => (umbrella.x -= g.speed));
-        g.umbrellas = g.umbrellas.filter(
-          (umbrella) => umbrella.x > -60 && !umbrella.taken,
-        );
+        g.umbrellas = g.umbrellas.filter((umbrella) => umbrella.x > -60 && !umbrella.taken);
         for (const umbrella of g.umbrellas) {
           if (Math.hypot(px + pw / 2 - umbrella.x, g.y + 23 - umbrella.y) < 30) {
             umbrella.taken = true;
@@ -429,8 +403,7 @@ function Index() {
 
         for (const rainCloud of g.rainClouds) {
           const inX = px + pw > rainCloud.x && px < rainCloud.x + rainCloud.w;
-          const inRain =
-            g.y + 46 > rainCloud.y + 24 && g.y < rainCloud.y + 170;
+          const inRain = g.y + 46 > rainCloud.y + 24 && g.y < rainCloud.y + 170;
           if (inX && inRain && g.umbrella <= 0 && !g.disguised) {
             gameOver();
             break;
@@ -456,10 +429,7 @@ function Index() {
         g.enemies = g.enemies.filter((enemy) => enemy.x + enemy.w > -50);
 
         const lastMushroom = g.mushrooms[g.mushrooms.length - 1];
-        if (
-          (!lastMushroom || lastMushroom.x < W - 520) &&
-          Math.random() < 0.0025
-        ) {
+        if ((!lastMushroom || lastMushroom.x < W - 520) && Math.random() < 0.0025) {
           g.mushrooms.push({
             id: g.nextId++,
             x: W + 50,
@@ -469,9 +439,7 @@ function Index() {
           });
         }
         for (const mushroom of g.mushrooms) mushroom.x -= g.speed * 0.9;
-        g.mushrooms = g.mushrooms.filter(
-          (mushroom) => mushroom.x + mushroom.w > -40,
-        );
+        g.mushrooms = g.mushrooms.filter((mushroom) => mushroom.x + mushroom.w > -40);
         for (const mushroom of g.mushrooms) {
           if (!overlaps(playerBox, mushroom)) continue;
           const next = activateMushroom(combatState());
@@ -493,9 +461,7 @@ function Index() {
           });
         }
         for (const box of g.mysteryBoxes) box.x -= g.speed * 0.85;
-        g.mysteryBoxes = g.mysteryBoxes.filter(
-          (box) => box.x + box.w > -50 && !box.opened,
-        );
+        g.mysteryBoxes = g.mysteryBoxes.filter((box) => box.x + box.w > -50 && !box.opened);
         for (const box of g.mysteryBoxes) {
           if (!overlaps(playerBox, box)) continue;
           box.opened = true;
@@ -509,9 +475,7 @@ function Index() {
         }
 
         for (const projectile of g.projectiles) projectile.x += projectile.vx;
-        g.projectiles = g.projectiles.filter(
-          (projectile) => projectile.x < W + 80,
-        );
+        g.projectiles = g.projectiles.filter((projectile) => projectile.x < W + 80);
         const hitResult = resolveProjectileHits(g.enemies, g.projectiles);
         g.enemies = hitResult.enemies;
         g.projectiles = hitResult.projectiles;
@@ -571,27 +535,9 @@ function Index() {
         const radius = 20 * cloud.s;
         ctx.beginPath();
         ctx.arc(cloud.x, cloud.y, radius, 0, Math.PI * 2);
-        ctx.arc(
-          cloud.x + radius * 0.9,
-          cloud.y + radius * 0.15,
-          radius * 0.8,
-          0,
-          Math.PI * 2,
-        );
-        ctx.arc(
-          cloud.x - radius * 0.9,
-          cloud.y + radius * 0.2,
-          radius * 0.7,
-          0,
-          Math.PI * 2,
-        );
-        ctx.arc(
-          cloud.x + radius * 0.1,
-          cloud.y - radius * 0.55,
-          radius * 0.65,
-          0,
-          Math.PI * 2,
-        );
+        ctx.arc(cloud.x + radius * 0.9, cloud.y + radius * 0.15, radius * 0.8, 0, Math.PI * 2);
+        ctx.arc(cloud.x - radius * 0.9, cloud.y + radius * 0.2, radius * 0.7, 0, Math.PI * 2);
+        ctx.arc(cloud.x + radius * 0.1, cloud.y - radius * 0.55, radius * 0.65, 0, Math.PI * 2);
         ctx.fill();
         ctx.globalAlpha = 1;
       }
@@ -829,21 +775,10 @@ function Index() {
       if (img && img.complete && img.naturalWidth) {
         const playerHeight = 76 * scale;
         const playerWidth = (img.naturalWidth / img.naturalHeight) * playerHeight;
-        ctx.drawImage(
-          img,
-          139 - playerWidth / 2,
-          y + 46 - playerHeight,
-          playerWidth,
-          playerHeight,
-        );
+        ctx.drawImage(img, 139 - playerWidth / 2, y + 46 - playerHeight, playerWidth, playerHeight);
       } else {
         ctx.fillStyle = tok("--game-player", "#ffd166");
-        ctx.fillRect(
-          120 - (38 * (scale - 1)) / 2,
-          y + 46 - 46 * scale,
-          38 * scale,
-          46 * scale,
-        );
+        ctx.fillRect(120 - (38 * (scale - 1)) / 2, y + 46 - 46 * scale, 38 * scale, 46 * scale);
       }
 
       if (g.disguised) {
@@ -889,9 +824,7 @@ function Index() {
         <span>
           점수 {score} / {GOAL}
         </span>
-        <span className="rounded-full bg-accent px-3 py-1 text-accent-foreground">
-          {level}단계
-        </span>
+        <span className="rounded-full bg-accent px-3 py-1 text-accent-foreground">{level}단계</span>
         <span className="text-muted-foreground">최고 {best}</span>
       </div>
 
@@ -906,9 +839,7 @@ function Index() {
           </span>
         )}
         {giant && (
-          <span className="rounded-full bg-accent px-3 py-1 text-accent-foreground">
-            버섯 파워
-          </span>
+          <span className="rounded-full bg-accent px-3 py-1 text-accent-foreground">버섯 파워</span>
         )}
       </div>
 
@@ -958,11 +889,7 @@ function Index() {
               }}
               className="rounded-md bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              {state === "ready"
-                ? "게임 시작"
-                : state === "clear"
-                  ? "다시 도전"
-                  : "다시 하기"}
+              {state === "ready" ? "게임 시작" : state === "clear" ? "다시 도전" : "다시 하기"}
             </button>
           </div>
         )}
