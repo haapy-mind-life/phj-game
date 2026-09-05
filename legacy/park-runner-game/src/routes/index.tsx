@@ -179,11 +179,35 @@ function Index() {
       ctx.lineTo(W, GROUND + 46);
       ctx.stroke();
 
-      // obstacles
-      ctx.fillStyle = tok("--game-obstacle", "#f2586b");
+      // obstacles: traffic cones
       for (const o of game.current.obstacles) {
-        ctx.fillRect(o.x, GROUND + 46 - o.h, o.w, o.h);
+        const base = GROUND + 46;
+        const cw = Math.max(o.w, 22);
+        const cx = o.x + cw / 2;
+        // base plate
+        ctx.fillStyle = tok("--game-cone-dark", "#c2372f");
+        ctx.fillRect(o.x - 4, base - 6, cw + 8, 6);
+        // cone body
+        ctx.fillStyle = tok("--game-cone", "#ff6b35");
+        ctx.beginPath();
+        ctx.moveTo(cx, base - o.h);
+        ctx.lineTo(o.x + cw, base - 6);
+        ctx.lineTo(o.x, base - 6);
+        ctx.closePath();
+        ctx.fill();
+        // white stripe
+        const sy = base - 6 - o.h * 0.42;
+        const halfTop = ((base - 6 - sy) / (o.h - 6)) * (cw / 2);
+        ctx.fillStyle = tok("--game-cone-stripe", "#ffffff");
+        ctx.beginPath();
+        ctx.moveTo(cx - halfTop * 0.72, sy);
+        ctx.lineTo(cx + halfTop * 0.72, sy);
+        ctx.lineTo(cx + halfTop, sy + o.h * 0.16);
+        ctx.lineTo(cx - halfTop, sy + o.h * 0.16);
+        ctx.closePath();
+        ctx.fill();
       }
+
 
       // player
       const y = game.current.y;

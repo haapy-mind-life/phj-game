@@ -101,6 +101,10 @@
   --game-ground: #0d1524;
   --game-line: #4c6ea6;
   --game-obstacle: #f2586b;
+  --game-cone: #ff6b35;
+  --game-cone-dark: #c2372f;
+  --game-cone-stripe: #f7f3ee;
+
   --game-player: #ffd166;
   --game-player-dark: #e0a93c;
 }
