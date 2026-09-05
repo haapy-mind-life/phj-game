@@ -194,23 +194,55 @@ function Index() {
         g.t += 1;
         const lv = g.level;
         g.speed = 7 + g.t / 700 + (lv - 1) * 0.7;
+        const prevFeet = g.y + 46;
         g.vy += 0.78;
         g.y = Math.min(GROUND, g.y + g.vy);
-
-        const gap = Math.max(150, 260 - (lv - 1) * 12);
-        if (
-          g.obstacles.length === 0 ||
-          g.obstacles[g.obstacles.length - 1]!.x <
-            W - gap - Math.random() * Math.max(90, 240 - (lv - 1) * 14)
-        ) {
-          const h = 32 + Math.random() * (46 + (lv - 1) * 3);
-          g.obstacles.push({ x: W + 40, w: 20 + Math.random() * 22, h });
+        if (g.y < 6) {
+          g.y = 6;
+          if (g.vy < 0) g.vy = 0;
         }
-        g.obstacles.forEach((o) => (o.x -= g.speed));
-        g.obstacles = g.obstacles.filter((o) => o.x + o.w > -20);
+        if (g.umbrella > 0) g.umbrella -= 1;
 
         const px = 120;
         const pw = 38;
+
+        // sky cloud paths you can land on
+        const lastPlat = g.plats[g.plats.length - 1];
+        if ((!lastPlat || lastPlat.x + lastPlat.w < W - 260) && Math.random() < 0.02) {
+          g.plats.push({
+            x: W + 60,
+            y: 110 + Math.random() * 60,
+            w: 130 + Math.random() * 110,
+          });
+        }
+        g.plats.forEach((p) => (p.x -= g.speed));
+        g.plats = g.plats.filter((p) => p.x + p.w > -40);
+
+        g.onPlat = false;
+        const feet = g.y + 46;
+        for (const p of g.plats) {
+          if (
+            g.vy >= 0 &&
+            px + pw > p.x &&
+            px < p.x + p.w &&
+            prevFeet <= p.y + 4 &&
+            feet >= p.y
+          ) {
+            g.y = p.y - 46;
+            g.vy = 0;
+            g.onPlat = true;
+          }
+        }
+
+        const gap2 = Math.max(150, 260 - (lv - 1) * 12);
+        void gap2;
+
+        const gap3 = 0;
+        void gap3;
+
+        const gapObs = 0;
+        void gapObs;
+
         for (const o of g.obstacles) {
           if (px + pw > o.x && px < o.x + o.w && g.y > GROUND - o.h + 6) {
             g.running = false;
@@ -219,27 +251,62 @@ function Index() {
           }
         }
 
-        // rings: catch one mid-air for a huge boost
-        const lastRing = g.rings[g.rings.length - 1];
-        if (
-          (!lastRing || lastRing.x < W - 420) &&
-          Math.random() < 0.012
-        ) {
-          g.rings.push({
+        // springs on the ground: step on one to launch sky high
+        const lastSpring = g.springs[g.springs.length - 1];
+        if ((!lastSpring || lastSpring.x < W - 380) && Math.random() < 0.01) {
+          g.springs.push({ x: W + 60, c: 0 });
+        }
+        g.springs.forEach((s) => {
+          s.x -= g.speed;
+          if (s.c > 0) s.c -= 1;
+        });
+        g.springs = g.springs.filter((s) => s.x > -60);
+        for (const s of g.springs) {
+          if (
+            px + pw > s.x - 22 &&
+            px < s.x + 22 &&
+            g.vy >= 0 &&
+            g.y > GROUND - 34
+          ) {
+            s.c = 12;
+            g.vy = -21;
+            g.y = GROUND - 34;
+          }
+        }
+
+        // rain clouds up in the sky: you need an umbrella to pass
+        const lastRc = g.rainClouds[g.rainClouds.length - 1];
+        if ((!lastRc || lastRc.x < W - 420) && Math.random() < 0.008) {
+          g.rainClouds.push({ x: W + 80, y: 40 + Math.random() * 40, w: 120 });
+        }
+        g.rainClouds.forEach((r) => (r.x -= g.speed * 0.9));
+        g.rainClouds = g.rainClouds.filter((r) => r.x + r.w > -60);
+
+        // umbrella pickups float in the air
+        const lastUm = g.umbrellas[g.umbrellas.length - 1];
+        if ((!lastUm || lastUm.x < W - 420) && Math.random() < 0.008) {
+          g.umbrellas.push({
             x: W + 60,
-            y: GROUND - 40 - Math.random() * 70,
+            y: 120 + Math.random() * 90,
             taken: false,
-            sp: 0,
           });
         }
-        g.rings.forEach((r) => (r.x -= g.speed));
-        g.rings = g.rings.filter((r) => r.x > -60 && !r.taken);
-        for (const r of g.rings) {
-          const cx = px + pw / 2;
-          const cy = g.y + 23;
-          if (Math.hypot(cx - r.x, cy - r.y) < 34) {
-            r.taken = true;
-            g.vy = -24;
+        g.umbrellas.forEach((u) => (u.x -= g.speed));
+        g.umbrellas = g.umbrellas.filter((u) => u.x > -60 && !u.taken);
+        for (const u of g.umbrellas) {
+          if (Math.hypot(px + pw / 2 - u.x, g.y + 23 - u.y) < 30) {
+            u.taken = true;
+            g.umbrella = 600;
+          }
+        }
+
+        for (const r of g.rainClouds) {
+          const inX = px + pw > r.x && px < r.x + r.w;
+          const inRain = g.y + 46 > r.y + 24 && g.y < r.y + 170;
+          if (inX && inRain && g.umbrella <= 0) {
+            g.running = false;
+            setState("over");
+            saveBest(Math.floor(g.score));
           }
         }
 
