@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
+import heroAsset from "@/assets/runner-hero.png.asset.json";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -30,7 +32,9 @@ const GROUND = 280;
 
 function Index() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const heroImg = useRef<HTMLImageElement | null>(null);
   const [state, setState] = useState<"ready" | "playing" | "over">("ready");
+
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(0);
 
@@ -74,6 +78,14 @@ function Index() {
       /* ignore */
     }
   }, []);
+
+  useEffect(() => {
+    const img = new Image();
+    img.src = heroAsset.url;
+    heroImg.current = img;
+  }, []);
+
+
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -175,16 +187,16 @@ function Index() {
 
       // player
       const y = game.current.y;
-      ctx.fillStyle = tok("--game-player", "#ffd166");
-      ctx.fillRect(120, y - 46 + 46, 38, 46);
-      ctx.fillStyle = tok("--game-player-dark", "#e0a93c");
-      const legPhase = Math.sin(game.current.t / 3) * 8;
-      if (y >= GROUND) {
-        ctx.fillRect(122, GROUND + 40, 14, 8 + legPhase * 0.2);
-        ctx.fillRect(142, GROUND + 40, 14, 8 - legPhase * 0.2);
+      const img = heroImg.current;
+      if (img && img.complete && img.naturalWidth) {
+        const ph2 = 76;
+        const pw2 = (img.naturalWidth / img.naturalHeight) * ph2;
+        ctx.drawImage(img, 120 + 19 - pw2 / 2, y + 46 - ph2, pw2, ph2);
+      } else {
+        ctx.fillStyle = tok("--game-player", "#ffd166");
+        ctx.fillRect(120, y, 38, 46);
       }
-      ctx.fillStyle = tok("--game-sky-top", "#101a2e");
-      ctx.fillRect(146, y + 10, 6, 6);
+
 
       raf = requestAnimationFrame(loop);
     };
@@ -219,9 +231,15 @@ function Index() {
         <canvas ref={canvasRef} width={W} height={H} className="block w-full" />
         {state !== "playing" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-foreground/50 text-center backdrop-blur-[2px]">
+            <img
+              src={heroAsset.url}
+              alt="박현준 선수"
+              className="h-24 w-auto drop-shadow-lg sm:h-32"
+            />
             <p className="text-lg font-bold text-background">
               {state === "ready" ? "달릴 준비 되셨나요?" : `게임 종료! 점수 ${score}`}
             </p>
+
             <button
               onClick={(e) => {
                 e.stopPropagation();
