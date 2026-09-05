@@ -144,19 +144,53 @@ function Index() {
     const css = getComputedStyle(document.documentElement);
     const tok = (n: string, f: string) => css.getPropertyValue(n).trim() || f;
 
+    const saveBest = (s: number) =>
+      setBest((b) => {
+        const nb = Math.max(b, s);
+        try {
+          localStorage.setItem("runner-best", String(nb));
+        } catch {
+          /* ignore */
+        }
+        return nb;
+      });
+
     const loop = () => {
       const g = game.current;
+      if (g.clouds.length === 0) g.clouds = makeClouds();
+      if (g.birds.length === 0) g.birds = makeBirds();
+
+      // ambient life keeps moving even on menus
+      for (const c of g.clouds) {
+        c.x -= c.sp;
+        if (c.x < -160) {
+          c.x = W + 60;
+          c.y = 30 + Math.random() * 90;
+        }
+      }
+      for (const b of g.birds) {
+        b.x -= b.sp;
+        b.f += 0.16;
+        if (b.x < -60) {
+          b.x = W + 60 + Math.random() * 300;
+          b.y = 40 + Math.random() * 90;
+        }
+      }
+
       if (g.running) {
         g.t += 1;
-        g.speed = 7 + g.t / 700;
+        const lv = g.level;
+        g.speed = 7 + g.t / 700 + (lv - 1) * 0.7;
         g.vy += 0.78;
         g.y = Math.min(GROUND, g.y + g.vy);
 
+        const gap = Math.max(150, 260 - (lv - 1) * 12);
         if (
           g.obstacles.length === 0 ||
-          g.obstacles[g.obstacles.length - 1]!.x < W - 260 - Math.random() * 240
+          g.obstacles[g.obstacles.length - 1]!.x <
+            W - gap - Math.random() * Math.max(90, 240 - (lv - 1) * 14)
         ) {
-          const h = 32 + Math.random() * 46;
+          const h = 32 + Math.random() * (46 + (lv - 1) * 3);
           g.obstacles.push({ x: W + 40, w: 20 + Math.random() * 22, h });
         }
         g.obstacles.forEach((o) => (o.x -= g.speed));
@@ -164,30 +198,33 @@ function Index() {
 
         const px = 120;
         const pw = 38;
-        const ph = 46;
         for (const o of g.obstacles) {
-          if (
-            px + pw > o.x &&
-            px < o.x + o.w &&
-            g.y > GROUND - o.h + 6
-          ) {
+          if (px + pw > o.x && px < o.x + o.w && g.y > GROUND - o.h + 6) {
             g.running = false;
             setState("over");
-            const s = Math.floor(g.score);
-            setBest((b) => {
-              const nb = Math.max(b, s);
-              try {
-                localStorage.setItem("runner-best", String(nb));
-              } catch {
-                /* ignore */
-              }
-              return nb;
-            });
+            saveBest(Math.floor(g.score));
           }
         }
         g.score += g.speed / 12;
         setScore(Math.floor(g.score));
+
+        const nl = levelOf(g.score);
+        if (nl !== g.level) {
+          g.level = nl;
+          setLevel(nl);
+          setLevelFlash(nl);
+          window.setTimeout(() => setLevelFlash(0), 1200);
+        }
+
+        if (g.score >= GOAL) {
+          g.score = GOAL;
+          g.running = false;
+          setScore(GOAL);
+          setState("clear");
+          saveBest(GOAL);
+        }
       }
+
 
       // draw
       ctx.clearRect(0, 0, W, H);
