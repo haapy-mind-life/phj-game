@@ -95,7 +95,16 @@
   --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
   --sidebar-border: oklch(0.929 0.013 255.508);
   --sidebar-ring: oklch(0.704 0.04 256.788);
+  --game-sky-top: #101a2e;
+  --game-sky-bottom: #2b4066;
+  --game-hill: #1b2b47;
+  --game-ground: #0d1524;
+  --game-line: #4c6ea6;
+  --game-obstacle: #f2586b;
+  --game-player: #ffd166;
+  --game-player-dark: #e0a93c;
 }
+
 
 .dark {
   --background: oklch(0.129 0.042 264.695);
