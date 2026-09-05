@@ -1,7 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import heroAsset from "@/assets/runner-hero.png.asset.json";
-
+import {
+  activateMushroom,
+  fireProjectile,
+  resolveEnemyContact,
+  resolveProjectileHits,
+} from "@/game/combat";
+import type { Enemy, Mushroom, Projectile, WeaponKind } from "@/game/types";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -10,12 +16,12 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "박현준 러너는 장애물을 뛰어넘으며 최고 기록에 도전하는 간단한 러닝 게임입니다. 스페이스바나 화면 터치로 바로 시작하세요.",
+          "박현준 러너는 장애물을 뛰어넘고 적을 물리치며 최고 기록에 도전하는 아케이드 러닝 게임입니다.",
       },
       { property: "og:title", content: "박현준 러너 - 끝없이 달리는 점프 게임" },
       {
         property: "og:description",
-        content: "장애물을 뛰어넘고 최고 기록에 도전하는 러닝 게임.",
+        content: "점프하고 아이템을 모으며 1000점 완주에 도전하는 러닝 게임.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -35,10 +41,8 @@ type Umbrella = { x: number; y: number; taken: boolean };
 const W = 900;
 const H = 340;
 const GROUND = 280;
-
 const GOAL = 1000;
 const levelOf = (s: number) => Math.min(10, Math.floor(s / 100) + 1);
-
 
 const makeClouds = (): Cloud[] =>
   Array.from({ length: 6 }, (_, i) => ({
@@ -56,18 +60,23 @@ const makeBirds = (): Bird[] =>
     f: Math.random() * 10,
   }));
 
+const overlaps = (
+  a: { x: number; y: number; w: number; h: number },
+  b: { x: number; y: number; w: number; h: number },
+) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+
 function Index() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const heroImg = useRef<HTMLImageElement | null>(null);
-  const [state, setState] = useState<"ready" | "playing" | "over" | "clear">(
-    "ready",
-  );
-
-
+  const [state, setState] = useState<"ready" | "playing" | "over" | "clear">("ready");
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(0);
   const [level, setLevel] = useState(1);
   const [levelFlash, setLevelFlash] = useState(0);
+  const [armor, setArmor] = useState(1);
+  const [bullets, setBullets] = useState(12);
+  const [arrows, setArrows] = useState(6);
+  const [giant, setGiant] = useState(false);
 
   const game = useRef({
     y: GROUND,
@@ -79,7 +88,15 @@ function Index() {
     plats: [] as Plat[],
     rainClouds: [] as RainCloud[],
     umbrellas: [] as Umbrella[],
+    enemies: [] as Enemy[],
+    projectiles: [] as Projectile[],
+    mushrooms: [] as Mushroom[],
     umbrella: 0,
+    armor: 1,
+    bullets: 12,
+    arrows: 6,
+    giantTimer: 0,
+    nextId: 1,
     onPlat: false,
     speed: 7,
     t: 0,
@@ -87,7 +104,6 @@ function Index() {
     level: 1,
     running: false,
   });
-
 
   const start = useCallback(() => {
     const g = game.current;
@@ -98,11 +114,18 @@ function Index() {
     g.plats = [];
     g.rainClouds = [];
     g.umbrellas = [];
+    g.enemies = [];
+    g.projectiles = [];
+    g.mushrooms = [];
     g.umbrella = 0;
+    g.armor = 1;
+    g.bullets = 12;
+    g.arrows = 6;
+    g.giantTimer = 0;
+    g.nextId = 1;
     g.onPlat = false;
     g.clouds = makeClouds();
     g.birds = makeBirds();
-
     g.speed = 7;
     g.t = 0;
     g.score = 0;
@@ -111,9 +134,12 @@ function Index() {
     setScore(0);
     setLevel(1);
     setLevelFlash(0);
+    setArmor(1);
+    setBullets(12);
+    setArrows(6);
+    setGiant(false);
     setState("playing");
   }, []);
-
 
   const jump = useCallback(() => {
     const g = game.current;
@@ -123,6 +149,30 @@ function Index() {
     }
     if (g.y >= GROUND) g.vy = -15.5;
   }, [start]);
+
+  const shoot = useCallback((weapon: WeaponKind) => {
+    const g = game.current;
+    if (!g.running) return;
+    const result = fireProjectile(
+      {
+        armor: g.armor,
+        bullets: g.bullets,
+        arrows: g.arrows,
+        giantTimer: g.giantTimer,
+      },
+      weapon,
+      158,
+      g.y + 21,
+    );
+    g.bullets = result.state.bullets;
+    g.arrows = result.state.arrows;
+    if (result.projectile) {
+      result.projectile.id = g.nextId++;
+      g.projectiles.push(result.projectile);
+    }
+    setBullets(g.bullets);
+    setArrows(g.arrows);
+  }, []);
 
   useEffect(() => {
     try {
@@ -139,18 +189,22 @@ function Index() {
     heroImg.current = img;
   }, []);
 
-
-
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.code === "Space" || e.code === "ArrowUp") {
         e.preventDefault();
         jump();
+      } else if (e.code === "KeyX") {
+        e.preventDefault();
+        shoot("gun");
+      } else if (e.code === "KeyC") {
+        e.preventDefault();
+        shoot("bow");
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [jump]);
+  }, [jump, shoot]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -173,12 +227,18 @@ function Index() {
         return nb;
       });
 
+    const gameOver = () => {
+      const g = game.current;
+      g.running = false;
+      setState("over");
+      saveBest(Math.floor(g.score));
+    };
+
     const loop = () => {
       const g = game.current;
       if (g.clouds.length === 0) g.clouds = makeClouds();
       if (g.birds.length === 0) g.birds = makeBirds();
 
-      // ambient life keeps moving even on menus
       for (const c of g.clouds) {
         c.x -= c.sp;
         if (c.x < -160) {
@@ -207,18 +267,18 @@ function Index() {
           if (g.vy < 0) g.vy = 0;
         }
         if (g.umbrella > 0) g.umbrella -= 1;
+        if (g.giantTimer > 0) {
+          g.giantTimer -= 1;
+          if (g.giantTimer === 0) setGiant(false);
+        }
 
         const px = 120;
         const pw = 38;
+        const playerBox = { x: px, y: g.y, w: pw, h: 46 };
 
-        // sky cloud paths you can land on
         const lastPlat = g.plats[g.plats.length - 1];
         if ((!lastPlat || lastPlat.x + lastPlat.w < W - 260) && Math.random() < 0.02) {
-          g.plats.push({
-            x: W + 60,
-            y: 110 + Math.random() * 60,
-            w: 130 + Math.random() * 110,
-          });
+          g.plats.push({ x: W + 60, y: 110 + Math.random() * 60, w: 130 + Math.random() * 110 });
         }
         g.plats.forEach((p) => (p.x -= g.speed));
         g.plats = g.plats.filter((p) => p.x + p.w > -40);
@@ -239,16 +299,13 @@ function Index() {
           }
         }
 
-
         for (const o of g.obstacles) {
           if (px + pw > o.x && px < o.x + o.w && g.y > GROUND - o.h + 6) {
-            g.running = false;
-            setState("over");
-            saveBest(Math.floor(g.score));
+            gameOver();
+            break;
           }
         }
 
-        // springs on the ground: step on one to launch sky high
         const lastSpring = g.springs[g.springs.length - 1];
         if ((!lastSpring || lastSpring.x < W - 380) && Math.random() < 0.01) {
           g.springs.push({ x: W + 60, c: 0 });
@@ -259,19 +316,13 @@ function Index() {
         });
         g.springs = g.springs.filter((s) => s.x > -60);
         for (const s of g.springs) {
-          if (
-            px + pw > s.x - 22 &&
-            px < s.x + 22 &&
-            g.vy >= 0 &&
-            g.y > GROUND - 34
-          ) {
+          if (px + pw > s.x - 22 && px < s.x + 22 && g.vy >= 0 && g.y > GROUND - 34) {
             s.c = 12;
             g.vy = -21;
             g.y = GROUND - 34;
           }
         }
 
-        // rain clouds up in the sky: you need an umbrella to pass
         const lastRc = g.rainClouds[g.rainClouds.length - 1];
         if ((!lastRc || lastRc.x < W - 420) && Math.random() < 0.008) {
           g.rainClouds.push({ x: W + 80, y: 40 + Math.random() * 40, w: 120 });
@@ -279,14 +330,9 @@ function Index() {
         g.rainClouds.forEach((r) => (r.x -= g.speed * 0.9));
         g.rainClouds = g.rainClouds.filter((r) => r.x + r.w > -60);
 
-        // umbrella pickups float in the air
         const lastUm = g.umbrellas[g.umbrellas.length - 1];
         if ((!lastUm || lastUm.x < W - 420) && Math.random() < 0.008) {
-          g.umbrellas.push({
-            x: W + 60,
-            y: 120 + Math.random() * 90,
-            taken: false,
-          });
+          g.umbrellas.push({ x: W + 60, y: 120 + Math.random() * 90, taken: false });
         }
         g.umbrellas.forEach((u) => (u.x -= g.speed));
         g.umbrellas = g.umbrellas.filter((u) => u.x > -60 && !u.taken);
@@ -301,10 +347,70 @@ function Index() {
           const inX = px + pw > r.x && px < r.x + r.w;
           const inRain = g.y + 46 > r.y + 24 && g.y < r.y + 170;
           if (inX && inRain && g.umbrella <= 0) {
-            g.running = false;
-            setState("over");
-            saveBest(Math.floor(g.score));
+            gameOver();
+            break;
           }
+        }
+
+        const lastEnemy = g.enemies[g.enemies.length - 1];
+        if ((!lastEnemy || lastEnemy.x < W - 320) && Math.random() < 0.009) {
+          const air = Math.random() < 0.35;
+          g.enemies.push({
+            id: g.nextId++,
+            kind: air ? "air" : "ground",
+            x: W + 60,
+            y: air ? 120 + Math.random() * 70 : GROUND + 46 - 38,
+            w: air ? 38 : 34,
+            h: air ? 30 : 38,
+            alive: true,
+          });
+        }
+        for (const enemy of g.enemies) enemy.x -= g.speed * (enemy.kind === "air" ? 0.75 : 0.9);
+        g.enemies = g.enemies.filter((enemy) => enemy.x + enemy.w > -50);
+
+        const lastMushroom = g.mushrooms[g.mushrooms.length - 1];
+        if ((!lastMushroom || lastMushroom.x < W - 520) && Math.random() < 0.0025) {
+          g.mushrooms.push({ id: g.nextId++, x: W + 50, y: GROUND + 46 - 30, w: 28, h: 30 });
+        }
+        for (const mushroom of g.mushrooms) mushroom.x -= g.speed * 0.9;
+        g.mushrooms = g.mushrooms.filter((mushroom) => mushroom.x + mushroom.w > -40);
+        for (const mushroom of g.mushrooms) {
+          if (!overlaps(playerBox, mushroom)) continue;
+          const next = activateMushroom({
+            armor: g.armor,
+            bullets: g.bullets,
+            arrows: g.arrows,
+            giantTimer: g.giantTimer,
+          });
+          g.giantTimer = next.giantTimer;
+          setGiant(true);
+          g.mushrooms = g.mushrooms.filter((item) => item.id !== mushroom.id);
+          break;
+        }
+
+        for (const projectile of g.projectiles) projectile.x += projectile.vx;
+        g.projectiles = g.projectiles.filter((projectile) => projectile.x < W + 80);
+        const hitResult = resolveProjectileHits(g.enemies, g.projectiles);
+        g.enemies = hitResult.enemies;
+        g.projectiles = hitResult.projectiles;
+        g.score += hitResult.scoreDelta;
+
+        for (const enemy of g.enemies) {
+          if (!overlaps(playerBox, enemy)) continue;
+          const contact = resolveEnemyContact({
+            armor: g.armor,
+            bullets: g.bullets,
+            arrows: g.arrows,
+            giantTimer: g.giantTimer,
+          });
+          g.armor = contact.state.armor;
+          setArmor(g.armor);
+          if (contact.survives && contact.consumeEnemy) {
+            g.enemies = g.enemies.filter((item) => item.id !== enemy.id);
+          } else {
+            gameOver();
+          }
+          break;
         }
 
         g.score += g.speed / 12;
@@ -327,9 +433,7 @@ function Index() {
         }
       }
 
-
-      // draw
-      const pal = ((game.current.level - 1) % 4) + 1;
+      const pal = ((g.level - 1) % 4) + 1;
       ctx.clearRect(0, 0, W, H);
       const sky = ctx.createLinearGradient(0, 0, 0, H);
       sky.addColorStop(0, tok(`--game-sky${pal}-top`, "#101a2e"));
@@ -337,7 +441,6 @@ function Index() {
       ctx.fillStyle = sky;
       ctx.fillRect(0, 0, W, H);
 
-      // sun / moon
       ctx.fillStyle = tok("--game-orb", "#ffe6a7");
       ctx.globalAlpha = 0.85;
       ctx.beginPath();
@@ -345,9 +448,8 @@ function Index() {
       ctx.fill();
       ctx.globalAlpha = 1;
 
-      // clouds
       ctx.fillStyle = tok("--game-cloud", "#f4f7ff");
-      for (const c of game.current.clouds) {
+      for (const c of g.clouds) {
         ctx.globalAlpha = 0.75;
         const r = 20 * c.s;
         ctx.beginPath();
@@ -359,10 +461,9 @@ function Index() {
         ctx.globalAlpha = 1;
       }
 
-      // birds
       ctx.strokeStyle = tok("--game-bird", "#e8eefc");
       ctx.lineWidth = 2.2;
-      for (const b of game.current.birds) {
+      for (const b of g.birds) {
         const flap = Math.sin(b.f) * 5;
         ctx.beginPath();
         ctx.moveTo(b.x - 10, b.y);
@@ -371,15 +472,13 @@ function Index() {
         ctx.stroke();
       }
 
-      // parallax hills
       ctx.fillStyle = tok("--game-hill", "#1b2b47");
       for (let i = 0; i < 6; i++) {
-        const x = ((i * 220 - (game.current.t * 1.2) % 1320) + 1320) % 1320 - 200;
+        const x = ((i * 220 - (g.t * 1.2) % 1320) + 1320) % 1320 - 200;
         ctx.beginPath();
         ctx.arc(x, GROUND + 40, 130, Math.PI, 0);
         ctx.fill();
       }
-
 
       ctx.fillStyle = tok("--game-ground", "#0d1524");
       ctx.fillRect(0, GROUND + 46, W, H - GROUND);
@@ -390,15 +489,12 @@ function Index() {
       ctx.lineTo(W, GROUND + 46);
       ctx.stroke();
 
-      // obstacles: traffic cones
-      for (const o of game.current.obstacles) {
+      for (const o of g.obstacles) {
         const base = GROUND + 46;
         const cw = Math.max(o.w, 22);
         const cx = o.x + cw / 2;
-        // base plate
         ctx.fillStyle = tok("--game-cone-dark", "#c2372f");
         ctx.fillRect(o.x - 4, base - 6, cw + 8, 6);
-        // cone body
         ctx.fillStyle = tok("--game-cone", "#ff6b35");
         ctx.beginPath();
         ctx.moveTo(cx, base - o.h);
@@ -406,21 +502,9 @@ function Index() {
         ctx.lineTo(o.x, base - 6);
         ctx.closePath();
         ctx.fill();
-        // white stripe
-        const sy = base - 6 - o.h * 0.42;
-        const halfTop = ((base - 6 - sy) / (o.h - 6)) * (cw / 2);
-        ctx.fillStyle = tok("--game-cone-stripe", "#ffffff");
-        ctx.beginPath();
-        ctx.moveTo(cx - halfTop * 0.72, sy);
-        ctx.lineTo(cx + halfTop * 0.72, sy);
-        ctx.lineTo(cx + halfTop, sy + o.h * 0.16);
-        ctx.lineTo(cx - halfTop, sy + o.h * 0.16);
-        ctx.closePath();
-        ctx.fill();
       }
 
-      // sky cloud paths
-      for (const p of game.current.plats) {
+      for (const p of g.plats) {
         ctx.fillStyle = tok("--game-plat", "#ffffff");
         ctx.globalAlpha = 0.95;
         ctx.beginPath();
@@ -433,16 +517,9 @@ function Index() {
         ctx.closePath();
         ctx.fill();
         ctx.globalAlpha = 1;
-        ctx.strokeStyle = tok("--game-plat-edge", "#cfe0ff");
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(p.x + 4, p.y + 1);
-        ctx.lineTo(p.x + p.w - 4, p.y + 1);
-        ctx.stroke();
       }
 
-      // rain clouds
-      for (const rc of game.current.rainClouds) {
+      for (const rc of g.rainClouds) {
         ctx.fillStyle = tok("--game-raincloud", "#5a6b86");
         const cx = rc.x + rc.w / 2;
         ctx.beginPath();
@@ -455,7 +532,7 @@ function Index() {
         ctx.globalAlpha = 0.8;
         for (let i = 0; i < 8; i++) {
           const rx = rc.x + 12 + i * ((rc.w - 24) / 7);
-          const off = (game.current.t * 6 + i * 37) % 150;
+          const off = (g.t * 6 + i * 37) % 150;
           ctx.beginPath();
           ctx.moveTo(rx, rc.y + 28 + off);
           ctx.lineTo(rx - 3, rc.y + 40 + off);
@@ -464,7 +541,6 @@ function Index() {
         ctx.globalAlpha = 1;
       }
 
-      // umbrella pickups
       const drawUmbrella = (ux: number, uy: number, sc: number) => {
         ctx.save();
         ctx.translate(ux, uy);
@@ -476,20 +552,14 @@ function Index() {
         ctx.fill();
         ctx.fillStyle = tok("--game-umbrella-dark", "#c9346b");
         ctx.fillRect(-2, 0, 4, 22);
-        ctx.beginPath();
-        ctx.arc(-6, 22, 6, 0, Math.PI);
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = tok("--game-umbrella-dark", "#c9346b");
-        ctx.stroke();
         ctx.restore();
       };
-      for (const u of game.current.umbrellas) {
-        const bob = Math.sin(game.current.t * 0.08 + u.x * 0.02) * 4;
+      for (const u of g.umbrellas) {
+        const bob = Math.sin(g.t * 0.08 + u.x * 0.02) * 4;
         drawUmbrella(u.x, u.y + bob, 0.9);
       }
 
-      // ground springs
-      for (const s of game.current.springs) {
+      for (const s of g.springs) {
         const base = GROUND + 46;
         const squash = s.c > 0 ? 0.45 : 1;
         const hgt = 34 * squash;
@@ -498,35 +568,103 @@ function Index() {
         ctx.strokeStyle = tok("--game-spring", "#d8dee9");
         ctx.lineWidth = 5;
         ctx.beginPath();
-        const coils = 4;
-        for (let i = 0; i <= coils * 12; i++) {
-          const tt = i / (coils * 12);
+        for (let i = 0; i <= 48; i++) {
+          const tt = i / 48;
           const yy = base - 6 - tt * hgt;
-          const xx = s.x + Math.sin(tt * coils * Math.PI * 2) * 15;
+          const xx = s.x + Math.sin(tt * 8 * Math.PI) * 15;
           if (i === 0) ctx.moveTo(xx, yy);
           else ctx.lineTo(xx, yy);
         }
         ctx.stroke();
-        ctx.fillStyle = tok("--game-spring-dark", "#8fa1bd");
-        ctx.fillRect(s.x - 20, base - 6 - hgt - 6, 40, 7);
       }
 
-      // player
-      const y = game.current.y;
+      for (const mushroom of g.mushrooms) {
+        ctx.fillStyle = "#f7e7ce";
+        ctx.fillRect(mushroom.x + 10, mushroom.y + 14, 8, 16);
+        ctx.fillStyle = "#ef4444";
+        ctx.beginPath();
+        ctx.arc(mushroom.x + 14, mushroom.y + 14, 14, Math.PI, 0);
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(mushroom.x + 8, mushroom.y + 8, 3, 0, Math.PI * 2);
+        ctx.arc(mushroom.x + 19, mushroom.y + 10, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      for (const enemy of g.enemies) {
+        if (enemy.kind === "ground") {
+          ctx.fillStyle = "#7c3aed";
+          ctx.beginPath();
+          ctx.roundRect(enemy.x, enemy.y, enemy.w, enemy.h, 8);
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(enemy.x + 7, enemy.y + 9, 5, 5);
+          ctx.fillRect(enemy.x + 22, enemy.y + 9, 5, 5);
+        } else {
+          ctx.fillStyle = "#0ea5e9";
+          ctx.beginPath();
+          ctx.arc(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, 14, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "#bae6fd";
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(enemy.x + 5, enemy.y + 14);
+          ctx.lineTo(enemy.x - 8, enemy.y + 5);
+          ctx.moveTo(enemy.x + enemy.w - 5, enemy.y + 14);
+          ctx.lineTo(enemy.x + enemy.w + 8, enemy.y + 5);
+          ctx.stroke();
+        }
+      }
+
+      for (const projectile of g.projectiles) {
+        if (projectile.weapon === "gun") {
+          ctx.fillStyle = "#fde047";
+          ctx.beginPath();
+          ctx.roundRect(projectile.x, projectile.y, projectile.w, projectile.h, 3);
+          ctx.fill();
+        } else {
+          ctx.strokeStyle = "#f8fafc";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(projectile.x, projectile.y + 3);
+          ctx.lineTo(projectile.x + projectile.w - 5, projectile.y + 3);
+          ctx.stroke();
+          ctx.fillStyle = "#fb923c";
+          ctx.beginPath();
+          ctx.moveTo(projectile.x + projectile.w, projectile.y + 3);
+          ctx.lineTo(projectile.x + projectile.w - 7, projectile.y - 2);
+          ctx.lineTo(projectile.x + projectile.w - 7, projectile.y + 8);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+
+      const y = g.y;
       const img = heroImg.current;
+      const scale = g.giantTimer > 0 ? 1.5 : 1;
       if (img && img.complete && img.naturalWidth) {
-        const ph2 = 76;
+        const ph2 = 76 * scale;
         const pw2 = (img.naturalWidth / img.naturalHeight) * ph2;
-        ctx.drawImage(img, 120 + 19 - pw2 / 2, y + 46 - ph2, pw2, ph2);
+        ctx.drawImage(img, 139 - pw2 / 2, y + 46 - ph2, pw2, ph2);
       } else {
         ctx.fillStyle = tok("--game-player", "#ffd166");
-        ctx.fillRect(120, y, 38, 46);
-      }
-      if (game.current.umbrella > 0) {
-        const blink = game.current.umbrella > 90 || game.current.t % 20 < 12;
-        if (blink) drawUmbrella(139, y - 34, 1.1);
+        ctx.fillRect(120 - (38 * (scale - 1)) / 2, y + 46 - 46 * scale, 38 * scale, 46 * scale);
       }
 
+      if (g.armor > 0) {
+        ctx.strokeStyle = "#67e8f9";
+        ctx.lineWidth = 3;
+        ctx.globalAlpha = 0.8;
+        ctx.beginPath();
+        ctx.ellipse(139, y + 23, 30, 42, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+      if (g.umbrella > 0) {
+        const blink = g.umbrella > 90 || g.t % 20 < 12;
+        if (blink) drawUmbrella(139, y - 34, 1.1);
+      }
 
       raf = requestAnimationFrame(loop);
     };
@@ -535,22 +673,23 @@ function Index() {
   }, []);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background px-4 py-10">
+    <main className="flex min-h-screen flex-col items-center justify-center gap-5 bg-background px-4 py-8">
       <header className="text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-          박현준 러너
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          스페이스바 · 위쪽 화살표 · 화면 터치로 점프하세요
-        </p>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">박현준 러너</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Space/↑ 점프 · X 총 · C 활 · 화면 버튼 지원</p>
       </header>
 
       <div className="flex w-full max-w-[900px] items-center justify-between text-sm font-semibold text-foreground">
         <span>점수 {score} / {GOAL}</span>
-        <span className="rounded-full bg-accent px-3 py-1 text-accent-foreground">
-          {level}단계
-        </span>
+        <span className="rounded-full bg-accent px-3 py-1 text-accent-foreground">{level}단계</span>
         <span className="text-muted-foreground">최고 {best}</span>
+      </div>
+
+      <div className="flex w-full max-w-[900px] flex-wrap items-center justify-center gap-2 text-sm font-semibold text-foreground">
+        <span className="rounded-full bg-muted px-3 py-1">방탄 {armor}</span>
+        <span className="rounded-full bg-muted px-3 py-1">총알 {bullets}</span>
+        <span className="rounded-full bg-muted px-3 py-1">화살 {arrows}</span>
+        {giant && <span className="rounded-full bg-accent px-3 py-1 text-accent-foreground">버섯 파워</span>}
       </div>
 
       <div className="h-2 w-full max-w-[900px] overflow-hidden rounded-full bg-muted">
@@ -580,19 +719,14 @@ function Index() {
 
         {state !== "playing" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-foreground/50 text-center backdrop-blur-[2px]">
-            <img
-              src={heroAsset.url}
-              alt="박현준 선수"
-              className="h-24 w-auto drop-shadow-lg sm:h-32"
-            />
+            <img src={heroAsset.url} alt="박현준 선수" className="h-24 w-auto drop-shadow-lg sm:h-32" />
             <p className="text-lg font-bold text-background">
               {state === "ready"
-                ? "달릴 준비 되셨나요? 1000점이 마지막이에요"
+                ? "달릴 준비 되셨나요? 방탄·총·활을 들고 1000점에 도전하세요"
                 : state === "clear"
                   ? "🏆 완주 성공! 1000점 달성"
                   : `게임 종료! 점수 ${score} · ${level}단계`}
             </p>
-
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -600,16 +734,44 @@ function Index() {
               }}
               className="rounded-md bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              {state === "ready"
-                ? "게임 시작"
-                : state === "clear"
-                  ? "다시 도전"
-                  : "다시 하기"}
+              {state === "ready" ? "게임 시작" : state === "clear" ? "다시 도전" : "다시 하기"}
             </button>
           </div>
         )}
       </div>
 
+      <div className="grid w-full max-w-[900px] grid-cols-3 gap-3">
+        <button
+          type="button"
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            jump();
+          }}
+          className="rounded-lg bg-primary px-4 py-3 font-bold text-primary-foreground"
+        >
+          점프
+        </button>
+        <button
+          type="button"
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            shoot("gun");
+          }}
+          className="rounded-lg bg-accent px-4 py-3 font-bold text-accent-foreground"
+        >
+          총 · {bullets}
+        </button>
+        <button
+          type="button"
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            shoot("bow");
+          }}
+          className="rounded-lg bg-secondary px-4 py-3 font-bold text-secondary-foreground"
+        >
+          활 · {arrows}
+        </button>
+      </div>
     </main>
   );
 }
