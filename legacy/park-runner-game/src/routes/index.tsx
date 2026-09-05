@@ -234,14 +234,6 @@ function Index() {
           }
         }
 
-        const gap2 = Math.max(150, 260 - (lv - 1) * 12);
-        void gap2;
-
-        const gap3 = 0;
-        void gap3;
-
-        const gapObs = 0;
-        void gapObs;
 
         for (const o of g.obstacles) {
           if (px + pw > o.x && px < o.x + o.w && g.y > GROUND - o.h + 6) {
