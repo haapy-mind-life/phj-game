@@ -27,7 +27,10 @@ export const Route = createFileRoute("/")({
 type Obstacle = { x: number; w: number; h: number };
 type Cloud = { x: number; y: number; s: number; sp: number };
 type Bird = { x: number; y: number; sp: number; f: number };
-type Ring = { x: number; y: number; taken: boolean; sp: number };
+type Spring = { x: number; c: number };
+type Plat = { x: number; y: number; w: number };
+type RainCloud = { x: number; y: number; w: number };
+type Umbrella = { x: number; y: number; taken: boolean };
 
 const W = 900;
 const H = 340;
