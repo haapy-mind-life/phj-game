@@ -286,13 +286,7 @@ function Index() {
         g.onPlat = false;
         const feet = g.y + 46;
         for (const p of g.plats) {
-          if (
-            g.vy >= 0 &&
-            px + pw > p.x &&
-            px < p.x + p.w &&
-            prevFeet <= p.y + 4 &&
-            feet >= p.y
-          ) {
+          if (g.vy >= 0 && px + pw > p.x && px < p.x + p.w && prevFeet <= p.y + 4 && feet >= p.y) {
             g.y = p.y - 46;
             g.vy = 0;
             g.onPlat = true;
@@ -474,7 +468,7 @@ function Index() {
 
       ctx.fillStyle = tok("--game-hill", "#1b2b47");
       for (let i = 0; i < 6; i++) {
-        const x = ((i * 220 - (g.t * 1.2) % 1320) + 1320) % 1320 - 200;
+        const x = ((i * 220 - ((g.t * 1.2) % 1320) + 1320) % 1320) - 200;
         ctx.beginPath();
         ctx.arc(x, GROUND + 40, 130, Math.PI, 0);
         ctx.fill();
@@ -675,12 +669,18 @@ function Index() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-5 bg-background px-4 py-8">
       <header className="text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">박현준 러너</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Space/↑ 점프 · X 총 · C 활 · 화면 버튼 지원</p>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+          박현준 러너
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Space/↑ 점프 · X 총 · C 활 · 화면 버튼 지원
+        </p>
       </header>
 
       <div className="flex w-full max-w-[900px] items-center justify-between text-sm font-semibold text-foreground">
-        <span>점수 {score} / {GOAL}</span>
+        <span>
+          점수 {score} / {GOAL}
+        </span>
         <span className="rounded-full bg-accent px-3 py-1 text-accent-foreground">{level}단계</span>
         <span className="text-muted-foreground">최고 {best}</span>
       </div>
@@ -689,7 +689,9 @@ function Index() {
         <span className="rounded-full bg-muted px-3 py-1">방탄 {armor}</span>
         <span className="rounded-full bg-muted px-3 py-1">총알 {bullets}</span>
         <span className="rounded-full bg-muted px-3 py-1">화살 {arrows}</span>
-        {giant && <span className="rounded-full bg-accent px-3 py-1 text-accent-foreground">버섯 파워</span>}
+        {giant && (
+          <span className="rounded-full bg-accent px-3 py-1 text-accent-foreground">버섯 파워</span>
+        )}
       </div>
 
       <div className="h-2 w-full max-w-[900px] overflow-hidden rounded-full bg-muted">
@@ -719,7 +721,11 @@ function Index() {
 
         {state !== "playing" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-foreground/50 text-center backdrop-blur-[2px]">
-            <img src={heroAsset.url} alt="박현준 선수" className="h-24 w-auto drop-shadow-lg sm:h-32" />
+            <img
+              src={heroAsset.url}
+              alt="박현준 선수"
+              className="h-24 w-auto drop-shadow-lg sm:h-32"
+            />
             <p className="text-lg font-bold text-background">
               {state === "ready"
                 ? "달릴 준비 되셨나요? 방탄·총·활을 들고 1000점에 도전하세요"
