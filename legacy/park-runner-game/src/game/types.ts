@@ -1,4 +1,4 @@
-export type WeaponKind = "gun" | "bow";
+export type WeaponKind = "gun" | "bow" | "banana";
 export type EnemyKind = "ground" | "air";
 
 export type Enemy = {
@@ -29,10 +29,21 @@ export type Mushroom = {
   h: number;
 };
 
+export type MysteryBox = {
+  id: number;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  opened: boolean;
+};
+
 export type PlayerCombatState = {
   armor: number;
   bullets: number;
   arrows: number;
+  bananas: number;
+  disguised: boolean;
   giantTimer: number;
 };
 
