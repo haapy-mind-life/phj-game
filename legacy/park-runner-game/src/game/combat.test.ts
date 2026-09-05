@@ -40,9 +40,7 @@ test("bow does not fire with zero arrows", () => {
 });
 
 test("gun kill awards 50 points once", () => {
-  const enemies: Enemy[] = [
-    { id: 1, kind: "ground", x: 200, y: 240, w: 30, h: 40, alive: true },
-  ];
+  const enemies: Enemy[] = [{ id: 1, kind: "ground", x: 200, y: 240, w: 30, h: 40, alive: true }];
   const shots: Projectile[] = [
     { id: 1, weapon: "gun", x: 205, y: 250, vx: 12, w: 12, h: 5 },
     { id: 2, weapon: "gun", x: 206, y: 251, vx: 12, w: 12, h: 5 },
@@ -53,12 +51,8 @@ test("gun kill awards 50 points once", () => {
 });
 
 test("bow kill awards 80 points once", () => {
-  const enemies: Enemy[] = [
-    { id: 1, kind: "air", x: 200, y: 120, w: 34, h: 28, alive: true },
-  ];
-  const shots: Projectile[] = [
-    { id: 1, weapon: "bow", x: 205, y: 125, vx: 9, w: 22, h: 6 },
-  ];
+  const enemies: Enemy[] = [{ id: 1, kind: "air", x: 200, y: 120, w: 34, h: 28, alive: true }];
+  const shots: Projectile[] = [{ id: 1, weapon: "bow", x: 205, y: 125, vx: 9, w: 22, h: 6 }];
   const result = resolveProjectileHits(enemies, shots);
   assert.equal(result.scoreDelta, 80);
   assert.equal(result.enemies.length, 0);
