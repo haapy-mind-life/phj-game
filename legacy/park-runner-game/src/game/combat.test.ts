@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import * as combat from "./combat.ts";
 import {
   activateMushroom,
   fireProjectile,
@@ -80,4 +81,31 @@ test("contact without giant or armor is fatal", () => {
 
 test("mushroom activates giant timer", () => {
   assert.equal(activateMushroom(base).giantTimer, 480);
+});
+
+test("banana shot consumes one banana and creates a banana projectile", () => {
+  const result = fireProjectile({ ...base, bananas: 5 } as PlayerCombatState, "banana" as never, 140, 200);
+  assert.equal((result.state as PlayerCombatState & { bananas: number }).bananas, 4);
+  assert.equal(result.projectile?.weapon, "banana");
+});
+
+test("banana kill awards 100 points", () => {
+  const enemies: Enemy[] = [{ id: 7, kind: "ground", x: 200, y: 240, w: 30, h: 40, alive: true }];
+  const shots = [
+    { id: 9, weapon: "banana", x: 205, y: 250, vx: 11, w: 20, h: 14 },
+  ] as unknown as Projectile[];
+  const result = resolveProjectileHits(enemies, shots);
+  assert.equal(result.scoreDelta, 100);
+  assert.equal(result.enemies.length, 0);
+});
+
+test("permanent disguise defeats enemy contact without consuming armor", () => {
+  const result = resolveEnemyContact({ ...base, disguised: true } as PlayerCombatState);
+  assert.equal(result.survives, true);
+  assert.equal(result.consumeEnemy, true);
+  assert.equal(result.state.armor, 1);
+});
+
+test("combat module exposes mystery box reward behavior", () => {
+  assert.equal(typeof (combat as unknown as { openMysteryBox?: unknown }).openMysteryBox, "function");
 });
