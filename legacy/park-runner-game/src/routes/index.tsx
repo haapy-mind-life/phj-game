@@ -72,6 +72,7 @@ function Index() {
     obstacles: [] as Obstacle[],
     clouds: [] as Cloud[],
     birds: [] as Bird[],
+    rings: [] as Ring[],
     speed: 7,
     t: 0,
     score: 0,
@@ -85,8 +86,10 @@ function Index() {
     g.y = GROUND;
     g.vy = 0;
     g.obstacles = [];
+    g.rings = [];
     g.clouds = makeClouds();
     g.birds = makeBirds();
+
     g.speed = 7;
     g.t = 0;
     g.score = 0;
