@@ -83,13 +83,19 @@ function Index() {
     g.y = GROUND;
     g.vy = 0;
     g.obstacles = [];
+    g.clouds = makeClouds();
+    g.birds = makeBirds();
     g.speed = 7;
     g.t = 0;
     g.score = 0;
+    g.level = 1;
     g.running = true;
     setScore(0);
+    setLevel(1);
+    setLevelFlash(0);
     setState("playing");
   }, []);
+
 
   const jump = useCallback(() => {
     const g = game.current;
