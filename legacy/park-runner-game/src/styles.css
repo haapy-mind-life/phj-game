@@ -97,6 +97,17 @@
   --sidebar-ring: oklch(0.704 0.04 256.788);
   --game-sky-top: #101a2e;
   --game-sky-bottom: #2b4066;
+  --game-sky1-top: #14213d;
+  --game-sky1-bottom: #4b6fa8;
+  --game-sky2-top: #2b2350;
+  --game-sky2-bottom: #a86a8f;
+  --game-sky3-top: #0f3b4d;
+  --game-sky3-bottom: #62b6b0;
+  --game-sky4-top: #3b1f3f;
+  --game-sky4-bottom: #d1795a;
+  --game-orb: #ffe6a7;
+  --game-cloud: #f4f7ff;
+  --game-bird: #e8eefc;
   --game-hill: #1b2b47;
   --game-ground: #0d1524;
   --game-line: #4c6ea6;
@@ -107,6 +118,7 @@
 
   --game-player: #ffd166;
   --game-player-dark: #e0a93c;
+
 }
 
 
