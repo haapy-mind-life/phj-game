@@ -414,25 +414,97 @@ function Index() {
         ctx.fill();
       }
 
-      // boost rings
-      for (const r of game.current.rings) {
-        const pulse = 1 + Math.sin(game.current.t * 0.12 + r.x * 0.02) * 0.06;
-        ctx.save();
-        ctx.strokeStyle = tok("--game-ring-glow", "#ffe9a8");
-        ctx.globalAlpha = 0.35;
-        ctx.lineWidth = 12;
+      // sky cloud paths
+      for (const p of game.current.plats) {
+        ctx.fillStyle = tok("--game-plat", "#ffffff");
+        ctx.globalAlpha = 0.95;
         ctx.beginPath();
-        ctx.arc(r.x, r.y, 24 * pulse, 0, Math.PI * 2);
-        ctx.stroke();
+        const r = 16;
+        ctx.arc(p.x + r, p.y + r, r, Math.PI, Math.PI * 1.5);
+        ctx.arc(p.x + p.w * 0.35, p.y + 2, 20, Math.PI, 0);
+        ctx.arc(p.x + p.w * 0.7, p.y + 4, 16, Math.PI, 0);
+        ctx.lineTo(p.x + p.w, p.y + 22);
+        ctx.lineTo(p.x, p.y + 22);
+        ctx.closePath();
+        ctx.fill();
         ctx.globalAlpha = 1;
-        ctx.strokeStyle = tok("--game-ring", "#ffc300");
-        ctx.lineWidth = 6;
+        ctx.strokeStyle = tok("--game-plat-edge", "#cfe0ff");
+        ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.arc(r.x, r.y, 24 * pulse, 0, Math.PI * 2);
+        ctx.moveTo(p.x + 4, p.y + 1);
+        ctx.lineTo(p.x + p.w - 4, p.y + 1);
         ctx.stroke();
-        ctx.restore();
       }
 
+      // rain clouds
+      for (const rc of game.current.rainClouds) {
+        ctx.fillStyle = tok("--game-raincloud", "#5a6b86");
+        const cx = rc.x + rc.w / 2;
+        ctx.beginPath();
+        ctx.arc(cx - 34, rc.y + 12, 22, 0, Math.PI * 2);
+        ctx.arc(cx, rc.y + 2, 28, 0, Math.PI * 2);
+        ctx.arc(cx + 34, rc.y + 12, 22, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = tok("--game-rain", "#9fd0ff");
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = 0.8;
+        for (let i = 0; i < 8; i++) {
+          const rx = rc.x + 12 + i * ((rc.w - 24) / 7);
+          const off = (game.current.t * 6 + i * 37) % 150;
+          ctx.beginPath();
+          ctx.moveTo(rx, rc.y + 28 + off);
+          ctx.lineTo(rx - 3, rc.y + 40 + off);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      // umbrella pickups
+      const drawUmbrella = (ux: number, uy: number, sc: number) => {
+        ctx.save();
+        ctx.translate(ux, uy);
+        ctx.scale(sc, sc);
+        ctx.fillStyle = tok("--game-umbrella", "#ff5d8f");
+        ctx.beginPath();
+        ctx.arc(0, 0, 20, Math.PI, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = tok("--game-umbrella-dark", "#c9346b");
+        ctx.fillRect(-2, 0, 4, 22);
+        ctx.beginPath();
+        ctx.arc(-6, 22, 6, 0, Math.PI);
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = tok("--game-umbrella-dark", "#c9346b");
+        ctx.stroke();
+        ctx.restore();
+      };
+      for (const u of game.current.umbrellas) {
+        const bob = Math.sin(game.current.t * 0.08 + u.x * 0.02) * 4;
+        drawUmbrella(u.x, u.y + bob, 0.9);
+      }
+
+      // ground springs
+      for (const s of game.current.springs) {
+        const base = GROUND + 46;
+        const squash = s.c > 0 ? 0.45 : 1;
+        const hgt = 34 * squash;
+        ctx.fillStyle = tok("--game-spring-base", "#ff4d6d");
+        ctx.fillRect(s.x - 20, base - 6, 40, 6);
+        ctx.strokeStyle = tok("--game-spring", "#d8dee9");
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        const coils = 4;
+        for (let i = 0; i <= coils * 12; i++) {
+          const tt = i / (coils * 12);
+          const yy = base - 6 - tt * hgt;
+          const xx = s.x + Math.sin(tt * coils * Math.PI * 2) * 15;
+          if (i === 0) ctx.moveTo(xx, yy);
+          else ctx.lineTo(xx, yy);
+        }
+        ctx.stroke();
+        ctx.fillStyle = tok("--game-spring-dark", "#8fa1bd");
+        ctx.fillRect(s.x - 20, base - 6 - hgt - 6, 40, 7);
+      }
 
       // player
       const y = game.current.y;
@@ -444,6 +516,10 @@ function Index() {
       } else {
         ctx.fillStyle = tok("--game-player", "#ffd166");
         ctx.fillRect(120, y, 38, 46);
+      }
+      if (game.current.umbrella > 0) {
+        const blink = game.current.umbrella > 90 || game.current.t % 20 < 12;
+        if (blink) drawUmbrella(139, y - 34, 1.1);
       }
 
 
