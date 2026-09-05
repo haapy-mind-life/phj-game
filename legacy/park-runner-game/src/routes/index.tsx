@@ -25,10 +25,14 @@ export const Route = createFileRoute("/")({
 });
 
 type Obstacle = { x: number; w: number; h: number };
+type Cloud = { x: number; y: number; s: number; sp: number };
+type Bird = { x: number; y: number; sp: number; f: number };
 
 const W = 900;
 const H = 340;
 const GROUND = 280;
+
+const levelOf = (s: number) => Math.min(8, Math.floor(s / 50) + 1);
 
 function Index() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -37,16 +41,22 @@ function Index() {
 
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(0);
+  const [level, setLevel] = useState(1);
+  const [levelFlash, setLevelFlash] = useState(0);
 
   const game = useRef({
     y: GROUND,
     vy: 0,
     obstacles: [] as Obstacle[],
+    clouds: [] as Cloud[],
+    birds: [] as Bird[],
     speed: 7,
     t: 0,
     score: 0,
+    level: 1,
     running: false,
   });
+
 
   const start = useCallback(() => {
     const g = game.current;
