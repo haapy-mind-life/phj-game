@@ -34,11 +34,26 @@ test("stage boundaries stay fixed through the 1000 point clear", () => {
 });
 
 test("tap priority is crane then ladder top then ladder ready then flying then jump", () => {
-  assert.equal(resolveTapAction({ craneActive: true, ladderTop: true, ladderReady: true, flying: true }), "grab");
-  assert.equal(resolveTapAction({ craneActive: false, ladderTop: true, ladderReady: true, flying: true }), "descend");
-  assert.equal(resolveTapAction({ craneActive: false, ladderTop: false, ladderReady: true, flying: true }), "climb");
-  assert.equal(resolveTapAction({ craneActive: false, ladderTop: false, ladderReady: false, flying: true }), "fly");
-  assert.equal(resolveTapAction({ craneActive: false, ladderTop: false, ladderReady: false, flying: false }), "jump");
+  assert.equal(
+    resolveTapAction({ craneActive: true, ladderTop: true, ladderReady: true, flying: true }),
+    "grab",
+  );
+  assert.equal(
+    resolveTapAction({ craneActive: false, ladderTop: true, ladderReady: true, flying: true }),
+    "descend",
+  );
+  assert.equal(
+    resolveTapAction({ craneActive: false, ladderTop: false, ladderReady: true, flying: true }),
+    "climb",
+  );
+  assert.equal(
+    resolveTapAction({ craneActive: false, ladderTop: false, ladderReady: false, flying: true }),
+    "fly",
+  );
+  assert.equal(
+    resolveTapAction({ craneActive: false, ladderTop: false, ladderReady: false, flying: false }),
+    "jump",
+  );
 });
 
 test("automatic weapon priority is banana then bow then gun", () => {
@@ -49,8 +64,14 @@ test("automatic weapon priority is banana then bow then gun", () => {
 });
 
 test("crane rewards mutate only the intended inventory", () => {
-  assert.deepEqual(applyCraneReward(base, 3, "banana"), { state: { ...base, bananas: 5 }, money: 3 });
-  assert.deepEqual(applyCraneReward(base, 3, "armor"), { state: { ...base, armor: 2 }, money: 3 });
+  assert.deepEqual(applyCraneReward(base, 3, "banana"), {
+    state: { ...base, bananas: 5 },
+    money: 3,
+  });
+  assert.deepEqual(applyCraneReward(base, 3, "armor"), {
+    state: { ...base, armor: 2 },
+    money: 3,
+  });
   assert.deepEqual(applyCraneReward(base, 3, "coins"), { state: base, money: 8 });
   assert.deepEqual(applyCraneReward(base, 3, "treasure"), { state: base, money: 13 });
 });
