@@ -94,7 +94,12 @@ function Index() {
     g.y = GROUND;
     g.vy = 0;
     g.obstacles = [];
-    g.rings = [];
+    g.springs = [];
+    g.plats = [];
+    g.rainClouds = [];
+    g.umbrellas = [];
+    g.umbrella = 0;
+    g.onPlat = false;
     g.clouds = makeClouds();
     g.birds = makeBirds();
 
