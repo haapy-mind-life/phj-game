@@ -231,9 +231,15 @@ function Index() {
         <canvas ref={canvasRef} width={W} height={H} className="block w-full" />
         {state !== "playing" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-foreground/50 text-center backdrop-blur-[2px]">
+            <img
+              src={heroAsset.url}
+              alt="박현준 선수"
+              className="h-24 w-auto drop-shadow-lg sm:h-32"
+            />
             <p className="text-lg font-bold text-background">
               {state === "ready" ? "달릴 준비 되셨나요?" : `게임 종료! 점수 ${score}`}
             </p>
+
             <button
               onClick={(e) => {
                 e.stopPropagation();
