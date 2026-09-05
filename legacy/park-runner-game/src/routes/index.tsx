@@ -32,7 +32,9 @@ const GROUND = 280;
 
 function Index() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const heroImg = useRef<HTMLImageElement | null>(null);
   const [state, setState] = useState<"ready" | "playing" | "over">("ready");
+
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(0);
 
