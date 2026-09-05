@@ -7,7 +7,7 @@ on:
     branches: ["main"]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   verify:
@@ -21,6 +21,17 @@ jobs:
         with:
           bun-version: latest
       - run: bun install --frozen-lockfile
+      - name: Format feature files
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feat/staged-single-tap-adventure'
+        run: |
+          npx prettier --write src/routes/index.tsx src/game/progression.ts src/game/progression.test.ts src/game/combat.ts src/game/combat.test.ts src/game/types.ts
+          if ! git diff --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add src/routes/index.tsx src/game/progression.ts src/game/progression.test.ts src/game/combat.ts src/game/combat.test.ts src/game/types.ts
+            git commit -m "style: format staged adventure [skip ci]"
+            git push
+          fi
       - run: npm test
       - run: npm run lint
       - run: npm run build
