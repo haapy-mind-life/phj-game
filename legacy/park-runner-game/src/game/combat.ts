@@ -1,10 +1,4 @@
-import type {
-  CombatHitResult,
-  Enemy,
-  PlayerCombatState,
-  Projectile,
-  WeaponKind,
-} from "./types.ts";
+import type { CombatHitResult, Enemy, PlayerCombatState, Projectile, WeaponKind } from "./types.ts";
 
 export const GUN_SCORE = 50;
 export const BOW_SCORE = 80;
@@ -13,11 +7,7 @@ export const GIANT_FRAMES = 480;
 const overlaps = (
   a: { x: number; y: number; w: number; h: number },
   b: { x: number; y: number; w: number; h: number },
-) =>
-  a.x < b.x + b.w &&
-  a.x + a.w > b.x &&
-  a.y < b.y + b.h &&
-  a.y + a.h > b.y;
+) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 
 export function fireProjectile(
   state: PlayerCombatState,
@@ -53,8 +43,7 @@ export function resolveProjectileHits(
 
   for (const projectile of projectiles) {
     const target = enemies.find(
-      (enemy) =>
-        enemy.alive && !killed.has(enemy.id) && overlaps(projectile, enemy),
+      (enemy) => enemy.alive && !killed.has(enemy.id) && overlaps(projectile, enemy),
     );
     if (!target) continue;
     killed.add(target.id);
@@ -64,9 +53,7 @@ export function resolveProjectileHits(
 
   return {
     enemies: enemies.filter((enemy) => enemy.alive && !killed.has(enemy.id)),
-    projectiles: projectiles.filter(
-      (projectile) => !consumed.has(projectile.id),
-    ),
+    projectiles: projectiles.filter((projectile) => !consumed.has(projectile.id)),
     scoreDelta,
   };
 }
@@ -89,8 +76,6 @@ export function resolveEnemyContact(state: PlayerCombatState): {
   return { state: { ...state }, survives: false, consumeEnemy: false };
 }
 
-export function activateMushroom(
-  state: PlayerCombatState,
-): PlayerCombatState {
+export function activateMushroom(state: PlayerCombatState): PlayerCombatState {
   return { ...state, giantTimer: GIANT_FRAMES };
 }
