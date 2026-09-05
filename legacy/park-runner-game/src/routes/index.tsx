@@ -80,6 +80,14 @@ function Index() {
   }, []);
 
   useEffect(() => {
+    const img = new Image();
+    img.src = heroAsset.url;
+    heroImg.current = img;
+  }, []);
+
+
+
+  useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.code === "Space" || e.code === "ArrowUp") {
         e.preventDefault();
