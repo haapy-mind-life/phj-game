@@ -349,8 +349,18 @@ function Index() {
       </header>
 
       <div className="flex w-full max-w-[900px] items-center justify-between text-sm font-semibold text-foreground">
-        <span>점수 {score}</span>
+        <span>점수 {score} / {GOAL}</span>
+        <span className="rounded-full bg-accent px-3 py-1 text-accent-foreground">
+          {level}단계
+        </span>
         <span className="text-muted-foreground">최고 {best}</span>
+      </div>
+
+      <div className="h-2 w-full max-w-[900px] overflow-hidden rounded-full bg-muted">
+        <div
+          className="h-full rounded-full bg-primary transition-[width] duration-200"
+          style={{ width: `${Math.min(100, (score / GOAL) * 100)}%` }}
+        />
       </div>
 
       <div
@@ -362,6 +372,15 @@ function Index() {
         onKeyDown={() => {}}
       >
         <canvas ref={canvasRef} width={W} height={H} className="block w-full" />
+
+        {levelFlash > 0 && state === "playing" && (
+          <div className="pointer-events-none absolute inset-x-0 top-10 text-center">
+            <span className="rounded-full bg-primary/90 px-5 py-2 text-lg font-bold text-primary-foreground shadow-lg">
+              {levelFlash}단계 시작!
+            </span>
+          </div>
+        )}
+
         {state !== "playing" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-foreground/50 text-center backdrop-blur-[2px]">
             <img
@@ -370,7 +389,11 @@ function Index() {
               className="h-24 w-auto drop-shadow-lg sm:h-32"
             />
             <p className="text-lg font-bold text-background">
-              {state === "ready" ? "달릴 준비 되셨나요?" : `게임 종료! 점수 ${score}`}
+              {state === "ready"
+                ? "달릴 준비 되셨나요? 1000점이 마지막이에요"
+                : state === "clear"
+                  ? "🏆 완주 성공! 1000점 달성"
+                  : `게임 종료! 점수 ${score} · ${level}단계`}
             </p>
 
             <button
@@ -380,11 +403,16 @@ function Index() {
               }}
               className="rounded-md bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              {state === "ready" ? "게임 시작" : "다시 하기"}
+              {state === "ready"
+                ? "게임 시작"
+                : state === "clear"
+                  ? "다시 도전"
+                  : "다시 하기"}
             </button>
           </div>
         )}
       </div>
+
     </main>
   );
 }
