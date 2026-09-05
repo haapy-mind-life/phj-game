@@ -38,12 +38,38 @@ export type MysteryBox = {
   opened: boolean;
 };
 
+export type Ladder = {
+  id: number;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  used: boolean;
+};
+
+export type FlightItem = {
+  id: number;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+};
+
+export type CraneEncounter = {
+  id: number;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+};
+
 export type PlayerCombatState = {
   armor: number;
   bullets: number;
   arrows: number;
   bananas: number;
   disguised: boolean;
+  flying: boolean;
   giantTimer: number;
 };
 

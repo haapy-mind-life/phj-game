@@ -2,7 +2,7 @@ name: Combat CI
 
 on:
   push:
-    branches: ["feat/combat-powerups", "feat/disguise-banana"]
+    branches: ["feat/combat-powerups", "feat/disguise-banana", "feat/staged-single-tap-adventure", "main"]
   pull_request:
     branches: ["main"]
 

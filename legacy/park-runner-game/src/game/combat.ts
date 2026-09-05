@@ -78,7 +78,7 @@ export function resolveEnemyContact(state: PlayerCombatState): {
   survives: boolean;
   consumeEnemy: boolean;
 } {
-  if (state.disguised || state.giantTimer > 0) {
+  if (state.disguised || state.flying || state.giantTimer > 0) {
     return { state: { ...state }, survives: true, consumeEnemy: true };
   }
   if (state.armor > 0) {
