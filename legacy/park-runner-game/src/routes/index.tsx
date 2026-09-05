@@ -175,16 +175,16 @@ function Index() {
 
       // player
       const y = game.current.y;
-      ctx.fillStyle = tok("--game-player", "#ffd166");
-      ctx.fillRect(120, y - 46 + 46, 38, 46);
-      ctx.fillStyle = tok("--game-player-dark", "#e0a93c");
-      const legPhase = Math.sin(game.current.t / 3) * 8;
-      if (y >= GROUND) {
-        ctx.fillRect(122, GROUND + 40, 14, 8 + legPhase * 0.2);
-        ctx.fillRect(142, GROUND + 40, 14, 8 - legPhase * 0.2);
+      const img = heroImg.current;
+      if (img && img.complete && img.naturalWidth) {
+        const ph2 = 76;
+        const pw2 = (img.naturalWidth / img.naturalHeight) * ph2;
+        ctx.drawImage(img, 120 + 19 - pw2 / 2, y + 46 - ph2, pw2, ph2);
+      } else {
+        ctx.fillStyle = tok("--game-player", "#ffd166");
+        ctx.fillRect(120, y, 38, 46);
       }
-      ctx.fillStyle = tok("--game-sky-top", "#101a2e");
-      ctx.fillRect(146, y + 10, 6, 6);
+
 
       raf = requestAnimationFrame(loop);
     };
