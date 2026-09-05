@@ -27,13 +27,15 @@ export const Route = createFileRoute("/")({
 type Obstacle = { x: number; w: number; h: number };
 type Cloud = { x: number; y: number; s: number; sp: number };
 type Bird = { x: number; y: number; sp: number; f: number };
+type Ring = { x: number; y: number; taken: boolean; sp: number };
 
 const W = 900;
 const H = 340;
 const GROUND = 280;
 
 const GOAL = 1000;
-const levelOf = (s: number) => Math.min(20, Math.floor(s / 50) + 1);
+const levelOf = (s: number) => Math.min(10, Math.floor(s / 100) + 1);
+
 
 const makeClouds = (): Cloud[] =>
   Array.from({ length: 6 }, (_, i) => ({
@@ -70,6 +72,7 @@ function Index() {
     obstacles: [] as Obstacle[],
     clouds: [] as Cloud[],
     birds: [] as Bird[],
+    rings: [] as Ring[],
     speed: 7,
     t: 0,
     score: 0,
@@ -83,8 +86,10 @@ function Index() {
     g.y = GROUND;
     g.vy = 0;
     g.obstacles = [];
+    g.rings = [];
     g.clouds = makeClouds();
     g.birds = makeBirds();
+
     g.speed = 7;
     g.t = 0;
     g.score = 0;
@@ -205,6 +210,31 @@ function Index() {
             saveBest(Math.floor(g.score));
           }
         }
+
+        // rings: catch one mid-air for a huge boost
+        const lastRing = g.rings[g.rings.length - 1];
+        if (
+          (!lastRing || lastRing.x < W - 420) &&
+          Math.random() < 0.012
+        ) {
+          g.rings.push({
+            x: W + 60,
+            y: GROUND - 40 - Math.random() * 70,
+            taken: false,
+            sp: 0,
+          });
+        }
+        g.rings.forEach((r) => (r.x -= g.speed));
+        g.rings = g.rings.filter((r) => r.x > -60 && !r.taken);
+        for (const r of g.rings) {
+          const cx = px + pw / 2;
+          const cy = g.y + 23;
+          if (Math.hypot(cx - r.x, cy - r.y) < 34) {
+            r.taken = true;
+            g.vy = -24;
+          }
+        }
+
         g.score += g.speed / 12;
         setScore(Math.floor(g.score));
 
@@ -315,6 +345,25 @@ function Index() {
         ctx.lineTo(cx - halfTop, sy + o.h * 0.16);
         ctx.closePath();
         ctx.fill();
+      }
+
+      // boost rings
+      for (const r of game.current.rings) {
+        const pulse = 1 + Math.sin(game.current.t * 0.12 + r.x * 0.02) * 0.06;
+        ctx.save();
+        ctx.strokeStyle = tok("--game-ring-glow", "#ffe9a8");
+        ctx.globalAlpha = 0.35;
+        ctx.lineWidth = 12;
+        ctx.beginPath();
+        ctx.arc(r.x, r.y, 24 * pulse, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = tok("--game-ring", "#ffc300");
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.arc(r.x, r.y, 24 * pulse, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
       }
 
 
