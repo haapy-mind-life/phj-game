@@ -2,6 +2,7 @@ import type { CombatHitResult, Enemy, PlayerCombatState, Projectile, WeaponKind 
 
 export const GUN_SCORE = 50;
 export const BOW_SCORE = 80;
+export const BANANA_SCORE = 100;
 export const GIANT_FRAMES = 480;
 
 const overlaps = (
@@ -25,11 +26,20 @@ export function fireProjectile(
     };
   }
 
-  if (next.arrows <= 0) return { state: next, projectile: null };
-  next.arrows -= 1;
+  if (weapon === "bow") {
+    if (next.arrows <= 0) return { state: next, projectile: null };
+    next.arrows -= 1;
+    return {
+      state: next,
+      projectile: { id: 0, weapon, x, y, vx: 10, w: 22, h: 6 },
+    };
+  }
+
+  if (next.bananas <= 0) return { state: next, projectile: null };
+  next.bananas -= 1;
   return {
     state: next,
-    projectile: { id: 0, weapon, x, y, vx: 10, w: 22, h: 6 },
+    projectile: { id: 0, weapon, x, y, vx: 11, w: 20, h: 14 },
   };
 }
 
@@ -48,7 +58,12 @@ export function resolveProjectileHits(
     if (!target) continue;
     killed.add(target.id);
     consumed.add(projectile.id);
-    scoreDelta += projectile.weapon === "gun" ? GUN_SCORE : BOW_SCORE;
+    scoreDelta +=
+      projectile.weapon === "gun"
+        ? GUN_SCORE
+        : projectile.weapon === "bow"
+          ? BOW_SCORE
+          : BANANA_SCORE;
   }
 
   return {
@@ -63,7 +78,7 @@ export function resolveEnemyContact(state: PlayerCombatState): {
   survives: boolean;
   consumeEnemy: boolean;
 } {
-  if (state.giantTimer > 0) {
+  if (state.disguised || state.giantTimer > 0) {
     return { state: { ...state }, survives: true, consumeEnemy: true };
   }
   if (state.armor > 0) {
@@ -78,4 +93,12 @@ export function resolveEnemyContact(state: PlayerCombatState): {
 
 export function activateMushroom(state: PlayerCombatState): PlayerCombatState {
   return { ...state, giantTimer: GIANT_FRAMES };
+}
+
+export function openMysteryBox(state: PlayerCombatState): PlayerCombatState {
+  return {
+    ...state,
+    disguised: true,
+    bananas: state.bananas + 5,
+  };
 }
