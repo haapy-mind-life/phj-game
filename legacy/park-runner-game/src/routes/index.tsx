@@ -347,6 +347,25 @@ function Index() {
         ctx.fill();
       }
 
+      // boost rings
+      for (const r of game.current.rings) {
+        const pulse = 1 + Math.sin(game.current.t * 0.12 + r.x * 0.02) * 0.06;
+        ctx.save();
+        ctx.strokeStyle = tok("--game-ring-glow", "#ffe9a8");
+        ctx.globalAlpha = 0.35;
+        ctx.lineWidth = 12;
+        ctx.beginPath();
+        ctx.arc(r.x, r.y, 24 * pulse, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = tok("--game-ring", "#ffc300");
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.arc(r.x, r.y, 24 * pulse, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+
 
       // player
       const y = game.current.y;
