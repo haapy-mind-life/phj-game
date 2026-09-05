@@ -27,13 +27,15 @@ export const Route = createFileRoute("/")({
 type Obstacle = { x: number; w: number; h: number };
 type Cloud = { x: number; y: number; s: number; sp: number };
 type Bird = { x: number; y: number; sp: number; f: number };
+type Ring = { x: number; y: number; taken: boolean; sp: number };
 
 const W = 900;
 const H = 340;
 const GROUND = 280;
 
 const GOAL = 1000;
-const levelOf = (s: number) => Math.min(20, Math.floor(s / 50) + 1);
+const levelOf = (s: number) => Math.min(10, Math.floor(s / 100) + 1);
+
 
 const makeClouds = (): Cloud[] =>
   Array.from({ length: 6 }, (_, i) => ({
