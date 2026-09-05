@@ -210,6 +210,31 @@ function Index() {
             saveBest(Math.floor(g.score));
           }
         }
+
+        // rings: catch one mid-air for a huge boost
+        const lastRing = g.rings[g.rings.length - 1];
+        if (
+          (!lastRing || lastRing.x < W - 420) &&
+          Math.random() < 0.012
+        ) {
+          g.rings.push({
+            x: W + 60,
+            y: GROUND - 40 - Math.random() * 70,
+            taken: false,
+            sp: 0,
+          });
+        }
+        g.rings.forEach((r) => (r.x -= g.speed));
+        g.rings = g.rings.filter((r) => r.x > -60 && !r.taken);
+        for (const r of g.rings) {
+          const cx = px + pw / 2;
+          const cy = g.y + 23;
+          if (Math.hypot(cx - r.x, cy - r.y) < 34) {
+            r.taken = true;
+            g.vy = -24;
+          }
+        }
+
         g.score += g.speed / 12;
         setScore(Math.floor(g.score));
 
