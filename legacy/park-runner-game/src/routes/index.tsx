@@ -32,12 +32,32 @@ const W = 900;
 const H = 340;
 const GROUND = 280;
 
-const levelOf = (s: number) => Math.min(8, Math.floor(s / 50) + 1);
+const GOAL = 1000;
+const levelOf = (s: number) => Math.min(20, Math.floor(s / 50) + 1);
+
+const makeClouds = (): Cloud[] =>
+  Array.from({ length: 6 }, (_, i) => ({
+    x: (i * 170 + Math.random() * 80) % W,
+    y: 30 + Math.random() * 90,
+    s: 0.6 + Math.random() * 0.8,
+    sp: 0.25 + Math.random() * 0.5,
+  }));
+
+const makeBirds = (): Bird[] =>
+  Array.from({ length: 3 }, (_, i) => ({
+    x: i * 320 + Math.random() * 200,
+    y: 40 + Math.random() * 90,
+    sp: 1.1 + Math.random() * 1.1,
+    f: Math.random() * 10,
+  }));
 
 function Index() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const heroImg = useRef<HTMLImageElement | null>(null);
-  const [state, setState] = useState<"ready" | "playing" | "over">("ready");
+  const [state, setState] = useState<"ready" | "playing" | "over" | "clear">(
+    "ready",
+  );
+
 
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(0);
@@ -63,13 +83,19 @@ function Index() {
     g.y = GROUND;
     g.vy = 0;
     g.obstacles = [];
+    g.clouds = makeClouds();
+    g.birds = makeBirds();
     g.speed = 7;
     g.t = 0;
     g.score = 0;
+    g.level = 1;
     g.running = true;
     setScore(0);
+    setLevel(1);
+    setLevelFlash(0);
     setState("playing");
   }, []);
+
 
   const jump = useCallback(() => {
     const g = game.current;
@@ -118,19 +144,53 @@ function Index() {
     const css = getComputedStyle(document.documentElement);
     const tok = (n: string, f: string) => css.getPropertyValue(n).trim() || f;
 
+    const saveBest = (s: number) =>
+      setBest((b) => {
+        const nb = Math.max(b, s);
+        try {
+          localStorage.setItem("runner-best", String(nb));
+        } catch {
+          /* ignore */
+        }
+        return nb;
+      });
+
     const loop = () => {
       const g = game.current;
+      if (g.clouds.length === 0) g.clouds = makeClouds();
+      if (g.birds.length === 0) g.birds = makeBirds();
+
+      // ambient life keeps moving even on menus
+      for (const c of g.clouds) {
+        c.x -= c.sp;
+        if (c.x < -160) {
+          c.x = W + 60;
+          c.y = 30 + Math.random() * 90;
+        }
+      }
+      for (const b of g.birds) {
+        b.x -= b.sp;
+        b.f += 0.16;
+        if (b.x < -60) {
+          b.x = W + 60 + Math.random() * 300;
+          b.y = 40 + Math.random() * 90;
+        }
+      }
+
       if (g.running) {
         g.t += 1;
-        g.speed = 7 + g.t / 700;
+        const lv = g.level;
+        g.speed = 7 + g.t / 700 + (lv - 1) * 0.7;
         g.vy += 0.78;
         g.y = Math.min(GROUND, g.y + g.vy);
 
+        const gap = Math.max(150, 260 - (lv - 1) * 12);
         if (
           g.obstacles.length === 0 ||
-          g.obstacles[g.obstacles.length - 1]!.x < W - 260 - Math.random() * 240
+          g.obstacles[g.obstacles.length - 1]!.x <
+            W - gap - Math.random() * Math.max(90, 240 - (lv - 1) * 14)
         ) {
-          const h = 32 + Math.random() * 46;
+          const h = 32 + Math.random() * (46 + (lv - 1) * 3);
           g.obstacles.push({ x: W + 40, w: 20 + Math.random() * 22, h });
         }
         g.obstacles.forEach((o) => (o.x -= g.speed));
@@ -138,38 +198,76 @@ function Index() {
 
         const px = 120;
         const pw = 38;
-        const ph = 46;
         for (const o of g.obstacles) {
-          if (
-            px + pw > o.x &&
-            px < o.x + o.w &&
-            g.y > GROUND - o.h + 6
-          ) {
+          if (px + pw > o.x && px < o.x + o.w && g.y > GROUND - o.h + 6) {
             g.running = false;
             setState("over");
-            const s = Math.floor(g.score);
-            setBest((b) => {
-              const nb = Math.max(b, s);
-              try {
-                localStorage.setItem("runner-best", String(nb));
-              } catch {
-                /* ignore */
-              }
-              return nb;
-            });
+            saveBest(Math.floor(g.score));
           }
         }
         g.score += g.speed / 12;
         setScore(Math.floor(g.score));
+
+        const nl = levelOf(g.score);
+        if (nl !== g.level) {
+          g.level = nl;
+          setLevel(nl);
+          setLevelFlash(nl);
+          window.setTimeout(() => setLevelFlash(0), 1200);
+        }
+
+        if (g.score >= GOAL) {
+          g.score = GOAL;
+          g.running = false;
+          setScore(GOAL);
+          setState("clear");
+          saveBest(GOAL);
+        }
       }
 
+
       // draw
+      const pal = ((game.current.level - 1) % 4) + 1;
       ctx.clearRect(0, 0, W, H);
       const sky = ctx.createLinearGradient(0, 0, 0, H);
-      sky.addColorStop(0, tok("--game-sky-top", "#101a2e"));
-      sky.addColorStop(1, tok("--game-sky-bottom", "#233657"));
+      sky.addColorStop(0, tok(`--game-sky${pal}-top`, "#101a2e"));
+      sky.addColorStop(1, tok(`--game-sky${pal}-bottom`, "#233657"));
       ctx.fillStyle = sky;
       ctx.fillRect(0, 0, W, H);
+
+      // sun / moon
+      ctx.fillStyle = tok("--game-orb", "#ffe6a7");
+      ctx.globalAlpha = 0.85;
+      ctx.beginPath();
+      ctx.arc(760, 72, 30, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // clouds
+      ctx.fillStyle = tok("--game-cloud", "#f4f7ff");
+      for (const c of game.current.clouds) {
+        ctx.globalAlpha = 0.75;
+        const r = 20 * c.s;
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, r, 0, Math.PI * 2);
+        ctx.arc(c.x + r * 0.9, c.y + r * 0.15, r * 0.8, 0, Math.PI * 2);
+        ctx.arc(c.x - r * 0.9, c.y + r * 0.2, r * 0.7, 0, Math.PI * 2);
+        ctx.arc(c.x + r * 0.1, c.y - r * 0.55, r * 0.65, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
+      // birds
+      ctx.strokeStyle = tok("--game-bird", "#e8eefc");
+      ctx.lineWidth = 2.2;
+      for (const b of game.current.birds) {
+        const flap = Math.sin(b.f) * 5;
+        ctx.beginPath();
+        ctx.moveTo(b.x - 10, b.y);
+        ctx.quadraticCurveTo(b.x - 5, b.y - 5 - flap, b.x, b.y);
+        ctx.quadraticCurveTo(b.x + 5, b.y - 5 - flap, b.x + 10, b.y);
+        ctx.stroke();
+      }
 
       // parallax hills
       ctx.fillStyle = tok("--game-hill", "#1b2b47");
@@ -179,6 +277,7 @@ function Index() {
         ctx.arc(x, GROUND + 40, 130, Math.PI, 0);
         ctx.fill();
       }
+
 
       ctx.fillStyle = tok("--game-ground", "#0d1524");
       ctx.fillRect(0, GROUND + 46, W, H - GROUND);
@@ -250,8 +349,18 @@ function Index() {
       </header>
 
       <div className="flex w-full max-w-[900px] items-center justify-between text-sm font-semibold text-foreground">
-        <span>점수 {score}</span>
+        <span>점수 {score} / {GOAL}</span>
+        <span className="rounded-full bg-accent px-3 py-1 text-accent-foreground">
+          {level}단계
+        </span>
         <span className="text-muted-foreground">최고 {best}</span>
+      </div>
+
+      <div className="h-2 w-full max-w-[900px] overflow-hidden rounded-full bg-muted">
+        <div
+          className="h-full rounded-full bg-primary transition-[width] duration-200"
+          style={{ width: `${Math.min(100, (score / GOAL) * 100)}%` }}
+        />
       </div>
 
       <div
@@ -263,6 +372,15 @@ function Index() {
         onKeyDown={() => {}}
       >
         <canvas ref={canvasRef} width={W} height={H} className="block w-full" />
+
+        {levelFlash > 0 && state === "playing" && (
+          <div className="pointer-events-none absolute inset-x-0 top-10 text-center">
+            <span className="rounded-full bg-primary/90 px-5 py-2 text-lg font-bold text-primary-foreground shadow-lg">
+              {levelFlash}단계 시작!
+            </span>
+          </div>
+        )}
+
         {state !== "playing" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-foreground/50 text-center backdrop-blur-[2px]">
             <img
@@ -271,7 +389,11 @@ function Index() {
               className="h-24 w-auto drop-shadow-lg sm:h-32"
             />
             <p className="text-lg font-bold text-background">
-              {state === "ready" ? "달릴 준비 되셨나요?" : `게임 종료! 점수 ${score}`}
+              {state === "ready"
+                ? "달릴 준비 되셨나요? 1000점이 마지막이에요"
+                : state === "clear"
+                  ? "🏆 완주 성공! 1000점 달성"
+                  : `게임 종료! 점수 ${score} · ${level}단계`}
             </p>
 
             <button
@@ -281,11 +403,16 @@ function Index() {
               }}
               className="rounded-md bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              {state === "ready" ? "게임 시작" : "다시 하기"}
+              {state === "ready"
+                ? "게임 시작"
+                : state === "clear"
+                  ? "다시 도전"
+                  : "다시 하기"}
             </button>
           </div>
         )}
       </div>
+
     </main>
   );
 }
