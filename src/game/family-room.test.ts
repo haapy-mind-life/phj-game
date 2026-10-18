@@ -53,7 +53,8 @@ test("sending is throttled, skips unchanged state, and always sends a new emote"
   assert.equal(shouldSend(null, msg(), 0, 0), true);
   assert.equal(shouldSend(msg(), msg({ x: 120 }), 100, 0), false);
   assert.equal(shouldSend(msg(), msg({ x: 120 }), 250, 0), true);
-  assert.equal(shouldSend(msg(), msg(), 5000, 0), false);
+  assert.equal(shouldSend(msg(), msg(), 1500, 0), false);
+  assert.equal(shouldSend(msg(), msg(), 2000, 0), true);
   assert.equal(shouldSend(msg(), msg({ emote: "👋" }), 10, 0), true);
   assert.equal(shouldSend(msg({ emote: "👋" }), msg({ emote: "👋" }), 10, 0), false);
 });
@@ -80,4 +81,13 @@ test("remote draw position glides over one interval and filters by region", () =
   assert.deepEqual(drawPosition(r["abcd-1"]!, 5000), { x: 100, y: 50 });
   assert.equal(visibleRemotes(r, "village").length, 0);
   assert.equal(visibleRemotes(r, "mansion").length, 1);
+});
+
+test("presence admits only the first four people by join time", async () => {
+  const { admittedByPresence } = await import("./family-room.ts");
+  const m = [1, 2, 3, 4, 5].map((n) => ({ id: `p-${n}`, joinedAt: n * 10 }));
+  assert.equal(admittedByPresence(m, "p-4"), true);
+  assert.equal(admittedByPresence(m, "p-5"), false);
+  assert.equal(admittedByPresence(m.slice(0, 3), "p-3"), true);
+  assert.equal(admittedByPresence(m, "ghost"), false);
 });

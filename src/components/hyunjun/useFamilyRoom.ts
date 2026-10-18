@@ -14,6 +14,7 @@ import {
   type RemoteMap,
 } from "@/game/family-room";
 import { createBroadcastTransport, type FamilyTransport } from "@/game/family-transport";
+import { createRealtimeTransport } from "@/game/realtime-transport";
 import type { Outfit } from "@/lib/world-model";
 
 type Self = {
@@ -38,6 +39,9 @@ export function useFamilyRoom(self: Self) {
   const [remotes, setRemotes] = useState<RemoteMap>({});
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
+  const [mode, setMode] = useState<"online" | "local" | null>(null);
+  const [people, setPeople] = useState(0);
+  const attempt = useRef(0);
   const id = useRef(newId());
   const latest = useRef(self);
   latest.current = self;
@@ -51,7 +55,10 @@ export function useFamilyRoom(self: Self) {
     transport.current?.close();
     transport.current = null;
     last.current = { msg: null, at: 0 };
+    attempt.current++;
     setCode(null);
+    setMode(null);
+    setPeople(0);
     setRemotes({});
   }, []);
   const join = useCallback(
@@ -62,18 +69,37 @@ export function useFamilyRoom(self: Self) {
         return false;
       }
       leave();
-      const t = createBroadcastTransport(clean);
-      if (!t) {
-        setError("이 기기에서는 가족방을 쓸 수 없어요.");
-        return false;
-      }
-      t.onMessage((raw) => {
-        const msg = parsePlayerMessage(raw);
-        if (msg) setRemotes((r) => applyMessage(r, msg, id.current, Date.now()));
-      });
-      transport.current = t;
+      const my = attempt.current;
       setError(null);
-      setCode(clean);
+      void (async () => {
+        let t: FamilyTransport | null = await createRealtimeTransport(clean, id.current, {
+          onPeople: setPeople,
+          onFull: () => {
+            leave();
+            setError("방이 꽉 찼어요. 4명까지 들어올 수 있어요.");
+          },
+        });
+        let m: "online" | "local" = "online";
+        if (!t) {
+          t = createBroadcastTransport(clean);
+          m = "local";
+        }
+        if (my !== attempt.current) {
+          t?.close();
+          return;
+        }
+        if (!t) {
+          setError("이 기기에서는 가족방을 쓸 수 없어요.");
+          return;
+        }
+        t.onMessage((raw) => {
+          const msg = parsePlayerMessage(raw);
+          if (msg) setRemotes((r) => applyMessage(r, msg, id.current, Date.now()));
+        });
+        transport.current = t;
+        setMode(m);
+        setCode(clean);
+      })();
       return true;
     },
     [leave],
@@ -112,5 +138,5 @@ export function useFamilyRoom(self: Self) {
   }, [code]);
   useEffect(() => leave, [leave]);
 
-  return { code, nick, setNick, remotes, error, create, join, leave, sendEmote, tick };
+  return { code, mode, people, nick, setNick, remotes, error, create, join, leave, sendEmote, tick };
 }

@@ -39,7 +39,7 @@ export function RemotePlayers({ room, region }: { room: Room; region: FamilyRegi
 export function FamilyRoomPanel({ room }: { room: Room }) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
-  const count = Object.keys(room.remotes).length + (room.code ? 1 : 0);
+  const count = Math.max(room.people, Object.keys(room.remotes).length + (room.code ? 1 : 0));
   return (
     <>
       <button className="hj-family-toggle" onClick={() => setOpen((v) => !v)}>
@@ -85,7 +85,11 @@ export function FamilyRoomPanel({ room }: { room: Room }) {
             </>
           )}
           {room.error && <p role="alert">{room.error}</p>}
-          <small>지금은 같은 기기의 창끼리만 만나요. 다른 기기 연결은 다음 단계예요.</small>
+          <small>
+            {room.mode === "local"
+              ? "인터넷 연결이 안 돼서 같은 기기의 창끼리만 만나요."
+              : "같은 방 코드를 넣으면 다른 휴대폰·태블릿에서도 만나요 (최대 4명)."}
+          </small>
         </div>
       )}
     </>
