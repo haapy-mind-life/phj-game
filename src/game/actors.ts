@@ -54,7 +54,7 @@ export const portalHasPriority = (p: Point, scene: ActorScene) =>
 
 export function homeActorPosition(id: string, guests: string[]): Point {
   const slots = [
-    { x: 720, y: 450 },
+    { x: 850, y: 650 },
     { x: 900, y: 450 },
     { x: 720, y: 630 },
     { x: 900, y: 630 },

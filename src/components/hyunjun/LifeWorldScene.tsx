@@ -1,7 +1,8 @@
-import { useReducedMotion } from "./useReducedMotion";
+import { PlayerAvatar } from "./PlayerAvatar";
+import { HomeFurnishings } from "./HomeFurnishings";
+import type { FurnitureId } from "@/lib/world-model";
 import { FriendArt } from "./FriendArt";
 import { RobotArt } from "./RobotArt";
-import { characterUrl } from "@/game/character-art";
 import type { Outfit } from "@/lib/world-model";
 import type { Point } from "@/game/adventure";
 import {
@@ -26,6 +27,7 @@ export function LifeWorldScene({
   submarine,
   explored,
   houseTier,
+  room,
   decor,
   candy,
   partyActive,
@@ -40,12 +42,12 @@ export function LifeWorldScene({
   submarine: boolean;
   explored: string[];
   houseTier: number;
+  room: (FurnitureId | null)[];
   decor: PlacedDecor[];
   candy: string[];
   partyActive: boolean;
 }) {
   const dim = LIFE_MAPS[region];
-  const reducedMotion = useReducedMotion();
   return (
     <svg
       className="hj-life-scene"
@@ -229,15 +231,6 @@ export function LifeWorldScene({
           <text x="1400" y="1070" fontSize="105" textAnchor="middle">
             🍽️
           </text>
-          <text x="510" y="1100" fontSize="115">
-            🛏️
-          </text>
-          <text x="1550" y="430" fontSize="120">
-            🧸
-          </text>
-          <text x="1850" y="430" fontSize="120">
-            📚
-          </text>
           {houseTier < 2 && (
             <g>
               <rect
@@ -393,6 +386,7 @@ export function LifeWorldScene({
           </text>
         </g>
       )}
+      {region === "mansion" && <HomeFurnishings room={room} tier={houseTier} playerY={player.y} />}
       <g transform={`translate(${player.x} ${player.y})`}>
         {submarine ? (
           <>
@@ -403,13 +397,7 @@ export function LifeWorldScene({
           </>
         ) : (
           <g transform={`scale(${facing} 1)`}>
-            <image
-              x="-72"
-              y="-165"
-              width="144"
-              height="192"
-              href={characterUrl(outfit, moving ? "walk" : "idle", false, reducedMotion)}
-            />
+            <PlayerAvatar outfit={outfit} moving={moving} svg />
           </g>
         )}
         {holding && (
@@ -422,6 +410,9 @@ export function LifeWorldScene({
           현준이
         </text>
       </g>
+      {region === "mansion" && (
+        <HomeFurnishings room={room} tier={houseTier} playerY={player.y} front />
+      )}
     </svg>
   );
 }

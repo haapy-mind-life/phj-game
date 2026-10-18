@@ -36,12 +36,14 @@ export function useLivingWorld({
   setPos,
   direction,
   vehicle,
+  suspended = false,
 }: {
   pos: Point;
   lifePos: Point;
   region: string;
   submarine: boolean;
   vehicle: string | null;
+  suspended?: boolean;
   message: (s: string) => void;
   setPos: (p: Point) => void;
   direction: React.RefObject<() => Point>;
@@ -69,7 +71,7 @@ export function useLivingWorld({
     region,
     companions: state.companions.length,
     houseTier: state.houseTier,
-    paused: !!talk || wardrobe || menuOpen,
+    paused: suspended || !!talk || wardrobe || menuOpen,
   });
   current.current = {
     pos,
@@ -77,14 +79,14 @@ export function useLivingWorld({
     region,
     companions: state.companions.length,
     houseTier: state.houseTier,
-    paused: !!talk || wardrobe || menuOpen,
+    paused: suspended || !!talk || wardrobe || menuOpen,
   };
   const season = isHalloween(now);
   const seasonRef = useRef(season);
   seasonRef.current = season;
   useEffect(() => {
     const timer = setInterval(() => {
-      setSeconds((s) => s + 0.1);
+      if (!document.hidden && !current.current.paused) setSeconds((s) => s + 0.1);
       setActivity((a) => {
         if (!a || a.done || document.hidden || current.current.paused) return a;
         if (a.kind === "festival" && !seasonRef.current) return null;

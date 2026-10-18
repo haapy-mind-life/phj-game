@@ -1,10 +1,9 @@
+import { PlayerAvatar } from "./PlayerAvatar";
 import { RESTAURANT_ROOM as ROOM, type RESTAURANTS } from "@/game/world-content";
-import { characterUrl } from "@/game/character-art";
 import type { Point } from "@/game/adventure";
 import type { GameState } from "@/lib/world-model";
 import { FriendArt } from "./FriendArt";
 import { People } from "./People";
-import { useReducedMotion } from "./useReducedMotion";
 type Restaurant = (typeof RESTAURANTS)[number];
 export function RestaurantScene({
   restaurant,
@@ -29,7 +28,6 @@ export function RestaurantScene({
   seconds: number;
   onTalk: (id: string) => void;
 }) {
-  const reduced = useReducedMotion();
   return (
     <svg
       width={ROOM.width}
@@ -102,13 +100,7 @@ export function RestaurantScene({
       />
       <g transform={`translate(${player.x} ${player.y})`}>
         <g transform={`scale(${facing} 1)`}>
-          <image
-            href={characterUrl(state.outfit, moving ? "walk" : "idle", false, reduced)}
-            x="-65"
-            y="-160"
-            width="130"
-            height="174"
-          />
+          <PlayerAvatar outfit={state.outfit} moving={moving} svg />
         </g>
         {(meal !== null || carrying) && (
           <text x="65" y="-60" fontSize="62">

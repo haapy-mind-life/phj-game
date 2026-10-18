@@ -1,3 +1,4 @@
+import { CARS, canBuyCar, ENGINE_COST, SPECIAL_COST, type CarUpgrade } from "../game/cars.ts";
 import {
   ACTOR_IDS,
   OUTFITS,
@@ -131,7 +132,8 @@ export type GameState = {
   ownedOutfits: Outfit[];
   ownedCars: string[];
   settledActivities: string[];
-  version: 2;
+  version: 3;
+  carUpgrades: Record<string, CarUpgrade>;
   money: number;
   plots: Plot[];
   hasTicket: boolean;
@@ -213,11 +215,33 @@ export function migrateSave(input: unknown): GameState {
     guests: actorList(raw["guests"]).filter((id) => !companions.includes(id)),
     ownedOutfits,
     ownedCars: [
-      ...Array.from({ length: 120 }, (_, i) => `car-${String(i + 1).padStart(3, "0")}`),
-      ...PREMIUM_CARS.filter(
-        (c) => Array.isArray(raw["ownedCars"]) && raw["ownedCars"].includes(c.id),
-      ).map((c) => c.id),
+      "car-001",
+      ...CARS.slice(1)
+        .filter(
+          (c) =>
+            raw["version"] === 3 &&
+            Array.isArray(raw["ownedCars"]) &&
+            raw["ownedCars"].includes(c.id),
+        )
+        .map((c) => c.id),
     ],
+    carUpgrades: Object.fromEntries(
+      CARS.map((c) => {
+        const owned =
+          c.id === "car-001" ||
+          (raw["version"] === 3 &&
+            Array.isArray(raw["ownedCars"]) &&
+            raw["ownedCars"].includes(c.id));
+        const upgrades = object(object(raw["carUpgrades"])[c.id]);
+        return [
+          c.id,
+          {
+            engine: owned && upgrades["engine"] === true,
+            special: owned && upgrades["special"] === true,
+          },
+        ];
+      }),
+    ),
     settledActivities: Array.isArray(raw["settledActivities"])
       ? raw["settledActivities"]
           .filter((id): id is string => typeof id === "string" && id.length > 0 && id.length < 160)
@@ -268,8 +292,16 @@ export function migrateSave(input: unknown): GameState {
       completed: object(raw["halloween"])["completed"] === true,
     },
     houseTier: [1, 2, 3, 4].includes(raw["houseTier"] as number) ? (raw["houseTier"] as number) : 1,
-    version: 2,
-    money: finite(raw["money"], 50),
+    version: 3,
+    money: Math.min(
+      1e12,
+      finite(raw["money"], 50) +
+        (raw["version"] === 3
+          ? 0
+          : PREMIUM_CARS.filter(
+              (c) => Array.isArray(raw["ownedCars"]) && raw["ownedCars"].includes(c.id),
+            ).reduce((sum, c) => sum + c.cost, 0)),
+    ),
     plots: Array.from({ length: PLOT_COUNT }, (_, i) => {
       const p = object(oldPlots[i]);
       if (!knownCrop(p["crop"])) return emptyPlot();
@@ -308,7 +340,11 @@ export function migrateSave(input: unknown): GameState {
   };
 }
 export type ActivityKind = "restaurant" | "home" | "sea" | "festival";
+export type PlayKind =
+  "delivery" | "police" | "fire" | "ambulance" | "sea" | "truck-sale" | "truck-complete";
 export type WorldAction =
+  | { type: "upgrade-car"; id: string; upgrade: "engine" | "special" }
+  | { type: "settle-play"; id: string; activity: PlayKind; bonus: boolean }
   | { type: "companion"; id: string; mode: "follow" | "invite" | "leave" }
   | { type: "buy-outfit" | "buy-car"; id: string }
   | { type: "buy-meal"; priceIndex: number }
@@ -371,9 +407,47 @@ export function reduceWorld(state: GameState, action: WorldAction): GameState {
     };
   }
   if (action.type === "buy-car") {
-    const item = PREMIUM_CARS.find((c) => c.id === action.id);
-    if (!item || state.ownedCars.includes(item.id) || state.money < item.cost) return state;
+    const item = CARS.find((c) => c.id === action.id);
+    if (!item || !canBuyCar(state.ownedCars, item.id) || state.money < item.cost) return state;
     return { ...state, money: state.money - item.cost, ownedCars: [...state.ownedCars, item.id] };
+  }
+  if (action.type === "upgrade-car") {
+    if (
+      !["engine", "special"].includes(action.upgrade) ||
+      !state.ownedCars.includes(action.id) ||
+      !CARS.some((c) => c.id === action.id)
+    )
+      return state;
+    const current = state.carUpgrades[action.id] ?? { engine: false, special: false };
+    const cost = action.upgrade === "engine" ? ENGINE_COST : SPECIAL_COST;
+    if (current[action.upgrade] || state.money < cost) return state;
+    return {
+      ...state,
+      money: state.money - cost,
+      carUpgrades: { ...state.carUpgrades, [action.id]: { ...current, [action.upgrade]: true } },
+    };
+  }
+  if (action.type === "settle-play") {
+    if (
+      !action.id ||
+      action.id.length >= 160 ||
+      state.settledActivities.includes(action.id) ||
+      !["delivery", "police", "fire", "ambulance", "sea", "truck-sale", "truck-complete"].includes(
+        action.activity,
+      )
+    )
+      return state;
+    const car = CARS.find((c) => c.kind === action.activity);
+    if (car && !state.ownedCars.includes(car.id)) return state;
+    const base = action.activity.startsWith("truck-") ? 10 : 40;
+    const extra = action.bonus && action.activity !== "truck-sale" ? 10 : 0;
+    const delivery =
+      action.activity === "delivery" && state.carUpgrades["car-001"]?.special ? 8 : 0;
+    return {
+      ...state,
+      money: Math.min(1e12, state.money + base + extra + delivery),
+      settledActivities: [...state.settledActivities, action.id].slice(-200),
+    };
   }
   if (action.type === "buy-meal") {
     const price = FOOD_PRICES[action.priceIndex];

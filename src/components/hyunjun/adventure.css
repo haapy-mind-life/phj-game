@@ -1608,3 +1608,370 @@
   width: 5600px;
   height: 1800px;
 }
+/* Play space takes priority over headings and menus. */
+.kid-world-shell .hj-heading {
+  margin: 4px 0;
+}
+.kid-world-shell .hj-heading h1 {
+  font-size: 22px;
+  margin: 0;
+}
+.kid-world-shell .hj-heading p {
+  display: none;
+}
+.kid-world-shell .adv-toolbar {
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+.kid-world-shell .adv-toolbar > span {
+  display: none;
+}
+.kid-world-shell .adv-toolbar[hidden] {
+  display: none;
+}
+.kid-world-shell .adv-viewport {
+  height: min(760px, 77dvh);
+  min-height: 480px;
+}
+.kid-car-list {
+  display: grid;
+  gap: 12px;
+}
+.kid-car-list article {
+  padding: 14px;
+  border: 2px solid #e3dcc1;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.kid-car-list article.chosen {
+  border-color: #7caf97;
+  background: #f0f7e4;
+}
+.kid-car-list h3,
+.kid-car-list p {
+  margin: 4px 0;
+}
+.kid-car-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.kid-garage button,
+.kid-station button {
+  min-height: 48px;
+  border-radius: 14px;
+  border: 2px solid #e2d4af;
+  background: #fff8dd;
+  color: #405e59;
+  font: inherit;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+.kid-garage button:disabled,
+.kid-station button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.kid-station {
+  width: min(480px, 94vw);
+  padding: 24px;
+  border-radius: 26px;
+  background: #fff7df;
+  color: #485e56;
+  display: grid;
+  gap: 12px;
+}
+.kid-station p,
+.kid-station h2 {
+  margin: 0;
+}
+.kid-home-upgrade {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  border-radius: 15px;
+  border: 2px solid #ead8ae;
+  padding: 12px;
+  background: #fff6df;
+  color: #536955;
+  z-index: 4;
+}
+.kid-mission-hud {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  max-width: calc(100% - 20px);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  background: #fff8e6ed;
+  padding: 10px 14px;
+  border-radius: 18px;
+  color: #4a6256;
+  z-index: 5;
+}
+.kid-mission-hud small {
+  flex-basis: 100%;
+}
+.kid-mission-hud button {
+  position: absolute;
+  right: 4px;
+  top: 36px;
+  background: transparent;
+  border: 0;
+  color: #7a6d5b;
+}
+.kid-world-markers {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+.kid-dive,
+.kid-truck {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  overflow: hidden;
+  background: #103a69;
+  touch-action: none;
+}
+.kid-truck {
+  background: #f9e3ac;
+}
+.kid-truck-world {
+  width: 100%;
+  height: 100%;
+}
+.kid-scene-header {
+  position: absolute;
+  inset: 10px 10px auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  color: #fff9d9;
+  z-index: 4;
+}
+.kid-scene-header b {
+  padding: 10px 14px;
+  border-radius: 18px;
+  background: #193f67db;
+}
+.kid-scene-header button,
+.kid-recipe button {
+  border: 2px solid #e6cc94;
+  border-radius: 15px;
+  background: #fff5d8;
+  color: #486052;
+  font: inherit;
+  padding: 10px 12px;
+  min-height: 48px;
+  cursor: pointer;
+}
+.kid-play-controls {
+  position: absolute;
+  inset: auto 0 0;
+  height: 175px;
+  pointer-events: none;
+  z-index: 5;
+}
+.kid-play-controls p {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 130px;
+  margin: 0;
+  border-radius: 14px;
+  padding: 8px 12px;
+  background: #fff9e9ee;
+  color: #425c59;
+  text-align: center;
+  font-size: 14px;
+}
+.kid-play-controls .adv-joystick-group {
+  position: absolute;
+  left: 12px;
+  bottom: 6px;
+  pointer-events: auto;
+}
+.kid-action {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  width: 112px;
+  min-height: 85px;
+  padding: 10px;
+  font: inherit;
+  font-weight: bold;
+  color: #fffdf1;
+  background: #538c85;
+  border: 4px solid #f8e6b6;
+  border-radius: 28px;
+  pointer-events: auto;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.kid-ink {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse, #28174ac9, #241b47a6 45%, transparent 85%);
+  z-index: 3;
+  pointer-events: none;
+}
+.kid-recipe {
+  position: absolute;
+  top: 72px;
+  left: 10px;
+  width: min(310px, calc(100% - 20px));
+  border: 2px solid #ebd8a7;
+  background: #fff9e8f5;
+  border-radius: 20px;
+  padding: 10px;
+  color: #665340;
+  z-index: 4;
+  box-shadow: 0 4px 15px #815d3320;
+}
+.kid-recipe p {
+  margin: 3px 0;
+  font-size: 27px;
+}
+.kid-recipe div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 6px;
+}
+.kid-recipe div button {
+  padding: 4px;
+  min-width: 43px;
+  font-size: 27px;
+}
+.kid-recipe button[aria-pressed="true"] {
+  background: #cde8bd;
+  border-color: #6fa58a;
+}
+@media (max-width: 600px) {
+  .kid-world-shell .hj-brand small {
+    display: none;
+  }
+  .kid-world-shell .hj-heading h1 {
+    font-size: 18px;
+  }
+  .kid-world-shell .adv-toolbar button {
+    padding: 7px 12px;
+  }
+  .kid-world-shell .adv-viewport {
+    height: 76dvh;
+    min-height: 470px;
+    border-width: 3px;
+    border-radius: 22px;
+  }
+  .kid-world-shell .hj-life-hud {
+    max-width: 155px;
+    font-size: 12px;
+    padding: 8px;
+  }
+  .kid-world-shell .hj-life-hud small,
+  .kid-world-shell .hj-life-hud > span {
+    display: none;
+  }
+  .kid-world-shell .living-home-actions {
+    max-width: 150px;
+  }
+  .kid-recipe {
+    width: 230px;
+    padding: 8px;
+  }
+  .kid-recipe div button {
+    min-width: 32px;
+    padding: 3px;
+    font-size: 22px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kid-dive *,
+  .kid-truck * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+.kid-world-shell .adv-console {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 8px;
+}
+.kid-world-shell .adv-footer {
+  padding-bottom: 12px;
+}
+.kid-water-spray {
+  animation: kid-spray 0.7s ease-out forwards;
+}
+@keyframes kid-spray {
+  from {
+    opacity: 1;
+    stroke-dasharray: 15 10;
+  }
+  to {
+    opacity: 0;
+    stroke-dasharray: 30 5;
+  }
+}
+.kid-recipe {
+  width: auto;
+  right: 10px;
+  padding: 8px;
+}
+.kid-recipe b {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 15px;
+}
+.kid-recipe div {
+  flex-wrap: nowrap;
+  align-items: center;
+  margin: 0;
+}
+.kid-recipe div button {
+  min-width: 42px;
+  min-height: 48px;
+  font-size: 25px;
+}
+.kid-recipe div button:last-child {
+  font-size: 14px;
+  flex: 1;
+}
+@media (max-width: 600px) {
+  .kid-recipe {
+    width: auto;
+  }
+}
+.kid-dive-entry {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: grid;
+  place-items: center;
+  background: #188eb5;
+  color: #fff6d5;
+  font-size: 27px;
+  font-weight: bold;
+  opacity: 0;
+  pointer-events: none;
+  animation: kid-dive-entry 1.2s ease-out;
+}
+@keyframes kid-dive-entry {
+  0%,
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}

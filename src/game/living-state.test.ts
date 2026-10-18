@@ -2,13 +2,13 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { migrateSave, reduceWorld } from "../lib/world-model.ts";
 import { isHalloween } from "./world-content.ts";
-test("old saves retain free cars and outfits; malformed party is sanitized", () => {
+test("old saves retain outfits and start vehicle progression; malformed party is sanitized", () => {
   const s = migrateSave({
     money: 400,
     companions: ["dad", "dad", "fake", "robot", "friend-home", "friend-character", "friend-chief"],
     guests: ["dad"],
   });
-  assert.equal(s.ownedCars.length, 120);
+  assert.equal(s.ownedCars.length, 1);
   assert.ok(s.ownedOutfits.includes("mint"));
   assert.equal(s.companions.length, 4);
   assert.ok(!s.guests.includes("dad"));
@@ -27,15 +27,15 @@ test("purchases and activities are atomic, idempotent and survive migration", ()
   s = reduceWorld(s, { type: "buy-outfit", id: "witch" });
   assert.equal(s.money, 440);
   assert.equal(reduceWorld(s, { type: "buy-outfit", id: "witch" }), s);
-  s = reduceWorld(s, { type: "buy-car", id: "car-121" });
-  assert.equal(s.money, 340);
+  s = reduceWorld(s, { type: "buy-car", id: "car-021" });
+  assert.equal(s.money, 320);
   const next = reduceWorld(s, {
     type: "settle-activity",
     id: "job-1",
     activity: "restaurant",
     completed: true,
   });
-  assert.equal(next.money, 385);
+  assert.equal(next.money, 365);
   assert.equal(
     reduceWorld(next, {
       type: "settle-activity",
@@ -46,7 +46,7 @@ test("purchases and activities are atomic, idempotent and survive migration", ()
     next,
   );
   assert.ok(migrateSave(next).ownedOutfits.includes("witch"));
-  assert.ok(migrateSave(next).ownedCars.includes("car-121"));
+  assert.ok(migrateSave(next).ownedCars.includes("car-021"));
 });
 test("Halloween uses Korean calendar and outside October cannot award candy", () => {
   assert.equal(isHalloween(new Date("2026-09-30T15:00:00Z")), true);

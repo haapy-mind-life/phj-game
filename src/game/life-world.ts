@@ -1,3 +1,4 @@
+import type { FurnitureId } from "../lib/world-model.ts";
 import type { Point } from "./adventure.ts";
 
 export type LifeRegion = "village" | "coast" | "mansion" | "deep-sea";
@@ -37,6 +38,17 @@ export const HOME_WALLS = [
     { x, y: 1180, width: 24, height: 180 },
   ]),
 ];
+export function homeFurniturePlacements(room: (FurnitureId | null)[], tier: number) {
+  const slots = [
+    { x: 350, y: tier >= 3 ? 1100 : 550 },
+    { x: 760, y: 560 },
+    { x: 850, y: 340 },
+    { x: 1450, y: 1100 },
+    { x: 500, y: 640 },
+    { x: 1900, y: 1120 },
+  ];
+  return room.flatMap((id, i) => (id && slots[i] ? [{ id, ...slots[i]! }] : []));
+}
 export function canWalkHome(p: Point, houseTier = 4) {
   if (p.x < 140 || p.x > 2060 || p.y < 240 || p.y > 1300) return false;
   if (houseTier < 2 && p.x > 1240 && p.y < 710) return false;

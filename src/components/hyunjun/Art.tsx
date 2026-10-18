@@ -1,6 +1,5 @@
-import { useReducedMotion } from "./useReducedMotion";
+import { PlayerAvatar } from "./PlayerAvatar";
 import type { Outfit, FurnitureId, CropId } from "@/lib/world-model";
-import { characterUrl } from "@/game/character-art";
 export function Star() {
   return <span aria-hidden="true">⭐</span>;
 }
@@ -15,21 +14,16 @@ export function Mascot({
   moving?: boolean;
   diving?: boolean;
 }) {
-  const reducedMotion = useReducedMotion();
   return (
-    <img
+    <PlayerAvatar
+      outfit={outfit}
+      moving={moving}
+      diving={diving}
       className={small ? "hj-mascot small" : "hj-mascot"}
-      src={characterUrl(
-        outfit,
-        moving ? (diving ? "swim" : "walk") : "idle",
-        diving,
-        reducedMotion,
-      )}
-      alt=""
-      draggable={false}
     />
   );
 }
+
 export function Building({ kind }: { kind: "home" | "run" | "farm" }) {
   return (
     <div className={`hj-building ${kind}`} aria-hidden="true">

@@ -16,7 +16,7 @@ export function Shell({
 }) {
   const { state, ready, storageWarning } = useGame();
   return (
-    <main className="hj-shell">
+    <main className={`hj-shell${active === "home" ? " kid-world-shell" : ""}`}>
       <div className="hj-container">
         <header className="hj-topbar">
           <Link to="/" className="hj-brand">

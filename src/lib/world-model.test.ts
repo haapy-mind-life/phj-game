@@ -8,7 +8,7 @@ test("v1 save migrates into six safe v2 plots", () => {
     bestRun: 44,
     plots: [{ crop: "carrot", water: 2, gold: true }],
   });
-  assert.equal(state.version, 2);
+  assert.equal(state.version, 3);
   assert.equal(state.money, 321);
   assert.equal(state.bestRun, 44);
   assert.equal(state.plots.length, 6);

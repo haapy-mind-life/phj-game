@@ -44,9 +44,9 @@ export function isWalkable(p: Point) {
     (b) => p.x > b.x - 18 && p.x < b.x + b.w + 18 && p.y > b.y - 18 && p.y < b.y + b.h + 18,
   );
 }
-export function stepPlayer(p: Point, d: Point, dt: number): Point {
+export function stepPlayer(p: Point, d: Point, dt: number, speedMultiplier = 1): Point {
   const length = Math.hypot(d.x, d.y) || 1;
-  const step = (245 * clamp(dt, 0, 0.05)) / Math.max(1, length);
+  const step = (245 * clamp(dt, 0, 0.05) * clamp(speedMultiplier, 0, 2)) / Math.max(1, length);
   const next = { x: p.x, y: p.y };
   // Wrap both axes; collision still keeps walking on the connected continent.
   const candidate = wrapPoint({ x: p.x + d.x * step, y: p.y + d.y * step });

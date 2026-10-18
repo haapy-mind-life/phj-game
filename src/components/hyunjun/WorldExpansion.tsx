@@ -33,6 +33,24 @@ export function WorldCopies({
     </>
   );
 }
+/** Keep mission paint surfaces bounded, including wrapped world copies. */
+export function WorldOverlay({ center, children }: { center: Point; children: ReactNode }) {
+  const offset = useContext(CopyOffset);
+  const left = Math.floor((center.x - offset.x - 768) / 256) * 256;
+  const top = Math.floor((center.y - offset.y - 512) / 256) * 256;
+  return (
+    <svg
+      className="kid-world-markers"
+      width="2048"
+      height="1536"
+      style={{ left, top }}
+      viewBox={`${left} ${top} 2048 1536`}
+      aria-hidden="true"
+    >
+      {children}
+    </svg>
+  );
+}
 export function WorldExpansion({
   center,
   season,

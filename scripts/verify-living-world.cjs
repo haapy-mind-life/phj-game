@@ -40,7 +40,9 @@ async function family() {
         .first()
         .evaluate((e) => ({ x: parseFloat(e.style.left), y: parseFloat(e.style.top) }));
     const svg =
-      m === "home" ? ".hj-life-scene > g:last-child" : 'svg[aria-label$="실내"] > g:last-child';
+      m === "home"
+        ? ".hj-life-scene > g:has(> g > [data-avatar])"
+        : 'svg[aria-label$="실내"] > g:last-child';
     return page
       .locator(svg)
       .getAttribute("transform")
@@ -79,7 +81,7 @@ async function family() {
   }
   const action = () => page.locator(".adv-interact").click();
   await home();
-  await move("y", 450);
+  await move("y", 650);
   await move("x", 760);
   await action();
   await page.getByRole("button", { name: /같이 가자/ }).click();
@@ -156,10 +158,13 @@ async function family() {
   await btn("🌊 집 밖으로").click();
   await town(11, "벚꽃 마을");
   await btn("자동차 타기").click();
-  for (let i = 0; i < 6; i++) await btn("다음 20대 ▶").click();
-  await page.getByRole("button", { name: /별빛 레이싱카/ }).click();
+  await page
+    .locator(".kid-car-list article")
+    .nth(1)
+    .getByRole("button", { name: "120 별코인 · 구입", exact: true })
+    .click();
   await btn("닫기 ✕").click();
-  console.log("PASS premium car purchase");
+  console.log("PASS functional car purchase");
   assert.equal(errors.length, 0, errors.join("\n"));
   console.log("PASS E2E no browser errors");
   await browser.close();
@@ -231,23 +236,12 @@ async function explore() {
   }
   await page.keyboard.up("ArrowRight");
   await b("잠수함 타기").click();
-  await b("🐠 바닷속 잠항").click();
-  await b("🦑 먹물 피하기 놀이").click();
-  await page.waitForTimeout(7200);
-  await b("물로 먹물 씻기").click();
-  for (let i = 0; i < 6; i++) {
-    const targets = await page.locator(".activity-targets g").all();
-    if (!targets.length) break;
-    const v = (await targets[0].getAttribute("transform")).match(/[-\d.]+/g).map(Number);
-    await move("x", v[0]);
-    await move("y", v[1]);
-    await page.locator(".adv-interact").click();
-  }
-  assert.ok((await page.locator(".living-activity-hud").innerText()).includes("성공"));
+  await page.getByRole("region", { name: "세로 잠수함 탐험", exact: true }).waitFor();
   await page.screenshot({ path: path.join(output, "sea-game.png") });
-  await b("놀이 마치기").click();
-  console.log("PASS ink, wash, sea collection/reward");
-  await b("🌊 해변 안내").click();
+  await b("↑ 수면 · 항구로").click();
+  console.log(
+    "PASS independent sea entry and same-port return; full dive checks in verify-child-play.cjs",
+  );
   await town(1, "우리 마을");
   await move("y", 850);
   await page.keyboard.down("ArrowLeft");
@@ -291,6 +285,12 @@ async function explore() {
       }),
   );
   console.log("PERFORMANCE", JSON.stringify(perf));
+  assert.ok(
+    await page
+      .locator(".kid-world-markers")
+      .evaluateAll((es) => es.every((e) => e.width.baseVal.value <= 2048)),
+    "mission overlay surfaces must remain bounded",
+  );
   assert.equal(errors.length, 0, errors.join("\n"));
   await browser.close();
 }
@@ -334,7 +334,7 @@ async function input() {
   let before = await pos();
   await client.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [p] });
   await page.waitForTimeout(200);
-  const report = page.getByRole("button", { name: "☎️ 새로운 신고 받기", exact: true });
+  const report = page.locator(".adv-interact");
   const rr = await report.boundingBox();
   const other = { x: rr.x + rr.width / 2, y: rr.y + rr.height / 2, id: 2 };
   await client.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [p, other] });
@@ -575,6 +575,12 @@ async function seams() {
       }),
   );
   console.log("PERFORMANCE", JSON.stringify(perf));
+  assert.ok(
+    await page
+      .locator(".kid-world-markers")
+      .evaluateAll((es) => es.every((e) => e.width.baseVal.value <= 2048)),
+    "mission overlay surfaces must remain bounded",
+  );
   assert.equal(errors.length, 0, errors.join("\n"));
   await browser.close();
 }
