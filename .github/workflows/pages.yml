@@ -38,6 +38,8 @@ jobs:
         run: npm run build:pages
         env:
           PAGES_BASE_PATH: /${{ github.event.repository.name }}/
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
       - name: Confirm playable entry and assets
         run: |
           test -s dist-pages/index.html
