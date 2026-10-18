@@ -1,3 +1,4 @@
+import { NEW_VILLAGES } from "./world-content.ts";
 import type { Outfit } from "../lib/world-model.ts";
 import type { Point } from "./adventure.ts";
 export const VILLAGES = [
@@ -111,6 +112,7 @@ export const VILLAGES = [
     outfit: "lavender",
     words: "반짝반짝 다이아몬드 마을이야! 북쪽 별자리 공방에서 별자리 놀이도 해 봐.",
   },
+  ...NEW_VILLAGES,
 ] satisfies (Point & {
   id: string;
   name: string;

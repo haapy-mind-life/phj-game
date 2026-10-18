@@ -1,3 +1,5 @@
+import { ACTORS } from "@/game/actors";
+import { PersonArt } from "./People";
 import { useEffect, useRef, useState } from "react";
 import { actMini, newMini, stepMini, type MiniKind } from "@/game/adventure";
 import { characterUrl } from "@/game/character-art";
@@ -78,14 +80,19 @@ export function MiniGame({ kind, onClose }: { kind: MiniKind; onClose: () => voi
     let raf = 0,
       last = 0;
     const loop = (now: number) => {
-      stepMini(game.current, directionRef.current(), last ? (now - last) / 1000 : 0);
+      stepMini(
+        game.current,
+        directionRef.current(),
+        last ? (now - last) / 1000 : 0,
+        state.companions.length,
+      );
       last = now;
       render((v) => v + 1);
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [started, paused]);
+  }, [started, paused, state.companions.length]);
   const g = game.current;
   useEffect(() => {
     if (!started || g.phase === "playing" || reward !== null) return;
@@ -127,6 +134,11 @@ export function MiniGame({ kind, onClose }: { kind: MiniKind; onClose: () => voi
           </b>
           <span>남은 시간 {Math.ceil(g.time)}초</span>
           <span>최고 {state.miniBest[kind]}</span>
+          {state.companions.length > 0 && (
+            <span>
+              함께 {state.companions.length}명 · 친구 도움 {g.assisted}/2
+            </span>
+          )}
           {started && g.phase === "playing" && (
             <button onClick={() => setPaused((p) => !p)}>
               {paused ? "계속하기" : "잠깐 쉬기"}
@@ -165,6 +177,14 @@ export function MiniGame({ kind, onClose }: { kind: MiniKind; onClose: () => voi
                     </text>
                   </g>
                 ))}
+            {kind !== "fishing" && state.companions.length > 0 && (
+              <g transform={`translate(${g.helper.x - 25} ${g.helper.y - 65}) scale(.55)`}>
+                <PersonArt
+                  actor={ACTORS.find((a) => a.id === state.companions[0])!}
+                  moving={g.helperTarget !== null}
+                />
+              </g>
+            )}
             {kind === "fishing" ? (
               <>
                 <ellipse cx="380" cy="215" rx="285" ry="110" fill="#83c9dc" />

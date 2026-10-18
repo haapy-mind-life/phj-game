@@ -1,3 +1,4 @@
+import { worldDistance, worldDelta } from "./world-space.ts";
 import { MAP, clamp, type Point } from "./adventure.ts";
 
 export type ServiceKind = "fire" | "ambulance" | "police";
@@ -65,7 +66,7 @@ export const WORLD_CALLS: readonly WorldCall[] = [
   },
 ] as const;
 
-export const distance = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y);
+export const distance = (a: Point, b: Point) => worldDistance(a, b);
 export function canHelp(call: WorldCall, pos: Point, kind: string, driving: boolean) {
   return driving && kind === call.vehicle && distance(pos, call) <= 145;
 }
@@ -101,8 +102,7 @@ export function streetRoute(from: Point, to: Point): Point[] {
   return result.filter((p, i, all) => i === 0 || distance(p, all[i - 1]!) > 0);
 }
 export function routeDirection(from: Point, to: Point) {
-  const dx = to.x - from.x;
-  const dy = to.y - from.y;
+  const { x: dx, y: dy } = worldDelta(from, to);
   if (Math.abs(dx) > Math.abs(dy)) return dx > 0 ? "오른쪽 →" : "← 왼쪽";
   return dy > 0 ? "아래쪽 ↓" : "↑ 위쪽";
 }

@@ -1,18 +1,29 @@
+import { PlayerAvatar } from "./PlayerAvatar";
 import type { Outfit, FurnitureId, CropId } from "@/lib/world-model";
-import { characterUrl } from "@/game/character-art";
 export function Star() {
   return <span aria-hidden="true">⭐</span>;
 }
-export function Mascot({ outfit = "mint", small = false }: { outfit?: Outfit; small?: boolean }) {
+export function Mascot({
+  outfit = "mint",
+  small = false,
+  moving = false,
+  diving = false,
+}: {
+  outfit?: Outfit;
+  small?: boolean;
+  moving?: boolean;
+  diving?: boolean;
+}) {
   return (
-    <img
+    <PlayerAvatar
+      outfit={outfit}
+      moving={moving}
+      diving={diving}
       className={small ? "hj-mascot small" : "hj-mascot"}
-      src={characterUrl(outfit)}
-      alt=""
-      draggable={false}
     />
   );
 }
+
 export function Building({ kind }: { kind: "home" | "run" | "farm" }) {
   return (
     <div className={`hj-building ${kind}`} aria-hidden="true">

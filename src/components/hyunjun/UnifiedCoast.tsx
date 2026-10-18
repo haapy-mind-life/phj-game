@@ -1,3 +1,5 @@
+import { FriendArt } from "./FriendArt";
+import { RobotArt } from "./RobotArt";
 import { YARD } from "@/lib/world-model";
 import {
   AIRPORT,
@@ -8,12 +10,14 @@ import {
   RUNWAY,
 } from "@/game/unified-world";
 export function UnifiedCoast({
+  seconds = 0,
   parkedPlane,
   submarine,
   submerged,
   discovered,
   robotFollowing,
 }: {
+  seconds?: number;
   parkedPlane: boolean;
   submarine: boolean;
   submerged: boolean;
@@ -137,42 +141,25 @@ export function UnifiedCoast({
           현준이 푸드트럭
         </text>
       </g>
-      <text x={COAST.customer.x} y={COAST.customer.y} fontSize="110" textAnchor="middle">
-        🧑
-      </text>
-      <text
-        x={COAST.customer.x}
-        y={COAST.customer.y - 100}
-        fontSize="29"
-        textAnchor="middle"
-        fill="#4c6258"
-      >
-        손님
-      </text>
+      <g transform={`translate(${COAST.truck.x - 48} ${COAST.truck.y - 195})`}>
+        <FriendArt index={4} moving={Math.floor(seconds) % 6 < 2} />
+      </g>
+      {[0, 1, 2, 3, 4, 5].map((i) => (
+        <g
+          key={i}
+          transform={`translate(${COAST.customer.x + Math.sin(seconds * 0.3 + i * 1.4) * 210 - 45} ${COAST.customer.y + (i % 3) * 110 + Math.cos(seconds * 0.3 + i) * 45 - 110})`}
+        >
+          <FriendArt index={i} moving />
+          <text y="132" x="42" fontSize="18" fill="#655c41" textAnchor="middle">
+            {i < 3 ? "산책 중" : "배고픈 손님"}
+          </text>
+        </g>
+      ))}
       {!robotFollowing && (
         <g transform={`translate(${COAST.robot.x} ${COAST.robot.y}) scale(.62)`}>
-          <rect
-            x="-48"
-            y="-92"
-            width="96"
-            height="112"
-            rx="24"
-            fill="#82cadf"
-            stroke="#fff2bd"
-            strokeWidth="8"
-          />
-          <rect
-            x="-57"
-            y="-161"
-            width="114"
-            height="85"
-            rx="23"
-            fill="#f0f4ec"
-            stroke="#7db2c1"
-            strokeWidth="8"
-          />
-          <circle cx="-27" cy="-127" r="10" fill="#467b9c" />
-          <circle cx="27" cy="-127" r="10" fill="#467b9c" />
+          <g transform="translate(-75 -210) scale(1.5)">
+            <RobotArt />
+          </g>
           <text y="-190" textAnchor="middle" fontSize="28">
             🤖 아빠 로봇
           </text>

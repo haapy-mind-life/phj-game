@@ -8,7 +8,7 @@ test("v1 save migrates into six safe v2 plots", () => {
     bestRun: 44,
     plots: [{ crop: "carrot", water: 2, gold: true }],
   });
-  assert.equal(state.version, 2);
+  assert.equal(state.version, 3);
   assert.equal(state.money, 321);
   assert.equal(state.bestRun, 44);
   assert.equal(state.plots.length, 6);
@@ -45,7 +45,7 @@ test("run settlement is idempotent and clear bonus is paid once", () => {
     coins: 10,
     clear: true,
   });
-  assert.equal(once.money, 35);
+  assert.equal(once.money, 55);
   assert.equal(once.runs, 1);
   assert.deepEqual(twice, once);
 });
@@ -121,26 +121,36 @@ test("yard decor toggles and halloween party needs decorations, pays candy once 
   assert.deepEqual([s.yard, s.money], [["lights"], 188]);
   s = reduceWorld(s, { type: "toggle-yard", id: "lights" });
   assert.deepEqual([s.yard, s.money], [[], 188]);
-  assert.equal(reduceWorld(s, { type: "start-party" }), s);
+  assert.equal(reduceWorld(s, { type: "start-party", now: "2026-10-18T00:00:00Z" }), s);
   for (const id of ["pumpkin", "ghost", "bat"] as const)
     s = reduceWorld(s, { type: "place-decor", id, x: 400, y: 400 });
-  s = reduceWorld(s, { type: "start-party" });
+  s = reduceWorld(s, { type: "start-party", now: "2026-10-18T00:00:00Z" });
   assert.equal(s.halloween.active, true);
   const before = s.money;
-  s = reduceWorld(s, { type: "collect-candy", id: "candy-hall" });
-  assert.equal(reduceWorld(s, { type: "collect-candy", id: "candy-hall" }), s);
-  assert.equal(reduceWorld(s, { type: "collect-candy", id: "bogus" }), s);
+  s = reduceWorld(s, { type: "collect-candy", now: "2026-10-18T00:00:00Z", id: "candy-hall" });
+  assert.equal(
+    reduceWorld(s, { type: "collect-candy", now: "2026-10-18T00:00:00Z", id: "candy-hall" }),
+    s,
+  );
+  assert.equal(
+    reduceWorld(s, { type: "collect-candy", now: "2026-10-18T00:00:00Z", id: "bogus" }),
+    s,
+  );
   for (const id of ["candy-kitchen", "candy-play", "candy-dining", "candy-bed"])
-    s = reduceWorld(s, { type: "collect-candy", id });
+    s = reduceWorld(s, { type: "collect-candy", now: "2026-10-18T00:00:00Z", id });
   assert.equal(s.money, before + 25 + 50);
   assert.deepEqual(s.halloween, { active: false, candy: [], completed: true });
-  s = reduceWorld(s, { type: "start-party" });
+  s = reduceWorld(s, { type: "start-party", now: "2026-10-18T00:00:00Z" });
   const again = s.money;
   for (const c of ["candy-hall", "candy-kitchen", "candy-play", "candy-dining", "candy-bed"])
-    s = reduceWorld(s, { type: "collect-candy", id: c });
+    s = reduceWorld(s, { type: "collect-candy", now: "2026-10-18T00:00:00Z", id: c });
   assert.equal(s.money, again + 25);
   assert.equal(
-    reduceWorld(migrateSave({ money: 5 }), { type: "collect-candy", id: "candy-hall" }).money,
+    reduceWorld(migrateSave({ money: 5 }), {
+      type: "collect-candy",
+      now: "2026-10-18T00:00:00Z",
+      id: "candy-hall",
+    }).money,
     5,
   );
 });

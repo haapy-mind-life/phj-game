@@ -1,3 +1,9 @@
+import { PlayerAvatar } from "./PlayerAvatar";
+import { HomeFurnishings } from "./HomeFurnishings";
+import type { FurnitureId } from "@/lib/world-model";
+import { FriendArt } from "./FriendArt";
+import { RobotArt } from "./RobotArt";
+import type { Outfit } from "@/lib/world-model";
 import type { Point } from "@/game/adventure";
 import {
   FOOD_MENU,
@@ -13,22 +19,30 @@ import { CANDY_SPOTS, candySpotsForHouse, DECOR, type PlacedDecor } from "@/lib/
 export function LifeWorldScene({
   region,
   player,
+  outfit,
+  moving,
+  facing,
   following,
   holding,
   submarine,
   explored,
   houseTier,
+  room,
   decor,
   candy,
   partyActive,
 }: {
   region: Exclude<LifeRegion, "village">;
   player: Point;
+  outfit: Outfit;
+  moving: boolean;
+  facing: number;
   following: boolean;
   holding: FoodId | null;
   submarine: boolean;
   explored: string[];
   houseTier: number;
+  room: (FurnitureId | null)[];
   decor: PlacedDecor[];
   candy: string[];
   partyActive: boolean;
@@ -136,34 +150,14 @@ export function LifeWorldScene({
               🍕 🥤 🍛
             </text>
           </g>
-          <text x="2290" y="1015" fontSize="75">
-            🧑
-          </text>
+          <g transform="translate(2270 910)">
+            <FriendArt index={0} />
+          </g>
           {!following && (
             <g transform="translate(1490 1250)">
-              <rect
-                x="-43"
-                y="-75"
-                width="86"
-                height="95"
-                rx="21"
-                fill="#8ed1de"
-                stroke="#ffe0a6"
-                strokeWidth="8"
-              />
-              <rect
-                x="-54"
-                y="-146"
-                width="109"
-                height="79"
-                rx="19"
-                fill="#f6eee8"
-                stroke="#87aabc"
-                strokeWidth="7"
-              />
-              <circle cx="-24" cy="-112" r="10" fill="#3c7596" />
-              <circle cx="23" cy="-112" r="10" fill="#3c7596" />
-              <path d="M-14-90Q0-80 16-90" stroke="#3c7596" fill="none" strokeWidth="5" />
+              <g transform="translate(-50 -150)">
+                <RobotArt />
+              </g>
               <text x="0" y="-170" textAnchor="middle" fontSize="29" fill="#546d67">
                 🤖 아빠 로봇
               </text>
@@ -236,15 +230,6 @@ export function LifeWorldScene({
           </text>
           <text x="1400" y="1070" fontSize="105" textAnchor="middle">
             🍽️
-          </text>
-          <text x="510" y="1100" fontSize="115">
-            🛏️
-          </text>
-          <text x="1550" y="430" fontSize="120">
-            🧸
-          </text>
-          <text x="1850" y="430" fontSize="120">
-            📚
           </text>
           {houseTier < 2 && (
             <g>
@@ -393,34 +378,15 @@ export function LifeWorldScene({
       )}
       {following && (
         <g transform={`translate(${Math.max(90, player.x - 105)} ${player.y + 10})`}>
-          <rect
-            x="-34"
-            y="-62"
-            width="70"
-            height="77"
-            rx="18"
-            fill="#a6d9ec"
-            stroke="#ffdf81"
-            strokeWidth="7"
-          />
-          <rect
-            x="-44"
-            y="-120"
-            width="89"
-            height="68"
-            rx="20"
-            fill="#ecf4ef"
-            stroke="#8ba8bd"
-            strokeWidth="7"
-          />
-          <circle cx="-19" cy="-90" r="8" fill="#3d6b9e" />
-          <circle cx="20" cy="-90" r="8" fill="#3d6b9e" />
-          <path d="M-13-71Q0-60 16-72" fill="none" stroke="#5985a4" strokeWidth="5" />
+          <g transform="translate(-55 -150)">
+            <RobotArt moving={moving} />
+          </g>
           <text x="0" y="-143" fontSize="25" textAnchor="middle" fill="#475960">
             아빠 로봇
           </text>
         </g>
       )}
+      {region === "mansion" && <HomeFurnishings room={room} tier={houseTier} playerY={player.y} />}
       <g transform={`translate(${player.x} ${player.y})`}>
         {submarine ? (
           <>
@@ -430,13 +396,9 @@ export function LifeWorldScene({
             <path d="M8-60V-110H67" fill="none" stroke="#ffc65f" strokeWidth="20" />
           </>
         ) : (
-          <>
-            <circle cy="-78" r="41" fill="#ffe5bc" stroke="#96b8b0" strokeWidth="6" />
-            <rect x="-37" y="-37" width="75" height="90" rx="25" fill="#83c7aa" />
-            <text y="-64" textAnchor="middle" fontSize="40">
-              😊
-            </text>
-          </>
+          <g transform={`scale(${facing} 1)`}>
+            <PlayerAvatar outfit={outfit} moving={moving} svg />
+          </g>
         )}
         {holding && (
           <text x="64" y="-80" fontSize={holding === "gold-pizza" ? 85 : 64}>
@@ -448,6 +410,9 @@ export function LifeWorldScene({
           현준이
         </text>
       </g>
+      {region === "mansion" && (
+        <HomeFurnishings room={room} tier={houseTier} playerY={player.y} front />
+      )}
     </svg>
   );
 }

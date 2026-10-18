@@ -1,5 +1,15 @@
+import { CARS, canBuyCar, ENGINE_COST, SPECIAL_COST, type CarUpgrade } from "../game/cars.ts";
+import {
+  ACTOR_IDS,
+  OUTFITS,
+  PREMIUM_CARS,
+  REWARDS,
+  PARTY_LIMIT,
+  isHalloween,
+  FOOD_PRICES,
+} from "../game/world-content.ts";
 export type CropId = "radish" | "beet" | "lettuce" | "carrot" | "sunflower";
-export type Outfit = "mint" | "peach" | "lavender";
+export type Outfit = "mint" | "peach" | "lavender" | (typeof OUTFITS)[number]["id"];
 export type Wallpaper = "cream" | "sky" | "rose";
 export type FriendId = "toto" | "lulu";
 export type AnimalId = "bori";
@@ -117,7 +127,13 @@ export const halloweenDecorCount = (decor: PlacedDecor[]) =>
   decor.filter((d) => DECOR.find((x) => x.id === d.id)?.halloween).length;
 export type Plot = { crop: CropId | null; water: number; gold: boolean };
 export type GameState = {
-  version: 2;
+  companions: string[];
+  guests: string[];
+  ownedOutfits: Outfit[];
+  ownedCars: string[];
+  settledActivities: string[];
+  version: 3;
+  carUpgrades: Record<string, CarUpgrade>;
   money: number;
   plots: Plot[];
   hasTicket: boolean;
@@ -177,7 +193,60 @@ export function migrateSave(input: unknown): GameState {
     placed.add(item);
     return item;
   });
+  const actorList = (value: unknown) =>
+    Array.isArray(value)
+      ? [
+          ...new Set(
+            value.filter((id): id is string => typeof id === "string" && ACTOR_IDS.includes(id)),
+          ),
+        ].slice(0, PARTY_LIMIT)
+      : [];
+  const companions = actorList(raw["companions"]);
+  const ownedOutfits: Outfit[] = [
+    "mint",
+    "peach",
+    "lavender",
+    ...OUTFITS.filter(
+      (o) => Array.isArray(raw["ownedOutfits"]) && raw["ownedOutfits"].includes(o.id),
+    ).map((o) => o.id),
+  ];
   return {
+    companions,
+    guests: actorList(raw["guests"]).filter((id) => !companions.includes(id)),
+    ownedOutfits,
+    ownedCars: [
+      "car-001",
+      ...CARS.slice(1)
+        .filter(
+          (c) =>
+            raw["version"] === 3 &&
+            Array.isArray(raw["ownedCars"]) &&
+            raw["ownedCars"].includes(c.id),
+        )
+        .map((c) => c.id),
+    ],
+    carUpgrades: Object.fromEntries(
+      CARS.map((c) => {
+        const owned =
+          c.id === "car-001" ||
+          (raw["version"] === 3 &&
+            Array.isArray(raw["ownedCars"]) &&
+            raw["ownedCars"].includes(c.id));
+        const upgrades = object(object(raw["carUpgrades"])[c.id]);
+        return [
+          c.id,
+          {
+            engine: owned && upgrades["engine"] === true,
+            special: owned && upgrades["special"] === true,
+          },
+        ];
+      }),
+    ),
+    settledActivities: Array.isArray(raw["settledActivities"])
+      ? raw["settledActivities"]
+          .filter((id): id is string => typeof id === "string" && id.length > 0 && id.length < 160)
+          .slice(-200)
+      : [],
     miniBest: {
       constellation: finite(object(raw["miniBest"])["constellation"], 0, 6),
       treasure: finite(object(raw["miniBest"])["treasure"], 0, 6),
@@ -223,8 +292,16 @@ export function migrateSave(input: unknown): GameState {
       completed: object(raw["halloween"])["completed"] === true,
     },
     houseTier: [1, 2, 3, 4].includes(raw["houseTier"] as number) ? (raw["houseTier"] as number) : 1,
-    version: 2,
-    money: finite(raw["money"], 50),
+    version: 3,
+    money: Math.min(
+      1e12,
+      finite(raw["money"], 50) +
+        (raw["version"] === 3
+          ? 0
+          : PREMIUM_CARS.filter(
+              (c) => Array.isArray(raw["ownedCars"]) && raw["ownedCars"].includes(c.id),
+            ).reduce((sum, c) => sum + c.cost, 0)),
+    ),
     plots: Array.from({ length: PLOT_COUNT }, (_, i) => {
       const p = object(oldPlots[i]);
       if (!knownCrop(p["crop"])) return emptyPlot();
@@ -240,7 +317,7 @@ export function migrateSave(input: unknown): GameState {
     runnerBest: finite(raw["runnerBest"], 0, 1000),
     runs: finite(raw["runs"]),
     harvests: finite(raw["harvests"]),
-    outfit: raw["outfit"] === "peach" || raw["outfit"] === "lavender" ? raw["outfit"] : "mint",
+    outfit: ownedOutfits.includes(raw["outfit"] as Outfit) ? (raw["outfit"] as Outfit) : "mint",
     wallpaper:
       raw["wallpaper"] === "sky" || raw["wallpaper"] === "rose" ? raw["wallpaper"] : "cream",
     ownedFurniture: owned,
@@ -262,7 +339,22 @@ export function migrateSave(input: unknown): GameState {
       : [],
   };
 }
+export type ActivityKind = "restaurant" | "home" | "sea" | "festival";
+export type PlayKind =
+  "delivery" | "police" | "fire" | "ambulance" | "sea" | "truck-sale" | "truck-complete";
 export type WorldAction =
+  | { type: "upgrade-car"; id: string; upgrade: "engine" | "special" }
+  | { type: "settle-play"; id: string; activity: PlayKind; bonus: boolean }
+  | { type: "companion"; id: string; mode: "follow" | "invite" | "leave" }
+  | { type: "buy-outfit" | "buy-car"; id: string }
+  | { type: "buy-meal"; priceIndex: number }
+  | {
+      type: "settle-activity";
+      id: string;
+      activity: ActivityKind;
+      completed: boolean;
+      now?: string;
+    }
   | {
       type: "settle-mini";
       id: string;
@@ -283,10 +375,108 @@ export type WorldAction =
   | { type: "place-decor"; id: DecorId; x: number; y: number }
   | { type: "remove-decor"; index: number }
   | { type: "toggle-yard"; id: YardId }
-  | { type: "start-party" }
-  | { type: "collect-candy"; id: string }
+  | { type: "start-party"; now?: string }
+  | { type: "collect-candy"; id: string; now?: string }
   | { type: "upgrade-house" };
 export function reduceWorld(state: GameState, action: WorldAction): GameState {
+  if (action.type === "companion") {
+    if (!ACTOR_IDS.includes(action.id)) return state;
+    const target = action.mode === "follow" ? state.companions : state.guests;
+    if (action.mode !== "leave" && !target.includes(action.id) && target.length >= PARTY_LIMIT)
+      return state;
+    return {
+      ...state,
+      companions: [
+        ...state.companions.filter((id) => id !== action.id),
+        ...(action.mode === "follow" ? [action.id] : []),
+      ],
+      guests: [
+        ...state.guests.filter((id) => id !== action.id),
+        ...(action.mode === "invite" ? [action.id] : []),
+      ],
+    };
+  }
+  if (action.type === "buy-outfit") {
+    const item = OUTFITS.find((o) => o.id === action.id);
+    if (!item || state.ownedOutfits.includes(item.id) || state.money < item.cost) return state;
+    return {
+      ...state,
+      money: state.money - item.cost,
+      ownedOutfits: [...state.ownedOutfits, item.id],
+      outfit: item.id,
+    };
+  }
+  if (action.type === "buy-car") {
+    const item = CARS.find((c) => c.id === action.id);
+    if (!item || !canBuyCar(state.ownedCars, item.id) || state.money < item.cost) return state;
+    return { ...state, money: state.money - item.cost, ownedCars: [...state.ownedCars, item.id] };
+  }
+  if (action.type === "upgrade-car") {
+    if (
+      !["engine", "special"].includes(action.upgrade) ||
+      !state.ownedCars.includes(action.id) ||
+      !CARS.some((c) => c.id === action.id)
+    )
+      return state;
+    const current = state.carUpgrades[action.id] ?? { engine: false, special: false };
+    const cost = action.upgrade === "engine" ? ENGINE_COST : SPECIAL_COST;
+    if (current[action.upgrade] || state.money < cost) return state;
+    return {
+      ...state,
+      money: state.money - cost,
+      carUpgrades: { ...state.carUpgrades, [action.id]: { ...current, [action.upgrade]: true } },
+    };
+  }
+  if (action.type === "settle-play") {
+    if (
+      !action.id ||
+      action.id.length >= 160 ||
+      state.settledActivities.includes(action.id) ||
+      !["delivery", "police", "fire", "ambulance", "sea", "truck-sale", "truck-complete"].includes(
+        action.activity,
+      )
+    )
+      return state;
+    const car = CARS.find((c) => c.kind === action.activity);
+    if (car && !state.ownedCars.includes(car.id)) return state;
+    const base = action.activity.startsWith("truck-") ? 10 : 40;
+    const extra = action.bonus && action.activity !== "truck-sale" ? 10 : 0;
+    const delivery =
+      action.activity === "delivery" && state.carUpgrades["car-001"]?.special ? 8 : 0;
+    return {
+      ...state,
+      money: Math.min(1e12, state.money + base + extra + delivery),
+      settledActivities: [...state.settledActivities, action.id].slice(-200),
+    };
+  }
+  if (action.type === "buy-meal") {
+    const price = FOOD_PRICES[action.priceIndex];
+    return price !== undefined && Number.isInteger(action.priceIndex) && state.money >= price
+      ? { ...state, money: state.money - price }
+      : state;
+  }
+  if (action.type === "settle-activity") {
+    if (
+      !Object.hasOwn(REWARDS, action.activity) ||
+      !["restaurant", "home", "sea", "festival"].includes(action.activity) ||
+      !action.completed ||
+      !action.id ||
+      action.id.length >= 160 ||
+      state.settledActivities.includes(action.id)
+    )
+      return state;
+    if (
+      action.activity === "festival" &&
+      !isHalloween(action.now ? new Date(action.now) : new Date())
+    )
+      return state;
+    return {
+      ...state,
+      money: Math.min(1e12, state.money + REWARDS[action.activity]),
+      settledActivities: [...state.settledActivities, action.id].slice(-200),
+    };
+  }
+
   if (action.type === "upgrade-house") {
     const prices = [0, 100, 350, 850];
     if (state.houseTier >= 4) return state;
@@ -347,7 +537,12 @@ export function reduceWorld(state: GameState, action: WorldAction): GameState {
     const multiplier = action.game === "stars" ? 2 : 4;
     return {
       ...state,
-      money: Math.min(1e12, state.money + score * multiplier),
+      money: Math.min(
+        1e12,
+        state.money +
+          score * multiplier +
+          (score === limits[action.game] ? REWARDS.miniCompletion : 0),
+      ),
       miniBest: { ...state.miniBest, [action.game]: Math.max(state.miniBest[action.game], score) },
       settledMinis: [...state.settledMinis, action.id].slice(-50),
     };
@@ -380,7 +575,11 @@ export function reduceWorld(state: GameState, action: WorldAction): GameState {
       ...state,
       harvests,
       plots,
-      money: Math.min(1e12, state.money + (bonus ? crop.goldSellPrice : crop.sellPrice)),
+      money: Math.min(
+        1e12,
+        state.money +
+          Math.ceil((bonus ? crop.goldSellPrice : crop.sellPrice) * REWARDS.harvestMultiplier),
+      ),
     };
   }
   if (action.type === "settle-run") {
@@ -395,7 +594,9 @@ export function reduceWorld(state: GameState, action: WorldAction): GameState {
     )
       return state;
     const score = finite(action.score, 0, 1000),
-      earned = finite(action.coins, 0, 200) + (action.clear && score === 1000 ? 25 : 0);
+      earned =
+        finite(action.coins, 0, 200) +
+        (action.clear && score === 1000 ? 25 + REWARDS.runnerClear : 0);
     return {
       ...state,
       money: Math.min(1e12, state.money + earned),
@@ -490,11 +691,13 @@ export function reduceWorld(state: GameState, action: WorldAction): GameState {
     return { ...state, money: state.money - item.cost, yard: [...state.yard, item.id] };
   }
   if (action.type === "start-party") {
+    if (!isHalloween(action.now ? new Date(action.now) : new Date())) return state;
     if (state.halloween.active || halloweenDecorCount(state.decor) < PARTY_DECOR_NEEDED)
       return state;
     return { ...state, halloween: { ...state.halloween, active: true, candy: [] } };
   }
   if (action.type === "collect-candy") {
+    if (!isHalloween(action.now ? new Date(action.now) : new Date())) return state;
     const h = state.halloween;
     if (!h.active || !CANDY_SPOTS.some((c) => c.id === action.id) || h.candy.includes(action.id))
       return state;
@@ -507,7 +710,8 @@ export function reduceWorld(state: GameState, action: WorldAction): GameState {
       halloween: { active: !done, candy: done ? [] : candy, completed: h.completed || done },
     };
   }
-  if (action.type === "outfit") return { ...state, outfit: action.outfit };
+  if (action.type === "outfit")
+    return state.ownedOutfits.includes(action.outfit) ? { ...state, outfit: action.outfit } : state;
   if (action.type === "wallpaper") return { ...state, wallpaper: action.wallpaper };
   return state;
 }

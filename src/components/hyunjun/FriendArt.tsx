@@ -18,19 +18,33 @@ const FRIENDS = [
   { body: "#eebd85", head: "#fff8c7", ears: "alien", hat: "#bd8a60", mark: "✸", name: "우주 친구" },
 ] as const;
 export const FRIEND_STYLES = FRIENDS;
-export function FriendArt({ index }: { index: number }) {
+export function FriendArt({ index, moving = false }: { index: number; moving?: boolean }) {
   const f = FRIENDS[((index % FRIENDS.length) + FRIENDS.length) % FRIENDS.length]!;
+  const variant = Math.floor(index / FRIENDS.length);
   return (
-    <svg viewBox="0 0 110 138" width="83" height="105" role="img" aria-label={f.name}>
+    <svg
+      className={`hj-friend-art${moving ? " moving" : ""}`}
+      viewBox="0 0 110 138"
+      width="83"
+      height="105"
+      role="img"
+      aria-label={f.name}
+    >
       <ellipse cx="55" cy="133" rx="31" ry="4" fill="#42583e24" />
-      <path d="M35 110 V128 M75 110 V128" stroke="#5e7790" strokeWidth="12" strokeLinecap="round" />
-      <path d="M29 129 H43 M68 129 H83" stroke="#f5eedb" strokeWidth="11" strokeLinecap="round" />
-      <path
-        d="M36 82 L21 105 M74 82 L89 105"
-        stroke={f.body}
-        strokeWidth="13"
-        strokeLinecap="round"
-      />
+      <g className="friend-leg left">
+        <path d="M35 110V128" stroke="#5e7790" strokeWidth="12" strokeLinecap="round" />
+        <path d="M29 129H43" stroke="#f5eedb" strokeWidth="11" strokeLinecap="round" />
+      </g>
+      <g className="friend-leg right">
+        <path d="M75 110V128" stroke="#5e7790" strokeWidth="12" strokeLinecap="round" />
+        <path d="M68 129H83" stroke="#f5eedb" strokeWidth="11" strokeLinecap="round" />
+      </g>
+      <g className="friend-arm left">
+        <path d="M36 82 21 105" stroke={f.body} strokeWidth="13" strokeLinecap="round" />
+      </g>
+      <g className="friend-arm right">
+        <path d="M74 82 89 105" stroke={f.body} strokeWidth="13" strokeLinecap="round" />
+      </g>
       <rect
         x="29"
         y="75"
@@ -129,6 +143,21 @@ export function FriendArt({ index }: { index: number }) {
       <text x="55" y="105" textAnchor="middle" fontSize="20" fill="#fff8ea">
         {f.mark}
       </text>
+      {variant === 1 && (
+        <path
+          d="M29 82Q55 94 81 82L76 96 58 92 50 110 39 101 43 91Z"
+          fill="#f4d37a"
+          stroke="#fff3ce"
+          strokeWidth="2"
+        />
+      )}
+      {variant >= 2 && (
+        <g>
+          <path d="M23 26Q55-7 87 26Z" fill="#c698c9" />
+          <path d="M20 28h70" stroke="#fff0cd" strokeWidth="6" strokeLinecap="round" />
+          <circle cx="55" cy="13" r="5" fill="#fff0cd" />
+        </g>
+      )}
     </svg>
   );
 }

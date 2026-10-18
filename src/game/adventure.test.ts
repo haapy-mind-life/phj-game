@@ -3,12 +3,12 @@ import assert from "node:assert/strict";
 import { stepPlayer, cameraAt, BLOCKS, PORTALS, newMini, stepMini, actMini } from "./adventure.ts";
 import { migrateSave, reduceWorld } from "../lib/world-model.ts";
 
-test("diagonal movement has the same speed and north edge stops movement", () => {
+test("diagonal movement has the same speed and north edge wraps", () => {
   const p = { x: 1100, y: 850 };
   const a = stepPlayer(p, { x: 1, y: 0 }, 1 / 60);
   const b = stepPlayer(p, { x: 1, y: 1 }, 1 / 60);
   assert.ok(Math.abs(Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y)) < 0.01);
-  assert.equal(stepPlayer({ x: 24, y: 24 }, { x: -1, y: -1 }, 1).y, 24);
+  assert.ok(stepPlayer({ x: 2, y: 2 }, { x: -1, y: -1 }, 1).y > 10780);
 });
 test("lake and buildings block walking while all entrances are reachable ground", () => {
   for (const p of PORTALS) assert.deepEqual(stepPlayer(p, { x: 0, y: 0 }, 0), { x: p.x, y: p.y });
@@ -16,9 +16,9 @@ test("lake and buildings block walking while all entrances are reachable ground"
   const p = { x: lake.x - 19, y: lake.y + 50 };
   assert.equal(stepPlayer(p, { x: 1, y: 0 }, 0.05).x, p.x);
 });
-test("camera never exposes space outside the map", () => {
-  assert.deepEqual(cameraAt({ x: 24, y: 24 }, 800, 500), { x: 0, y: 0 });
-  assert.deepEqual(cameraAt({ x: 10176, y: 1776 }, 800, 500), { x: 9400, y: 1300 });
+test("camera follows seamlessly across wrapped edges", () => {
+  assert.deepEqual(cameraAt({ x: 24, y: 24 }, 800, 500), { x: -376, y: -226 });
+  assert.deepEqual(cameraAt({ x: 10176, y: 1776 }, 800, 500), { x: 9776, y: 1526 });
 });
 test("treasure can be won, rewards freeze, and restart clears progress", () => {
   const g = newMini("treasure");
@@ -56,7 +56,7 @@ test("minigame settlement is idempotent and does not corrupt runner records", ()
     score: 6,
   };
   const a = reduceWorld(s, action);
-  assert.equal(a.money, s.money + 24);
+  assert.equal(a.money, s.money + 34);
   assert.equal(a.runs, s.runs);
   assert.equal(a.runnerBest, s.runnerBest);
   assert.deepEqual(reduceWorld(a, action), a);
@@ -107,9 +107,23 @@ test("each world entrance is reachable from the plaza without crossing a buildin
       const n = stepPlayer(p, { x: dx, y: dy }, 0.05);
       if (n.x !== p.x || n.y !== p.y) {
         const q = { x: Math.round(n.x / 10) * 10, y: Math.round(n.y / 10) * 10 };
+        if (q.x < 20 || q.x > 2700 || q.y < 20 || q.y > 1780) continue;
         if (!seen.has(`${q.x},${q.y}`)) pending.push(q);
       }
     }
   }
   assert.equal(reached.size, PORTALS.length);
+});
+
+test("a companion visibly walks to nearby treasure only after the player participates", () => {
+  const g = newMini("treasure");
+  for (let i = 0; i < 200; i++) stepMini(g, { x: 0, y: 0 }, 0.05, 1);
+  assert.equal(g.score, 0);
+  g.player = { ...g.items[0]! };
+  stepMini(g, { x: 0, y: 0 }, 0.01, 1);
+  assert.equal(g.playerScore, 1);
+  g.player = { x: g.items[1]!.x - 100, y: g.items[1]!.y };
+  for (let i = 0; i < 300; i++) stepMini(g, { x: 0, y: 0 }, 0.05, 1);
+  assert.ok(g.assisted >= 1 && g.assisted <= 2);
+  assert.ok(g.helper.x > g.player.x);
 });
