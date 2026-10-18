@@ -39,6 +39,8 @@ import { CarArt } from "./CarArt";
 import { carById, CARS } from "@/game/cars";
 import { WorldScenes } from "./WorldScenes";
 import { LifeWorldScene } from "./LifeWorldScene";
+import { FamilyRoomPanel, RemotePlayers } from "./FamilyRoom";
+import { useFamilyRoom } from "./useFamilyRoom";
 import { UnifiedCoast, GrowingHome, PlaneArt, YardDecor } from "./UnifiedCoast";
 import {
   COAST,
@@ -367,6 +369,14 @@ export function Village() {
   const [diving, setDiving] = useState(false);
   const [camping, setCamping] = useState(false);
   const [facing, setFacing] = useState(1);
+  const familyRoom = useFamilyRoom({
+    region,
+    x: region === "village" ? pos.x : lifePos.x,
+    y: region === "village" ? pos.y : lifePos.y,
+    facing: facing === -1 ? -1 : 1,
+    outfit: state.outfit,
+    moving: walking,
+  });
   const consoleShown = !mini && !drawing && !mapOpen && !garageOpen && !truckOpen;
   const viewport = useRef<HTMLDivElement>(null);
   const nearby = nearestPortal(pos);
@@ -1208,6 +1218,7 @@ export function Village() {
               <ActivityTargets activity={living.activity} player={lifePos} />
             </>
           )}
+          {!living.restaurant && <RemotePlayers room={familyRoom} region={region} />}
         </div>
         {region === "village" &&
           !living.restaurant &&
@@ -1358,6 +1369,7 @@ export function Village() {
             }}
           />
         )}
+        <FamilyRoomPanel room={familyRoom} />
         <div className="adv-location">
           {living.restaurant
             ? living.restaurant.name
