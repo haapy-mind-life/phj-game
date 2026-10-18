@@ -9,7 +9,7 @@ export async function createRealtimeTransport(
   selfId: string,
   handlers: RealtimeHandlers,
 ): Promise<FamilyTransport | null> {
-  if (typeof window === "undefined" || !import.meta.env.VITE_SUPABASE_URL) return null;
+  if (typeof window === "undefined" || !import.meta.env['VITE_SUPABASE_URL']) return null;
   try {
     const { supabase } = await import("@/integrations/supabase/client");
     const joinedAt = Date.now();
