@@ -81,3 +81,12 @@ test("remote draw position glides over one interval and filters by region", () =
   assert.equal(visibleRemotes(r, "village").length, 0);
   assert.equal(visibleRemotes(r, "mansion").length, 1);
 });
+
+test("presence admits only the first four people by join time", async () => {
+  const { admittedByPresence } = await import("./family-room.ts");
+  const m = [1, 2, 3, 4, 5].map((n) => ({ id: `p-${n}`, joinedAt: n * 10 }));
+  assert.equal(admittedByPresence(m, "p-4"), true);
+  assert.equal(admittedByPresence(m, "p-5"), false);
+  assert.equal(admittedByPresence(m.slice(0, 3), "p-3"), true);
+  assert.equal(admittedByPresence(m, "ghost"), false);
+});

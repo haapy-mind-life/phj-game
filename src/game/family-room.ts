@@ -131,3 +131,13 @@ export function drawPosition(r: RemotePlayer, now: number) {
 }
 export const visibleRemotes = (remotes: RemoteMap, region: FamilyRegion) =>
   Object.values(remotes).filter((r) => r.msg.region === region);
+
+/** Presence: a newcomer may stay only if they are among the first MAX_ROOM_PLAYERS by join time. */
+export function admittedByPresence(
+  members: { id: string; joinedAt: number }[],
+  selfId: string,
+): boolean {
+  const order = [...members].sort((a, b) => a.joinedAt - b.joinedAt || a.id.localeCompare(b.id));
+  const idx = order.findIndex((m) => m.id === selfId);
+  return idx >= 0 && idx < MAX_ROOM_PLAYERS;
+}
