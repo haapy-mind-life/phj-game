@@ -119,6 +119,7 @@ fs.mkdirSync(out, { recursive: true });
     console.log("PASS physical delivery, police, fire and ambulance objectives/rewards");
     await page.screenshot({ path: out + "/station-tablet.png" });
     // Same saved outfit in world and house; bought furniture is drawn in the walkable scene.
+    await page.setViewportSize({ width: 390, height: 844 });
     await town(1, "우리 마을");
     await move("y", 620);
     await action();
@@ -129,6 +130,18 @@ fs.mkdirSync(out, { recursive: true });
     await page.screenshot({ path: out + "/home-phone.png" });
     const avatarSize = await page.locator(".hj-life-scene [data-avatar]").boundingBox();
     assert.ok(avatarSize.height >= 56);
+    const viewportScroll = await page
+      .locator(".adv-viewport")
+      .evaluate((e) => ({ x: e.scrollLeft, y: e.scrollTop }));
+    assert.deepEqual(
+      viewportScroll,
+      { x: 0, y: 0 },
+      "scene entry must not let browser scroll the camera",
+    );
+    assert.ok(
+      avatarSize.x + avatarSize.width / 2 > 140 && avatarSize.x + avatarSize.width / 2 < 250,
+      "phone avatar stays centered",
+    );
     await btn("집 밖으로").last().click();
     await page.setViewportSize({ width: 1024, height: 900 });
     // Physical beach customers walk before any shop dialog is opened.

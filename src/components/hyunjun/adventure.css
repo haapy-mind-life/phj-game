@@ -2038,3 +2038,11 @@
   font-size: 32px;
   line-height: 1;
 }
+/* Camera transforms own panning; browser focus/scroll anchoring must never pan the world. */
+.kid-world-shell {
+  overflow-anchor: none;
+}
+.kid-world-shell .adv-viewport {
+  overflow: clip;
+  overflow-anchor: none;
+}
