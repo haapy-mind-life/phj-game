@@ -121,6 +121,6 @@ export function stepLifePlayer(
 export const LIFE_REGION_LABELS: Record<LifeRegion, string> = {
   village: "열 개 마을",
   coast: "대왕집 · 바닷가 · 푸드트럭",
-  mansion: "현준이의 대왕집",
+  mansion: "현준이의 우리 집",
   "deep-sea": "잠수함으로 탐험하는 큰 바다",
 };

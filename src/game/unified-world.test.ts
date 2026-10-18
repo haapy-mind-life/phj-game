@@ -10,11 +10,11 @@ import {
   OCEAN_DISCOVERIES,
 } from "./unified-world.ts";
 test("old village and new coast share same continuous map", () => {
-  assert.equal(MAP.width, 10200);
+  assert.equal(MAP.width, 20400);
   assert.ok(COAST.truck.x > 5600 && COAST.truck.x < OCEAN.start);
   const next = stepPlayer({ x: 5570, y: 950 }, { x: 1, y: 0 }, 0.05);
   assert.ok(next.x > 5570);
-  assert.equal(stepPlayer({ x: 24, y: 950 }, { x: -1, y: 0 }, 0.05).x, 24);
+  assert.equal(stepPlayer({ x: 24, y: 950 }, { x: -1, y: 0 }, 0.05).x, 11.75);
 });
 test("sea is real wide area with submarine constrained to ocean", () => {
   assert.ok(OCEAN.end - OCEAN.start > 2500);
@@ -40,7 +40,9 @@ test("airplane: runway is on land and plane flies over the whole map", () => {
   for (let i = 0; i < 400; i++) p = stepPlane(p, { x: 1, y: 0 }, 0.05);
   assert.ok(p.x > OCEAN.start + 500 && p.x <= MAP.width - 40);
   for (let i = 0; i < 800; i++) p = stepPlane(p, { x: -1, y: -1 }, 0.05);
-  assert.deepEqual(p, { x: 40, y: 40 });
+  assert.ok(p.x >= 0 && p.x < MAP.width && p.y >= 0 && p.y < MAP.height);
+  const crossed = stepPlane({ x: 1, y: 1 }, { x: -1, y: -1 }, 0.05);
+  assert.ok(crossed.x > MAP.width - 30 && crossed.y > MAP.height - 30);
 });
 test("airplane: lands only on land or runway, never on the sea", () => {
   assert.ok(canLandPlane(AIRPORT));

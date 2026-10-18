@@ -3,12 +3,12 @@ import assert from "node:assert/strict";
 import { MAP, stepPlayer, isWalkable } from "./adventure.ts";
 import { migrateSave, reduceWorld } from "../lib/world-model.ts";
 
-test("original villages and new coast form an extended finite world", () => {
-  assert.equal(MAP.width, 10200);
+test("original villages and new coast form an extended wrapping world", () => {
+  assert.equal(MAP.width, 20400);
   const oldEdge = stepPlayer({ x: 5595, y: 850 }, { x: 1, y: 0 }, 0.05);
   assert.ok(oldEdge.x > 5600);
   const west = stepPlayer({ x: 24, y: 850 }, { x: -1, y: 0 }, 0.05);
-  assert.equal(west.x, 24);
+  assert.equal(west.x, 11.75);
   assert.ok(isWalkable(oldEdge) && isWalkable(west));
 });
 test("new constellation records migrate and pay only once", () => {
@@ -21,7 +21,7 @@ test("new constellation records migrate and pay only once", () => {
     score: 6,
   };
   const next = reduceWorld(old, action);
-  assert.equal(next.money, 147);
+  assert.equal(next.money, 157);
   assert.equal(next.miniBest.treasure, 4);
   assert.equal(next.miniBest.constellation, 6);
   assert.deepEqual(reduceWorld(next, action), next);

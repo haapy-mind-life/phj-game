@@ -1,8 +1,14 @@
+import { OUTFITS } from "./world-content";
 import { GROUND, HEIGHT, PLAYER_X, WIDTH, type Run } from "./runner-engine";
 import type { Outfit } from "@/lib/world-model";
 import { characterUrl } from "./character-art";
 const portraits = new Map<Outfit, HTMLImageElement>();
-const colors = { mint: "#7bb9a2", peach: "#e9a08d", lavender: "#a99dca" };
+const colors: Record<string, string> = {
+  mint: "#7bb9a2",
+  peach: "#e9a08d",
+  lavender: "#a99dca",
+  ...Object.fromEntries(OUTFITS.map((o) => [o.id, o.color])),
+};
 export function drawRunner(c: CanvasRenderingContext2D, r: Run, outfit: Outfit) {
   c.clearRect(0, 0, WIDTH, HEIGHT);
   c.fillStyle = r.stage === 4 ? "#ddecf2" : "#e7f3e3";
@@ -79,7 +85,7 @@ export function drawRunner(c: CanvasRenderingContext2D, r: Run, outfit: Outfit) 
     c.restore();
     return;
   }
-  c.fillStyle = colors[outfit];
+  c.fillStyle = colors[outfit] ?? "#7bb9a2";
   c.beginPath();
   c.arc(0, -62, 34, 0, Math.PI * 2);
   c.fill();
@@ -95,7 +101,7 @@ export function drawRunner(c: CanvasRenderingContext2D, r: Run, outfit: Outfit) 
   c.moveTo(9, -62);
   c.lineTo(9, -57);
   c.stroke();
-  c.fillStyle = colors[outfit];
+  c.fillStyle = colors[outfit] ?? "#7bb9a2";
   c.beginPath();
   c.roundRect(-23, -32, 46, 37, 13);
   c.fill();

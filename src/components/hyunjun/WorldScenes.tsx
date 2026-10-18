@@ -107,9 +107,9 @@ export function WorldScenes({
   return (
     <svg
       className="hj-world-scenes"
-      viewBox={"0 0 " + MAP.width + " " + MAP.height}
-      width={MAP.width}
-      height={MAP.height}
+      viewBox="0 0 5600 1800"
+      width="5600"
+      height="1800"
       aria-hidden="true"
     >
       <defs>

@@ -1,7 +1,9 @@
+import { WORLD_SIZE, wrapPoint, worldDistance, isOcean } from "./world-space.ts";
+import { RESTAURANTS, NEW_VILLAGES } from "./world-content.ts";
 export type Point = { x: number; y: number };
 export type MiniKind = "treasure" | "stars" | "fishing";
 // Preserve the original 0..5600 villages. The coast and ocean are contiguous eastern ground.
-export const MAP = { width: 10200, height: 1800 };
+export const MAP = WORLD_SIZE;
 export const OCEAN_START = 7380;
 export const SPAWN = { x: 1350, y: 920 };
 export const BLOCKS = [
@@ -20,6 +22,24 @@ export const PORTALS = [
 ] as const;
 export const clamp = (n: number, a: number, b: number) => Math.max(a, Math.min(b, n));
 export function isWalkable(p: Point) {
+  if (p.x > 7328 && p.x < 10238) return false;
+  if (
+    NEW_VILLAGES.some((v) =>
+      [-330, 330].some((dx) => {
+        const x = v.x + dx,
+          y = v.y - 260;
+        if (RESTAURANTS.some((r) => Math.hypot(r.x - x, r.y - y) < 250)) return false;
+        return Math.abs(p.x - x) < 108 && p.y > y - 98 && p.y < y + 78;
+      }),
+    )
+  )
+    return false;
+  if (
+    RESTAURANTS.some(
+      (r) => r.id !== "korean" && Math.abs(p.x - r.x) < 150 && p.y > r.y - 200 && p.y < r.y - 25,
+    )
+  )
+    return false;
   return !BLOCKS.some(
     (b) => p.x > b.x - 18 && p.x < b.x + b.w + 18 && p.y > b.y - 18 && p.y < b.y + b.h + 18,
   );
@@ -28,29 +48,35 @@ export function stepPlayer(p: Point, d: Point, dt: number): Point {
   const length = Math.hypot(d.x, d.y) || 1;
   const step = (245 * clamp(dt, 0, 0.05)) / Math.max(1, length);
   const next = { x: p.x, y: p.y };
-  // The old 5600px world used to wrap; a finite eastern ocean now requires real boundaries.
-  const x = clamp(p.x + d.x * step, 24, OCEAN_START - 52);
+  // Wrap both axes; collision still keeps walking on the connected continent.
+  const candidate = wrapPoint({ x: p.x + d.x * step, y: p.y + d.y * step });
+  const x = candidate.x;
   if (isWalkable({ x, y: p.y })) next.x = x;
-  const y = clamp(p.y + d.y * step, 24, MAP.height - 24);
+  const y = candidate.y;
   if (isWalkable({ x: next.x, y })) next.y = y;
   return next;
 }
 export function cameraAt(p: Point, w: number, h: number): Point {
   return {
-    x: clamp(p.x - w / 2, 0, Math.max(0, MAP.width - w)),
-    y: clamp(p.y - h / 2, 0, Math.max(0, MAP.height - h)),
+    x: p.x - w / 2,
+    y: p.y - h / 2,
   };
 }
 export function nearestPortal(p: Point) {
   return (
-    PORTALS.filter((g) => Math.hypot(g.x - p.x, g.y - p.y) < 100).sort(
-      (a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y),
+    PORTALS.filter((g) => worldDistance(g, p) < 100).sort(
+      (a, b) => worldDistance(a, p) - worldDistance(b, p),
     )[0] ?? null
   );
 }
 export type Mini = {
   kind: MiniKind;
   phase: "playing" | "won" | "over";
+  assisted: number;
+  playerScore: number;
+  helper: Point;
+  helperTarget: number | null;
+  helperClock: number;
   time: number;
   score: number;
   player: Point;
@@ -72,6 +98,11 @@ export function newMini(kind: MiniKind): Mini {
   return {
     kind,
     phase: "playing",
+    assisted: 0,
+    playerScore: 0,
+    helper: { x: 380, y: 370 },
+    helperTarget: null,
+    helperClock: 0,
     time: kind === "treasure" ? 75 : 45,
     score: 0,
     player: { x: 380, y: 370 },
@@ -85,7 +116,7 @@ export function newMini(kind: MiniKind): Mini {
         : "왼쪽 조이스틱을 밀어 움직여 봐!",
   };
 }
-export function stepMini(g: Mini, d: Point, delta: number) {
+export function stepMini(g: Mini, d: Point, delta: number, companions = 0) {
   if (g.phase !== "playing") return;
   const dt = clamp(delta, 0, 0.05);
   g.time = Math.max(0, g.time - dt);
@@ -108,8 +139,41 @@ export function stepMini(g: Mini, d: Point, delta: number) {
       if (!item.found && Math.hypot(item.x - g.player.x, item.y - g.player.y) < 35) {
         item.found = true;
         g.score++;
+        g.playerScore++;
         g.feedback = g.kind === "stars" ? "반짝! 별을 모았어!" : "보물 발견! 토토가 기뻐해!";
       }
+    if (companions > 0 && g.playerScore > 0 && g.assisted < 2) {
+      g.helperClock += dt;
+      if (g.helperTarget === null && g.helperClock >= 8) {
+        const index = g.items.findIndex(
+          (i) => !i.found && Math.hypot(i.x - g.player.x, i.y - g.player.y) < 200,
+        );
+        if (index >= 0) {
+          g.helperTarget = index;
+          g.helper = { x: g.player.x, y: g.player.y };
+          g.helperClock = 0;
+        }
+      }
+      if (g.helperTarget !== null) {
+        const target = g.items[g.helperTarget];
+        if (!target || target.found) g.helperTarget = null;
+        else {
+          const dx = target.x - g.helper.x,
+            dy = target.y - g.helper.y,
+            len = Math.hypot(dx, dy);
+          if (len < 20) {
+            target.found = true;
+            g.score++;
+            g.assisted++;
+            g.helperTarget = null;
+            g.feedback = "친구도 보물을 찾았어!";
+          } else {
+            g.helper.x += (dx / len) * 160 * dt;
+            g.helper.y += (dy / len) * 160 * dt;
+          }
+        }
+      }
+    }
     if (g.kind === "stars" && g.items.every((i) => i.found) && g.score < 18) {
       g.items = g.items.map((item, i) => ({
         x: 90 + ((item.x * 3 + i * 97) % 580),

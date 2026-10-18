@@ -1,13 +1,30 @@
+import { useReducedMotion } from "./useReducedMotion";
 import type { Outfit, FurnitureId, CropId } from "@/lib/world-model";
 import { characterUrl } from "@/game/character-art";
 export function Star() {
   return <span aria-hidden="true">⭐</span>;
 }
-export function Mascot({ outfit = "mint", small = false }: { outfit?: Outfit; small?: boolean }) {
+export function Mascot({
+  outfit = "mint",
+  small = false,
+  moving = false,
+  diving = false,
+}: {
+  outfit?: Outfit;
+  small?: boolean;
+  moving?: boolean;
+  diving?: boolean;
+}) {
+  const reducedMotion = useReducedMotion();
   return (
     <img
       className={small ? "hj-mascot small" : "hj-mascot"}
-      src={characterUrl(outfit)}
+      src={characterUrl(
+        outfit,
+        moving ? (diving ? "swim" : "walk") : "idle",
+        diving,
+        reducedMotion,
+      )}
       alt=""
       draggable={false}
     />

@@ -1,3 +1,5 @@
+import { useGame } from "@/lib/game-state";
+import { PREMIUM_CARS } from "@/game/world-content";
 import { useState } from "react";
 import { CARS, carById } from "@/game/cars";
 import { CarArt } from "./CarArt";
@@ -20,10 +22,11 @@ export function Garage({
   onClose: () => void;
 }) {
   const [page, setPage] = useState(0);
+  const { state, dispatch } = useGame();
   const pages = Math.ceil(CARS.length / 20);
   return (
     <div className="hj-garage-backdrop" role="presentation">
-      <section className="hj-garage" role="dialog" aria-modal="true" aria-label="자동차 120종 차고">
+      <section className="hj-garage" role="dialog" aria-modal="true" aria-label="자동차 126종 차고">
         <header>
           <div>
             <h2>현준이의 자동차 차고</h2>
@@ -40,12 +43,24 @@ export function Garage({
               key={car.id}
               className={selected === car.id ? "chosen" : ""}
               aria-pressed={selected === car.id}
-              onClick={() => onSelect(car.id)}
+              disabled={
+                !state.ownedCars.includes(car.id) &&
+                state.money < (PREMIUM_CARS.find((c) => c.id === car.id)?.cost ?? 0)
+              }
+              onClick={() => {
+                if (!state.ownedCars.includes(car.id)) {
+                  const next = dispatch({ type: "buy-car", id: car.id });
+                  if (!next.ownedCars.includes(car.id)) return;
+                }
+                onSelect(car.id);
+              }}
             >
               <CarArt car={car} size={85} />
               <span>{car.name}</span>
               <small>
-                {car.number} / {CARS.length}
+                {state.ownedCars.includes(car.id)
+                  ? "가지고 있어요"
+                  : `${PREMIUM_CARS.find((c) => c.id === car.id)?.cost} 별코인 · 특별 도색`}
               </small>
             </button>
           ))}

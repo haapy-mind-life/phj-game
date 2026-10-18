@@ -1,3 +1,4 @@
+import { PREMIUM_CARS } from "./world-content.ts";
 export const CAR_KINDS = [
   { name: "스포츠카", shape: "sport", roof: "낮은 레이싱 지붕" },
   { name: "소방차", shape: "fire", roof: "사다리" },
@@ -36,16 +37,19 @@ const COLORS = [
   "#78ab61",
   "#c6a578",
 ] as const;
-export const CARS = CAR_KINDS.flatMap((kind, kindIndex) =>
-  COLOR_NAMES.map((colorName, colorIndex) => ({
-    id: `car-${String(kindIndex * 10 + colorIndex + 1).padStart(3, "0")}`,
-    name: `${colorName} ${kind.name}`,
-    kind: kind.shape,
-    color: COLORS[colorIndex],
-    number: kindIndex * 10 + colorIndex + 1,
-    variation: colorIndex,
-  })),
-);
+export const CARS = [
+  ...CAR_KINDS.flatMap((kind, kindIndex) =>
+    COLOR_NAMES.map((colorName, colorIndex) => ({
+      id: `car-${String(kindIndex * 10 + colorIndex + 1).padStart(3, "0")}`,
+      name: `${colorName} ${kind.name}`,
+      kind: kind.shape,
+      color: COLORS[colorIndex],
+      number: kindIndex * 10 + colorIndex + 1,
+      variation: colorIndex,
+    })),
+  ),
+  ...PREMIUM_CARS,
+];
 export type Car = (typeof CARS)[number];
 export function carById(id: string): Car {
   return CARS.find((car) => car.id === id) ?? CARS[0]!;

@@ -1,3 +1,4 @@
+import { worldDistance, wrapPoint, isOcean } from "./world-space.ts";
 import { isWalkable, MAP, type Point } from "./adventure.ts";
 export const COAST = {
   truck: { x: 6310, y: 920 },
@@ -8,7 +9,7 @@ export const COAST = {
   kitchen: { x: 920, y: 560 },
   dining: { x: 1390, y: 970 },
 };
-export const OCEAN = { start: 7380, end: 10150, top: 60, bottom: 1740 };
+export const OCEAN = { start: 7380, end: 10150, top: 60, bottom: MAP.height - 20 };
 export const HOUSE_TIERS = [
   { tier: 1, name: "아담한 집", cost: 0 },
   { tier: 2, name: "넓은 2층 집", cost: 100 },
@@ -16,14 +17,14 @@ export const HOUSE_TIERS = [
   { tier: 4, name: "현준이 성", cost: 850 },
 ] as const;
 export function nearWorld(a: Point, b: Point, range = 180) {
-  return Math.hypot(a.x - b.x, a.y - b.y) <= range;
+  return worldDistance(a, b) <= range;
 }
 export function stepSubmarine(p: Point, d: Point, dt: number): Point {
   const t = Math.min(0.05, Math.max(0, dt)),
     len = Math.max(1, Math.hypot(d.x, d.y));
   return {
     x: Math.max(OCEAN.start + 38, Math.min(OCEAN.end, p.x + (d.x * 340 * t) / len)),
-    y: Math.max(OCEAN.top, Math.min(OCEAN.bottom, p.y + (d.y * 340 * t) / len)),
+    y: wrapPoint({ x: p.x, y: p.y + (d.y * 340 * t) / len }).y,
   };
 }
 export const OCEAN_DISCOVERIES = [
@@ -42,13 +43,13 @@ export function onRunway(p: Point) {
   return p.x >= RUNWAY.x1 && p.x <= RUNWAY.x2 && Math.abs(p.y - RUNWAY.y) <= RUNWAY.half;
 }
 export function canLandPlane(p: Point) {
-  return onRunway(p) || (p.x < SHORE_X && isWalkable(p));
+  return onRunway(p) || (!isOcean(p) && isWalkable(p));
 }
 export function stepPlane(p: Point, d: Point, dt: number): Point {
   const t = Math.min(0.05, Math.max(0, dt)),
     len = Math.max(1, Math.hypot(d.x, d.y));
-  return {
-    x: Math.max(40, Math.min(MAP.width - 40, p.x + (d.x * PLANE_SPEED * t) / len)),
-    y: Math.max(40, Math.min(MAP.height - 40, p.y + (d.y * PLANE_SPEED * t) / len)),
-  };
+  return wrapPoint({
+    x: p.x + (d.x * PLANE_SPEED * t) / len,
+    y: p.y + (d.y * PLANE_SPEED * t) / len,
+  });
 }
