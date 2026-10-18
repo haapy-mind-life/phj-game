@@ -53,7 +53,8 @@ test("sending is throttled, skips unchanged state, and always sends a new emote"
   assert.equal(shouldSend(null, msg(), 0, 0), true);
   assert.equal(shouldSend(msg(), msg({ x: 120 }), 100, 0), false);
   assert.equal(shouldSend(msg(), msg({ x: 120 }), 250, 0), true);
-  assert.equal(shouldSend(msg(), msg(), 5000, 0), false);
+  assert.equal(shouldSend(msg(), msg(), 1500, 0), false);
+  assert.equal(shouldSend(msg(), msg(), 2000, 0), true);
   assert.equal(shouldSend(msg(), msg({ emote: "👋" }), 10, 0), true);
   assert.equal(shouldSend(msg({ emote: "👋" }), msg({ emote: "👋" }), 10, 0), false);
 });

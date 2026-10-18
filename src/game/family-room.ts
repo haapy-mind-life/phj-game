@@ -5,6 +5,7 @@ export const ROOM_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 export const MAX_ROOM_PLAYERS = 4;
 export const SEND_INTERVAL_MS = 200;
 export const STALE_AFTER_MS = 5000;
+export const HEARTBEAT_MS = 2000;
 export const MAP_LIMIT = { x: 8000, y: 4000 } as const;
 
 export const NICKNAMES = ["현준", "아빠", "엄마", "누나"] as const;
@@ -91,6 +92,7 @@ export function shouldSend(
   if (!prev) return true;
   if (next.emote && next.emote !== prev.emote) return now - lastSentAt >= 0;
   if (now - lastSentAt < SEND_INTERVAL_MS) return false;
+  if (now - lastSentAt >= HEARTBEAT_MS) return true; // keep idle players from expiring
   return (
     prev.x !== next.x ||
     prev.y !== next.y ||
