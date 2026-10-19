@@ -1,11 +1,15 @@
+import { WORLD_SIZE, worldDelta, wrapPoint } from "./world-space.ts";
+import { OUTFITS as SHOP_OUTFITS } from "./world-content.ts";
+import { LIFE_MAPS } from "./life-world.ts";
 import type { Outfit } from "../lib/world-model.ts";
 
 export const ROOM_CODE_LENGTH = 6;
 export const ROOM_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 export const MAX_ROOM_PLAYERS = 4;
 export const SEND_INTERVAL_MS = 200;
-export const STALE_AFTER_MS = 5000;
-export const MAP_LIMIT = { x: 8000, y: 4000 } as const;
+export const HEARTBEAT_MS = 2000;
+export const STALE_AFTER_MS = 15000;
+export const MAP_LIMIT = { x: WORLD_SIZE.width, y: WORLD_SIZE.height } as const;
 
 export const NICKNAMES = ["현준", "아빠", "엄마", "누나"] as const;
 export type Nickname = (typeof NICKNAMES)[number];
@@ -13,7 +17,7 @@ export const EMOTES = ["👋", "😀", "❤️", "⭐", "🎃", "🍕"] as const
 export type Emote = (typeof EMOTES)[number];
 export const REGIONS = ["village", "coast", "mansion", "deep-sea"] as const;
 export type FamilyRegion = (typeof REGIONS)[number];
-const OUTFITS = ["mint", "peach", "lavender"] as const;
+const OUTFITS = ["mint", "peach", "lavender", ...SHOP_OUTFITS.map((o) => o.id)] as const;
 
 export type PlayerMessage = {
   id: string;
@@ -24,15 +28,22 @@ export type PlayerMessage = {
   facing: 1 | -1;
   outfit: Outfit;
   moving: boolean;
+  active?: boolean;
   emote: Emote | null;
   t: number;
 };
 
-export function makeRoomCode(random: () => number = Math.random): string {
-  let code = "";
-  for (let i = 0; i < ROOM_CODE_LENGTH; i++)
-    code += ROOM_CODE_ALPHABET[Math.floor(random() * ROOM_CODE_ALPHABET.length) % 32];
-  return code;
+export function makeRoomCode(random?: () => number): string {
+  const bytes = random ? null : globalThis.crypto.getRandomValues(new Uint8Array(ROOM_CODE_LENGTH));
+  return Array.from(
+    { length: ROOM_CODE_LENGTH },
+    (_, i) =>
+      ROOM_CODE_ALPHABET[
+        bytes
+          ? bytes[i]! & 31
+          : Math.min(31, Math.max(0, Math.floor(random!() * ROOM_CODE_ALPHABET.length)))
+      ],
+  ).join("");
 }
 export function normalizeRoomCode(input: string): string | null {
   const code = input.trim().toUpperCase();
@@ -50,8 +61,10 @@ const num = (v: unknown, max: number) =>
 export function parsePlayerMessage(input: unknown): PlayerMessage | null {
   if (input === null || typeof input !== "object") return null;
   const m = input as Record<string, unknown>;
-  const x = num(m["x"], MAP_LIMIT.x);
-  const y = num(m["y"], MAP_LIMIT.y);
+  const region = m["region"];
+  const limits = has(REGIONS, region) && region !== "village" ? LIFE_MAPS[region] : WORLD_SIZE;
+  const x = num(m["x"], limits.width);
+  const y = num(m["y"], limits.height);
   const t = num(m["t"], 1e15);
   if (
     typeof m["id"] !== "string" ||
@@ -61,6 +74,7 @@ export function parsePlayerMessage(input: unknown): PlayerMessage | null {
     !has(OUTFITS, m["outfit"]) ||
     (m["facing"] !== 1 && m["facing"] !== -1) ||
     typeof m["moving"] !== "boolean" ||
+    (m["active"] !== undefined && typeof m["active"] !== "boolean") ||
     (m["emote"] !== null && m["emote"] !== undefined && !has(EMOTES, m["emote"])) ||
     x === null ||
     y === null ||
@@ -76,12 +90,13 @@ export function parsePlayerMessage(input: unknown): PlayerMessage | null {
     facing: m["facing"],
     outfit: m["outfit"],
     moving: m["moving"],
+    ...(m["active"] === undefined ? {} : { active: m["active"] as boolean }),
     emote: (m["emote"] as Emote | null | undefined) ?? null,
     t,
   };
 }
 
-/** Send at most every SEND_INTERVAL_MS, skip when nothing changed (emote always goes). */
+/** Movement, heartbeats and emotes share one rate limit. */
 export function shouldSend(
   prev: PlayerMessage | null,
   next: PlayerMessage,
@@ -89,9 +104,12 @@ export function shouldSend(
   lastSentAt: number,
 ): boolean {
   if (!prev) return true;
-  if (next.emote && next.emote !== prev.emote) return now - lastSentAt >= 0;
   if (now - lastSentAt < SEND_INTERVAL_MS) return false;
   return (
+    now - lastSentAt >= HEARTBEAT_MS ||
+    prev.nick !== next.nick ||
+    prev.active !== next.active ||
+    prev.emote !== next.emote ||
     prev.x !== next.x ||
     prev.y !== next.y ||
     prev.region !== next.region ||
@@ -112,12 +130,19 @@ export function applyMessage(
   now: number,
 ): RemoteMap {
   if (msg.id === selfId) return remotes;
-  const old = remotes[msg.id];
-  if (old && msg.t < old.msg.t) return remotes;
+  const old = Object.hasOwn(remotes, msg.id) ? remotes[msg.id] : undefined;
+  if (old && msg.t <= old.msg.t) return remotes;
   if (!old && Object.keys(remotes).length >= MAX_ROOM_PLAYERS - 1) return remotes;
   return {
     ...remotes,
-    [msg.id]: { msg, from: old ? { x: old.msg.x, y: old.msg.y } : msg, seenAt: now },
+    [msg.id]: {
+      msg,
+      from:
+        old && old.msg.region === msg.region && old.msg.active !== false && msg.active !== false
+          ? drawPosition(old, now)
+          : { x: msg.x, y: msg.y },
+      seenAt: now,
+    },
   };
 }
 export function pruneStale(remotes: RemoteMap, now: number): RemoteMap {
@@ -127,7 +152,11 @@ export function pruneStale(remotes: RemoteMap, now: number): RemoteMap {
 /** Position to draw: glide from the previous point toward the latest over one send interval. */
 export function drawPosition(r: RemotePlayer, now: number) {
   const k = Math.min(1, Math.max(0, (now - r.seenAt) / SEND_INTERVAL_MS));
+  if (r.msg.region === "village") {
+    const delta = worldDelta(r.from, r.msg);
+    return wrapPoint({ x: r.from.x + delta.x * k, y: r.from.y + delta.y * k });
+  }
   return { x: r.from.x + (r.msg.x - r.from.x) * k, y: r.from.y + (r.msg.y - r.from.y) * k };
 }
 export const visibleRemotes = (remotes: RemoteMap, region: FamilyRegion) =>
-  Object.values(remotes).filter((r) => r.msg.region === region);
+  Object.values(remotes).filter((r) => r.msg.region === region && r.msg.active !== false);
