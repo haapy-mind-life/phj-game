@@ -87,6 +87,20 @@ npm run preview:pages -- --host 127.0.0.1 --port 4183
 
 이 가이드나 구현 과정에서 자동 push·merge·Supabase SQL 실행·운영 배포를 수행하지 않는다. Supabase 프로젝트를 제어하는 개인 토큰도 필요 없다.
 
+## CLI로 SQL 적용하기
+
+연결 대상 프로젝트는 `eoyqdxmesfolifgjuetf`다. CLI가 별도로 설치되지 않았다면 다음처럼 실행할 수 있다.
+
+```bash
+npx supabase login
+# 이 저장소에는 supabase/config.toml이 이미 있어 init은 다시 하지 않는다.
+npx supabase link --project-ref eoyqdxmesfolifgjuetf
+npx supabase db push --dry-run
+npx supabase db push
+```
+
+CLI 로그인은 공개 publishable 키와 다른 관리자 인증이다. 브라우저 로그인 후 프로젝트를 연결하며, 필요하면 DB 비밀번호를 로컬 터미널 프롬프트에 입력한다. 제공된 연결 문자열의 `[YOUR-PASSWORD]`는 실제 비밀번호로 교체해야 하는 자리 표시자다. 비밀번호는 커밋하거나 대화창에 보내지 않는다. SQL 적용 후에도 2~3단계의 가족 계정 생성·구성원 등록과 Realtime 설정은 필요하다.
+
 ## 5. 실제로 가족 만나기
 
 1. 아빠 기기에서 게임의 “가족방”을 열고 아빠 계정으로 로그인한다.
