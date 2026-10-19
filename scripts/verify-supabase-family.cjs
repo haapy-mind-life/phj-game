@@ -35,8 +35,19 @@ fs.mkdirSync(out, { recursive: true });
       await page.locator(".hj-family-toggle").click();
       await page.getByRole("form", { name: "부모님 가족 계정 로그인" }).waitFor();
       if (mobile) await page.screenshot({ path: out + "/login-phone.png" });
-      await page.getByLabel("가족 계정 이메일", { exact: true }).fill(name + "@family.test");
-      await page.getByLabel("비밀번호", { exact: true }).fill("demo-password");
+      const nickname = { dad: "아빠", mom: "엄마", sister: "누나", hyunjun: "현준" }[name];
+      if (!nickname) {
+        // Inject another server-side identity to verify the membership boundary independently of the picker.
+        await page.route("**/auth/v1/token?grant_type=password", (route) => {
+          const body = route.request().postDataJSON();
+          return route.continue({
+            postData: JSON.stringify({ ...body, email: name + "@phj-game.invalid" }),
+          });
+        });
+      }
+      await page.getByRole("button", { name: nickname || "현준", exact: true }).click();
+      assert.equal(await page.locator('.family-login input[type="email"]').count(), 0);
+      await page.getByLabel("암호", { exact: true }).fill("demo-password");
       await page.getByRole("button", { name: "가족 계정 로그인", exact: true }).click();
       return { page, context };
     }

@@ -99,7 +99,7 @@ export function useFamilyAccount() {
         password,
       });
       if (problem) {
-        setError("이메일과 비밀번호를 확인해 주세요.");
+        setError("선택한 가족과 암호를 확인해 주세요.");
         return false;
       }
       return true;
