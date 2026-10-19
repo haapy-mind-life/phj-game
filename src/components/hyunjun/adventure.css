@@ -2038,3 +2038,51 @@
   font-size: 32px;
   line-height: 1;
 }
+/* Camera transforms own panning; browser focus/scroll anchoring must never pan the world. */
+.kid-world-shell {
+  overflow-anchor: none;
+}
+.kid-world-shell .adv-viewport {
+  overflow: clip;
+  overflow-anchor: none;
+}
+.hj-family-panel {
+  z-index: 60;
+  box-sizing: border-box;
+  max-height: calc(100% - 134px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.hj-family-panel header {
+  position: sticky;
+  top: 0;
+  background: #fffaf0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.hj-family-panel form,
+.hj-family-panel label {
+  display: grid;
+  gap: 7px;
+}
+.hj-family-panel form {
+  gap: 12px;
+}
+.hj-family-panel .family-login input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  text-transform: none;
+}
+.hj-family-panel button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.hj-family-panel [role="alert"] {
+  color: #964e49;
+}
+.hj-family-panel small {
+  line-height: 1.5;
+}

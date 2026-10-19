@@ -31,3 +31,7 @@ dist-pages
 *.njsproj
 *.sln
 *.sw?
+
+# Local Supabase CLI cache
+supabase/.temp/
+supabase/.branches/

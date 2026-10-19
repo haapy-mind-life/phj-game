@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import {
   EMOTES,
   NICKNAMES,
@@ -6,17 +6,25 @@ import {
   visibleRemotes,
   type FamilyRegion,
 } from "@/game/family-room";
+import { screenPoint } from "@/game/world-space";
+import type { Point } from "@/game/adventure";
 import type { useFamilyRoom } from "./useFamilyRoom";
 import { PlayerAvatar } from "./PlayerAvatar";
-
 type Room = ReturnType<typeof useFamilyRoom>;
-
-export function RemotePlayers({ room, region }: { room: Room; region: FamilyRegion }) {
+export function RemotePlayers({
+  room,
+  region,
+  player,
+}: {
+  room: Room;
+  region: FamilyRegion;
+  player: Point;
+}) {
   const now = Date.now();
   return (
     <>
       {visibleRemotes(room.remotes, region).map((r) => {
-        const p = drawPosition(r, now);
+        const p = screenPoint(drawPosition(r, now), player);
         return (
           <div
             key={r.msg.id}
@@ -24,7 +32,9 @@ export function RemotePlayers({ room, region }: { room: Room; region: FamilyRegi
             style={{ left: p.x, top: p.y, zIndex: 4 }}
             data-remote={r.msg.nick}
           >
-            {r.msg.emote && <span className="hj-remote-emote">{r.msg.emote}</span>}
+            {r.msg.emote && now - r.seenAt < 2000 && (
+              <span className="hj-remote-emote">{r.msg.emote}</span>
+            )}
             <div style={{ transform: `scaleX(${r.msg.facing})` }}>
               <PlayerAvatar outfit={r.msg.outfit} moving={r.msg.moving} />
             </div>
@@ -35,62 +45,185 @@ export function RemotePlayers({ room, region }: { room: Room; region: FamilyRegi
     </>
   );
 }
-
+const statusLabel = {
+  connecting: "가족방 연결 중",
+  connected: "가족과 연결됐어요",
+  reconnecting: "연결을 다시 확인하고 있어요",
+  disconnected: "연결이 끊겼어요. 혼자 놀기는 계속돼요",
+  full: "가족방에 네 명이 있어요",
+};
 export function FamilyRoomPanel({ room }: { room: Room }) {
-  const [open, setOpen] = useState(false);
-  const [input, setInput] = useState("");
-  const count = Math.max(room.people, Object.keys(room.remotes).length + (room.code ? 1 : 0));
+  const [open, setOpen] = useState(false),
+    [input, setInput] = useState(""),
+    [email, setEmail] = useState(""),
+    [password, setPassword] = useState("");
+  const account = room.account,
+    online = account.mode === "supabase",
+    canJoin = account.mode === "local" || account.status === "ready";
+  const count = Object.keys(room.remotes).length + (room.code ? 1 : 0);
+  async function login(e: FormEvent) {
+    e.preventDefault();
+    try {
+      await account.signIn(email, password);
+    } finally {
+      setPassword("");
+    }
+  }
   return (
     <>
-      <button className="hj-family-toggle" onClick={() => setOpen((v) => !v)}>
-        👨‍👩‍👧 {room.code ? `가족방 ${count}명` : "가족방"}
+      <button className="hj-family-toggle" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
+        👨‍👩‍👧{" "}
+        {room.code
+          ? room.status === "connected"
+            ? `가족방 ${count}명`
+            : "가족방 연결 확인"
+          : "가족방"}
       </button>
       {open && (
-        <div className="hj-family-panel" role="group" aria-label="가족방">
-          <b>나는 누구?</b>
-          <div>
-            {NICKNAMES.map((n) => (
-              <button key={n} aria-pressed={room.nick === n} onClick={() => room.setNick(n)}>
-                {n}
-              </button>
-            ))}
-          </div>
-          {room.code ? (
-            <>
-              <p>
-                방 코드 <strong>{room.code}</strong>
-              </p>
-              <div>
-                {EMOTES.map((e) => (
-                  <button key={e} aria-label={`인사 ${e}`} onClick={() => room.sendEmote(e)}>
-                    {e}
-                  </button>
-                ))}
-              </div>
-              <button onClick={room.leave}>방 나가기</button>
-            </>
+        <section className="hj-family-panel" role="group" aria-label="가족방">
+          <header>
+            <b>함께 놀기</b>
+            <button onClick={() => setOpen(false)} aria-label="가족방 닫기">
+              닫기 ✕
+            </button>
+          </header>
+          {account.mode === "invalid" ? (
+            <p role="alert">
+              부모님이 가족방 연결 설정을 확인해 주세요. 혼자 놀기는 계속할 수 있어요.
+            </p>
           ) : (
             <>
-              <button onClick={() => room.create()}>방 만들기</button>
-              <div>
-                <input
-                  value={input}
-                  maxLength={6}
-                  placeholder="방 코드 6자리"
-                  aria-label="방 코드"
-                  onChange={(e) => setInput(e.target.value.toUpperCase())}
-                />
-                <button onClick={() => room.join(input)}>들어가기</button>
-              </div>
+              {online ? (
+                <>
+                  {account.status === "loading" ? (
+                    <p role="status">가족 계정을 확인하고 있어요…</p>
+                  ) : account.status === "ready" ? (
+                    <p>🔒 {room.nick}의 가족 전용 공간</p>
+                  ) : account.status === "not-member" || account.status === "error" ? (
+                    <>
+                      <p role="alert">{account.error}</p>
+                      <button onClick={() => void account.retry()}>다시 확인</button>
+                      <button
+                        onClick={() => {
+                          room.leave();
+                          void account.signOut();
+                        }}
+                      >
+                        다른 계정으로 로그인
+                      </button>
+                    </>
+                  ) : (
+                    <form
+                      onSubmit={login}
+                      className="family-login"
+                      aria-label="부모님 가족 계정 로그인"
+                    >
+                      <p>부모님이 처음 한 번 로그인해 주세요.</p>
+                      <label>
+                        가족 계정 이메일
+                        <input
+                          type="email"
+                          autoComplete="username"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required
+                        />
+                      </label>
+                      <label>
+                        비밀번호
+                        <input
+                          type="password"
+                          autoComplete="current-password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          required
+                        />
+                      </label>
+                      <button type="submit" disabled={account.busy}>
+                        {account.busy ? "로그인 중…" : "가족 계정 로그인"}
+                      </button>
+                      {account.error && <p role="alert">{account.error}</p>}
+                    </form>
+                  )}
+                </>
+              ) : (
+                <>
+                  <p>같은 기기에서 연 창끼리 만나는 연습 모드예요.</p>
+                  <b>나는 누구?</b>
+                  <div>
+                    {NICKNAMES.map((n) => (
+                      <button
+                        key={n}
+                        aria-pressed={room.nick === n}
+                        onClick={() => room.setNick(n)}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+              {canJoin && (
+                <>
+                  {room.code ? (
+                    <>
+                      <p>
+                        방 코드 <strong>{room.code}</strong>
+                      </p>
+                      <p role="status">{statusLabel[room.status]}</p>
+                      <div>
+                        {EMOTES.map((e) => (
+                          <button
+                            key={e}
+                            aria-label={`인사 ${e}`}
+                            disabled={room.status !== "connected"}
+                            onClick={() => room.sendEmote(e)}
+                          >
+                            {e}
+                          </button>
+                        ))}
+                      </div>
+                      {room.status !== "connected" && (
+                        <button onClick={() => room.reconnect()}>다시 연결</button>
+                      )}
+                      <button onClick={room.leave}>방 나가기</button>
+                    </>
+                  ) : (
+                    <>
+                      <button onClick={() => room.create()}>방 만들기</button>
+                      <div>
+                        <input
+                          value={input}
+                          maxLength={6}
+                          placeholder="방 코드 6자리"
+                          aria-label="방 코드"
+                          autoCapitalize="characters"
+                          autoComplete="off"
+                          spellCheck={false}
+                          onChange={(e) => setInput(e.target.value.toUpperCase())}
+                        />
+                        <button onClick={() => room.join(input)}>들어가기</button>
+                      </div>
+                    </>
+                  )}
+                  {room.error && <p role="alert">{room.error}</p>}
+                  {online && (
+                    <button
+                      disabled={account.busy}
+                      onClick={() => {
+                        room.leave();
+                        void account.signOut();
+                      }}
+                    >
+                      이 기기 로그아웃
+                    </button>
+                  )}
+                  <small>지상 마을에서 서로 보고 인사해요. 돈·집·농장은 각자 저장돼요.</small>
+                </>
+              )}
             </>
           )}
-          {room.error && <p role="alert">{room.error}</p>}
-          <small>
-            {room.mode === "local"
-              ? "인터넷 연결이 안 돼서 같은 기기의 창끼리만 만나요."
-              : "같은 방 코드를 넣으면 다른 휴대폰·태블릿에서도 만나요 (최대 4명)."}
-          </small>
-        </div>
+        </section>
       )}
     </>
   );

@@ -49,13 +49,12 @@ test("messages accept only numbers and listed values", () => {
   assert.equal("extra" in clean, false);
 });
 
-test("sending is throttled, skips unchanged state, and always sends a new emote", () => {
+test("sending is throttled, skips unchanged state briefly, and throttles emotes", () => {
   assert.equal(shouldSend(null, msg(), 0, 0), true);
   assert.equal(shouldSend(msg(), msg({ x: 120 }), 100, 0), false);
   assert.equal(shouldSend(msg(), msg({ x: 120 }), 250, 0), true);
-  assert.equal(shouldSend(msg(), msg(), 1500, 0), false);
-  assert.equal(shouldSend(msg(), msg(), 2000, 0), true);
-  assert.equal(shouldSend(msg(), msg({ emote: "👋" }), 10, 0), true);
+  assert.equal(shouldSend(msg(), msg(), 500, 0), false);
+  assert.equal(shouldSend(msg(), msg({ emote: "👋" }), 10, 0), false);
   assert.equal(shouldSend(msg({ emote: "👋" }), msg({ emote: "👋" }), 10, 0), false);
 });
 
@@ -69,12 +68,12 @@ test("remote players ignore self and stale packets, cap the room, and expire", (
   r = applyMessage(r, msg({ id: "bbbb-2", nick: "엄마" }), "me", 100);
   r = applyMessage(r, msg({ id: "cccc-3", nick: "누나" }), "me", 100);
   assert.equal(applyMessage(r, msg({ id: "dddd-4", nick: "현준" }), "me", 100), r);
-  assert.equal(Object.keys(pruneStale(r, 5050)).length, 3);
-  assert.equal(Object.keys(pruneStale(r, 5200)).length, 0);
+  assert.equal(Object.keys(pruneStale(r, 15050)).length, 3);
+  assert.equal(Object.keys(pruneStale(r, 15200)).length, 0);
 });
 
 test("remote draw position glides over one interval and filters by region", () => {
-  let r = applyMessage({}, msg({ x: 0, y: 0 }), "me", 0);
+  let r = applyMessage({}, msg({ x: 0, y: 0, region: "mansion" }), "me", 0);
   r = applyMessage(r, msg({ t: 1100, x: 100, y: 50, region: "mansion" }), "me", 1000);
   const p = drawPosition(r["abcd-1"]!, 1100);
   assert.deepEqual(p, { x: 50, y: 25 });
@@ -83,11 +82,29 @@ test("remote draw position glides over one interval and filters by region", () =
   assert.equal(visibleRemotes(r, "mansion").length, 1);
 });
 
-test("presence admits only the first four people by join time", async () => {
-  const { admittedByPresence } = await import("./family-room.ts");
-  const m = [1, 2, 3, 4, 5].map((n) => ({ id: `p-${n}`, joinedAt: n * 10 }));
-  assert.equal(admittedByPresence(m, "p-4"), true);
-  assert.equal(admittedByPresence(m, "p-5"), false);
-  assert.equal(admittedByPresence(m.slice(0, 3), "p-3"), true);
-  assert.equal(admittedByPresence(m, "ghost"), false);
+test("expanded world and purchased outfits are valid; inherited property names never crash", () => {
+  assert.ok(parsePlayerMessage(msg({ x: 17000, y: 9600, outfit: "witch" })));
+  for (const id of ["constructor", "toString"]) {
+    const parsed = parsePlayerMessage(msg({ id }));
+    assert.ok(parsed);
+    assert.doesNotThrow(() => applyMessage({}, parsed, "self", 0));
+  }
+});
+test("idle heartbeat, nickname and clearing emotes are sent with the same throttle", () => {
+  assert.equal(shouldSend(msg(), msg({ t: 4000 }), 4000, 1000), true);
+  assert.equal(shouldSend(msg(), msg({ nick: "엄마" }), 300, 0), true);
+  assert.equal(shouldSend(msg(), msg({ emote: "👋" }), 10, 0), false);
+  assert.equal(shouldSend(msg({ emote: "👋" }), msg(), 300, 0), true);
+});
+test("inactive scenes hide avatars, duplicate packets do not rewind, torus interpolation takes shortest route", () => {
+  let r = applyMessage({}, msg({ x: 20380, y: 10780 }), "self", 0);
+  const next = msg({ x: 20, y: 20, t: 1100 });
+  r = applyMessage(r, next, "self", 1000);
+  const drawn = drawPosition(r["abcd-1"]!, 1100);
+  assert.ok(drawn.x < 30 || drawn.x > 20370);
+  assert.ok(drawn.y < 30 || drawn.y > 10770);
+  assert.equal(applyMessage(r, next, "self", 2000), r);
+  r = applyMessage(r, msg({ active: false, t: 1200 }), "self", 2200);
+  assert.equal(visibleRemotes(r, "village").length, 0);
+  assert.equal(shouldSend(msg(), msg({ active: false }), 300, 0), true);
 });

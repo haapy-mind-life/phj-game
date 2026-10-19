@@ -369,14 +369,6 @@ export function Village() {
   const [diving, setDiving] = useState(false);
   const [camping, setCamping] = useState(false);
   const [facing, setFacing] = useState(1);
-  const familyRoom = useFamilyRoom({
-    region,
-    x: region === "village" ? pos.x : lifePos.x,
-    y: region === "village" ? pos.y : lifePos.y,
-    facing: facing === -1 ? -1 : 1,
-    outfit: state.outfit,
-    moving: walking,
-  });
   const consoleShown = !mini && !drawing && !mapOpen && !garageOpen && !truckOpen;
   const viewport = useRef<HTMLDivElement>(null);
   const nearby = nearestPortal(pos);
@@ -394,6 +386,23 @@ export function Village() {
   });
   const district = [...VILLAGES].sort((a, b) => worldDistance(a, pos) - worldDistance(b, pos))[0];
   const nearDrawing = Math.hypot(pos.x - 5010, pos.y - 520) < 110;
+  const familyRoom = useFamilyRoom({
+    region: "village",
+    x: pos.x,
+    y: pos.y,
+    facing: facing === -1 ? -1 : 1,
+    outfit: state.outfit,
+    moving: walking,
+    active:
+      region === "village" &&
+      !living.restaurant &&
+      !seaOpen &&
+      !submarine &&
+      !truckOpen &&
+      !mini &&
+      !drawing &&
+      plane === "off",
+  });
   const missionPlay = usePlaceMission(
     pos,
     region === "village" &&
@@ -1183,6 +1192,9 @@ export function Village() {
                   </g>
                 )}
               </WorldOverlay>
+              {region === "village" && !seaOpen && !truckOpen && (
+                <RemotePlayers room={familyRoom} region="village" player={pos} />
+              )}
               <ActivityTargets activity={living.activity} player={pos} />
             </WorldCopies>
           ) : (
@@ -1218,7 +1230,6 @@ export function Village() {
               <ActivityTargets activity={living.activity} player={lifePos} />
             </>
           )}
-          {!living.restaurant && <RemotePlayers room={familyRoom} region={region} />}
         </div>
         {region === "village" &&
           !living.restaurant &&

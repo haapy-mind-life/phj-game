@@ -10,5 +10,5 @@
 <!-- LOVABLE:END -->
 
 ## Rules
-- Family room cross-device sync uses Lovable Cloud realtime broadcast + presence only (no tables, nothing stored); it falls back to same-device BroadcastChannel when offline. Why: only momentary position data, keep kids' data off servers.
+- Family room cross-device sync uses Supabase Auth and private Realtime Broadcast + Presence with family membership RLS. Only family membership is stored on the server; game saves remain local. Same-device BroadcastChannel is an explicit preview mode when configuration is absent, never an online error fallback.
 - GitHub Pages build reads VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY from `.env` or repo Actions variables. Why: static build has no Lovable runtime env.
