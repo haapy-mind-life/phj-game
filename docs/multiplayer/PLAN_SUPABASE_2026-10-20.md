@@ -20,7 +20,7 @@
 - `scripts/verify-supabase-family.cjs`: 실제 Supabase SDK를 로컬 HTTP/WebSocket 계약 서버에 연결하고 독립 브라우저 컨텍스트 두 개로 검증했다. 늦은 입장, 정지 유지, 반복 인사, 재접속, 실내 숨김, 즉시 퇴장, 가족 격리, 미등록 계정 차단, 로그인 복원·로그아웃과 개인 코인 유지를 확인했다.
 - 휴대폰 390×844, 태블릿 1024×900 스크린샷으로 로그인·연결 UI를 검증했다. 가족방 패널이 게임 조작 위에 표시되며 휴대폰에서도 로그아웃을 누를 수 있다.
 - 설정 없는 같은 기기 모드의 늦은 입장·정지 유지·즉시 퇴장과 UUID API가 없는 환경을 확인했다. 기존 게임의 두 손가락 이동·행동, 펜 입력·취소와 가로 넘침 방지 검증도 통과했다.
-- 실제 Supabase 프로젝트, 실제 가족 계정, 서로 다른 인터넷 회선의 연결은 **미검증**이다. [연결 가이드](SUPABASE_SETUP.md)에 따라 프로젝트를 설정한 뒤 확인한다.
+- 최초 구현 시 실제 연결은 미검증이었다. 이후 실제 Supabase 프로젝트의 SQL·비공개 채널 설정과 네 계정을 등록하고, 배포된 Pages에서 두 브라우저의 로그인·이동·인사·정지 유지·퇴장을 검증했다. 서로 다른 실제 기기·인터넷 회선은 **미검증**이다. [연결 가이드](SUPABASE_SETUP.md)에 따라 프로젝트를 설정한 뒤 확인한다.
 
 스크린샷은 **로컬 계약 서버의 테스트 계정**으로 촬영했다. 실제 운영 연결 증거가 아니다.
 
@@ -29,3 +29,5 @@
 | ![휴대폰 로그인](images/supabase-login-phone.png) | ![휴대폰 가족방](images/supabase-connected-phone.png) | ![태블릿 가족방](images/supabase-connected-tablet.png) |
 
 브라우저 검증 재현: `bun run scripts/family-supabase-fixture.ts`로 로컬 계약 서버를 시작하고, `VITE_SUPABASE_URL=http://127.0.0.1:4194 VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_browser_contract npm run build:pages`로 테스트 빌드를 만든다. 4183 포트에서 미리보기를 실행한 뒤 `PLAYWRIGHT_CORE_PATH`, `CHROMIUM_EXECUTABLE`을 설치된 브라우저 도구에 맞게 지정하고 `node scripts/verify-supabase-family.cjs`를 실행한다. 이 테스트용 URL·키로 운영 배포하지 않는다.
+
+2026-10-20 로그인 입력을 가족 버튼 + 암호 하나로 줄였다. 암호 보기·숨기기, 가족 변경 시 암호 삭제, 실제 아빠·엄마 로그인과 비공개 방 연결을 휴대폰 화면에서 검증했다.

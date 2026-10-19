@@ -2076,6 +2076,17 @@
   box-sizing: border-box;
   text-transform: none;
 }
+.family-login-names,
+.family-password-entry {
+  display: flex;
+  gap: 6px;
+}
+.family-login-names {
+  flex-wrap: wrap;
+}
+.family-password-entry button {
+  flex-shrink: 0;
+}
 .hj-family-panel button:disabled {
   opacity: 0.55;
   cursor: default;

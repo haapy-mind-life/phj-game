@@ -5,12 +5,19 @@ import {
   drawPosition,
   visibleRemotes,
   type FamilyRegion,
+  type Nickname,
 } from "@/game/family-room";
 import { screenPoint } from "@/game/world-space";
 import type { Point } from "@/game/adventure";
 import type { useFamilyRoom } from "./useFamilyRoom";
 import { PlayerAvatar } from "./PlayerAvatar";
 type Room = ReturnType<typeof useFamilyRoom>;
+const LOGIN_EMAIL: Record<Nickname, string> = {
+  현준: "hyunjun@phj-game.invalid",
+  아빠: "dad@phj-game.invalid",
+  엄마: "mom@phj-game.invalid",
+  누나: "sister@phj-game.invalid",
+};
 export function RemotePlayers({
   room,
   region,
@@ -55,7 +62,8 @@ const statusLabel = {
 export function FamilyRoomPanel({ room }: { room: Room }) {
   const [open, setOpen] = useState(false),
     [input, setInput] = useState(""),
-    [email, setEmail] = useState(""),
+    [loginName, setLoginName] = useState<Nickname>("현준"),
+    [showPassword, setShowPassword] = useState(false),
     [password, setPassword] = useState("");
   const account = room.account,
     online = account.mode === "supabase",
@@ -64,9 +72,10 @@ export function FamilyRoomPanel({ room }: { room: Room }) {
   async function login(e: FormEvent) {
     e.preventDefault();
     try {
-      await account.signIn(email, password);
+      await account.signIn(LOGIN_EMAIL[loginName], password);
     } finally {
       setPassword("");
+      setShowPassword(false);
     }
   }
   return (
@@ -118,27 +127,49 @@ export function FamilyRoomPanel({ room }: { room: Room }) {
                       className="family-login"
                       aria-label="부모님 가족 계정 로그인"
                     >
-                      <p>부모님이 처음 한 번 로그인해 주세요.</p>
-                      <label>
-                        가족 계정 이메일
+                      <p>가족을 고르고 암호만 입력해 주세요.</p>
+                      <div className="family-login-names" role="group" aria-label="로그인할 가족">
+                        {NICKNAMES.map((n) => (
+                          <button
+                            key={n}
+                            type="button"
+                            aria-pressed={loginName === n}
+                            disabled={account.busy}
+                            onClick={() => {
+                              setLoginName(n);
+                              setPassword("");
+                              setShowPassword(false);
+                            }}
+                          >
+                            {n}
+                          </button>
+                        ))}
+                      </div>
+                      <input
+                        type="hidden"
+                        name="username"
+                        autoComplete="username"
+                        value={LOGIN_EMAIL[loginName]}
+                      />
+                      <label htmlFor="family-login-password">암호</label>
+                      <span className="family-password-entry">
                         <input
-                          type="email"
-                          autoComplete="username"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          required
-                        />
-                      </label>
-                      <label>
-                        비밀번호
-                        <input
-                          type="password"
+                          type={showPassword ? "text" : "password"}
+                          id="family-login-password"
+                          name="password"
                           autoComplete="current-password"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           required
                         />
-                      </label>
+                        <button
+                          type="button"
+                          aria-label={showPassword ? "암호 숨기기" : "암호 보기"}
+                          onClick={() => setShowPassword((v) => !v)}
+                        >
+                          {showPassword ? "숨기기" : "보기"}
+                        </button>
+                      </span>
                       <button type="submit" disabled={account.busy}>
                         {account.busy ? "로그인 중…" : "가족 계정 로그인"}
                       </button>
