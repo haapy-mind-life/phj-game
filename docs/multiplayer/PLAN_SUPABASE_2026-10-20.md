@@ -31,3 +31,5 @@
 브라우저 검증 재현: `bun run scripts/family-supabase-fixture.ts`로 로컬 계약 서버를 시작하고, `VITE_SUPABASE_URL=http://127.0.0.1:4194 VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_browser_contract npm run build:pages`로 테스트 빌드를 만든다. 4183 포트에서 미리보기를 실행한 뒤 `PLAYWRIGHT_CORE_PATH`, `CHROMIUM_EXECUTABLE`을 설치된 브라우저 도구에 맞게 지정하고 `node scripts/verify-supabase-family.cjs`를 실행한다. 이 테스트용 URL·키로 운영 배포하지 않는다.
 
 2026-10-20 로그인 입력을 가족 버튼 + 암호 하나로 줄였다. 암호 보기·숨기기, 가족 변경 시 암호 삭제, 실제 아빠·엄마 로그인과 비공개 방 연결을 휴대폰 화면에서 검증했다.
+
+로그인을 숫자 6자리 암호로 간소화하고 휴대폰 숫자 키패드를 제공한다. 기기는 마지막으로 선택한 가족 이름만 기억하며 암호는 저장하지 않는다. 실제 네 계정의 새 암호 로그인과 휴대폰 화면의 가족 선택 복원·입력·비공개 방 접속을 검증했다.
