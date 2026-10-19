@@ -18,6 +18,15 @@ const LOGIN_EMAIL: Record<Nickname, string> = {
   엄마: "mom@phj-game.invalid",
   누나: "sister@phj-game.invalid",
 };
+const LOGIN_NAME_KEY = "hj-family-login-name";
+function rememberedLoginName(): Nickname {
+  try {
+    const saved = localStorage.getItem(LOGIN_NAME_KEY);
+    return NICKNAMES.find((n) => n === saved) ?? "현준";
+  } catch {
+    return "현준";
+  }
+}
 export function RemotePlayers({
   room,
   region,
@@ -62,7 +71,7 @@ const statusLabel = {
 export function FamilyRoomPanel({ room }: { room: Room }) {
   const [open, setOpen] = useState(false),
     [input, setInput] = useState(""),
-    [loginName, setLoginName] = useState<Nickname>("현준"),
+    [loginName, setLoginName] = useState<Nickname>(rememberedLoginName),
     [showPassword, setShowPassword] = useState(false),
     [password, setPassword] = useState("");
   const account = room.account,
@@ -127,7 +136,7 @@ export function FamilyRoomPanel({ room }: { room: Room }) {
                       className="family-login"
                       aria-label="부모님 가족 계정 로그인"
                     >
-                      <p>가족을 고르고 암호만 입력해 주세요.</p>
+                      <p>가족을 고르고 숫자 암호 6자리만 입력해 주세요.</p>
                       <div className="family-login-names" role="group" aria-label="로그인할 가족">
                         {NICKNAMES.map((n) => (
                           <button
@@ -139,6 +148,11 @@ export function FamilyRoomPanel({ room }: { room: Room }) {
                               setLoginName(n);
                               setPassword("");
                               setShowPassword(false);
+                              try {
+                                localStorage.setItem(LOGIN_NAME_KEY, n);
+                              } catch {
+                                // Family selection still works when storage is unavailable.
+                              }
                             }}
                           >
                             {n}
@@ -158,6 +172,11 @@ export function FamilyRoomPanel({ room }: { room: Room }) {
                           id="family-login-password"
                           name="password"
                           autoComplete="current-password"
+                          inputMode="numeric"
+                          pattern="[0-9]{6}"
+                          minLength={6}
+                          maxLength={6}
+                          placeholder="숫자 6자리"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           required

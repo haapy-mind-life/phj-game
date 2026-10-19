@@ -21,7 +21,7 @@
 ## 2. 가족 계정 네 개 만들기
 
 1. Authentication → Users → Add user / Create user에서 아빠·엄마·누나·현준 계정을 각각 만든다.
-2. 게임 전용 ID `dad@phj-game.invalid`(아빠), `mom@phj-game.invalid`(엄마), `sister@phj-game.invalid`(누나), `hyunjun@phj-game.invalid`(현준)를 사용하고 암호를 정한다. 실제 메일을 받지 않는 로그인용 ID이므로 이메일 확인이 완료된 계정으로 만든다. 관리자 생성의 Auto Confirm 옵션을 사용할 수 있다.
+2. 게임 전용 ID `dad@phj-game.invalid`(아빠), `mom@phj-game.invalid`(엄마), `sister@phj-game.invalid`(누나), `hyunjun@phj-game.invalid`(현준)를 사용하고 각자 다른 숫자 6자리 암호를 정한다. 실제 메일을 받지 않는 로그인용 ID이므로 이메일 확인이 완료된 계정으로 만든다. 관리자 생성의 Auto Confirm 옵션을 사용할 수 있다.
 3. **각 계정의 User UID**를 복사해 둔다. 계정 이메일이나 비밀번호와는 다른 UUID다.
 4. Authentication 설정에서 공개 신규 회원가입을 끈다. 이 게임에는 회원가입 화면이 없다.
 5. URL Configuration의 Site URL은 실제 게임 주소, 예를 들어 `https://haapy-mind-life.github.io/phj-game/`로 설정한다.
@@ -77,7 +77,7 @@ npm run preview:pages -- --host 127.0.0.1 --port 4183
 
 두 값이 모두 없으면 화면에 **같은 기기 연습 모드**라고 나온다. 한 값만 있거나 비밀 키를 넣으면 설정 오류를 표시한다. 온라인 연결이 실패했다고 조용히 연습 모드로 바꾸지는 않는다.
 
-휴대폰에서는 가족 버튼을 고르고 **암호만 입력**한다. “보기”로 입력 내용을 확인할 수 있으며, 가족을 바꾸면 입력한 암호를 지운다.
+휴대폰에서는 가족 버튼을 고르고 **숫자 암호 6자리만 입력**한다. 숫자 키패드를 사용하며 한 번 선택한 가족은 해당 기기에서 기억한다. 암호는 별도로 저장하지 않고 유효한 로그인 세션을 유지한다. “보기”로 입력 내용을 확인할 수 있으며, 가족을 바꾸면 입력한 암호를 지운다.
 
 ![가족 선택과 암호 입력 화면](images/password-login-phone.png)
 

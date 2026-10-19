@@ -47,7 +47,7 @@ fs.mkdirSync(out, { recursive: true });
       }
       await page.getByRole("button", { name: nickname || "현준", exact: true }).click();
       assert.equal(await page.locator('.family-login input[type="email"]').count(), 0);
-      await page.getByLabel("암호", { exact: true }).fill("demo-password");
+      await page.getByLabel("암호", { exact: true }).fill("246813");
       await page.getByRole("button", { name: "가족 계정 로그인", exact: true }).click();
       return { page, context };
     }
