@@ -1,14 +1,17 @@
+import type { FamilyAppearanceId } from "@/game/family-identity";
 import { PlayerAvatar } from "./PlayerAvatar";
 import type { Outfit, FurnitureId, CropId } from "@/lib/world-model";
 export function Star() {
   return <span aria-hidden="true">⭐</span>;
 }
 export function Mascot({
+  identity = "hyunjun",
   outfit = "mint",
   small = false,
   moving = false,
   diving = false,
 }: {
+  identity?: FamilyAppearanceId;
   outfit?: Outfit;
   small?: boolean;
   moving?: boolean;
@@ -16,6 +19,7 @@ export function Mascot({
 }) {
   return (
     <PlayerAvatar
+      identity={identity}
       outfit={outfit}
       moving={moving}
       diving={diving}

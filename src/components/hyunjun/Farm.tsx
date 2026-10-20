@@ -1,8 +1,10 @@
+import { usePlayerIdentity } from "./useFamilyAccount";
 import { useState } from "react";
 import { CROPS, cropById, useGame, type CropId } from "@/lib/game-state";
 import { CropArt } from "./Art";
 import { Shell } from "./Shell";
 export function Farm() {
+  const identity = usePlayerIdentity();
   const { state, ready, dispatch, getState } = useGame();
   const [selected, setSelected] = useState<CropId>("radish");
   const [msg, setMsg] = useState("무료 동글 무부터 심어봐!");
@@ -36,7 +38,7 @@ export function Farm() {
   return (
     <Shell
       active="farm"
-      title="현준이의 반짝 농장"
+      title={`${identity.name}의 반짝 농장`}
       subtitle="심고, 물 주고, 수확해요. 실패는 없어요."
     >
       <div className="hj-seeds">
@@ -54,7 +56,7 @@ export function Farm() {
         ))}
       </div>
       <section className="hj-garden">
-        <h2>현준이네 작은 밭</h2>
+        <h2>{identity.name}의 작은 밭</h2>
         <div className="hj-plots">
           {state.plots.map((p, i) => {
             const c = p.crop ? cropById(p.crop) : null,

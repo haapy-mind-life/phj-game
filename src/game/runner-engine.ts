@@ -223,7 +223,7 @@ function collect(r: Run, p: Pickup) {
   if (p.kind === "coin") r.coins += 2;
   else if (p.kind === "mushroom") {
     r.combat.giantTimer = 480;
-    r.hint = "쑥쑥 버섯! 커다란 현준이로 변신!";
+    r.hint = "쑥쑥 버섯! 커다란 나로 변신!";
   } else {
     r.combat.disguised = true;
     r.combat.bananas += 5;
@@ -244,7 +244,7 @@ function fixedStep(r: Run, dt: number) {
   if (stage.id === "clear") {
     r.phase = "clear";
     r.score = 1000;
-    r.hint = "완주했어! 현준이 정말 멋져!";
+    r.hint = "완주했어! 정말 멋져!";
     return;
   }
   if (stage.id !== r.stage) {

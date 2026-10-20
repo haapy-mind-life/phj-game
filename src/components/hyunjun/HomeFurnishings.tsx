@@ -5,6 +5,7 @@ function Furniture({ id }: { id: FurnitureId }) {
   if (id === "bed")
     return (
       <g>
+        <path d="M-110 5H110V35H-110Z" fill="#a17ba5" />
         <rect x="-110" y="-160" width="220" height="180" rx="25" fill="#c4a0c9" {...line} />
         <rect x="-96" y="-145" width="192" height="145" rx="20" fill="#fffcf0" />
         <rect x="-84" y="-78" width="168" height="78" rx="14" fill="#a6dbe6" />
@@ -59,6 +60,7 @@ function Furniture({ id }: { id: FurnitureId }) {
   if (id === "shelf")
     return (
       <g>
+        <path d="M90-160l20-16V0L90 15Z" fill="#9e754d" />
         <rect x="-90" y="-160" width="180" height="175" rx="12" fill="#c59968" {...line} />
         {[-120, -50].map((y, i) => (
           <g key={y}>
@@ -117,6 +119,74 @@ function Furniture({ id }: { id: FurnitureId }) {
     </g>
   );
 }
+function Kitchen() {
+  return (
+    <g data-home-fixture="kitchen">
+      <ellipse cx="-40" cy="6" rx="315" ry="26" fill="#83694b22" />
+      <path d="M-330-220l25-16h120v223l-25 14Z" fill="#81b7b5" />
+      <rect
+        x="-330"
+        y="-220"
+        width="120"
+        height="220"
+        rx="12"
+        fill="#c4e4db"
+        stroke="#819e91"
+        strokeWidth="5"
+      />
+      <path d="M-330-145h120m-20-48v22m0 48v46" stroke="#779e94" strokeWidth="6" />
+      <path d="M-130-90H300V0H-130Z" fill="#d2a277" stroke="#ab8060" strokeWidth="5" />
+      <path d="M300-90l25-25v90L300 0" fill="#b78c68" />
+      <path d="M-145-90l25-35h445l-25 35Z" fill="#fff4db" stroke="#bf9875" strokeWidth="5" />
+      {[-105, 25, 155].map((x) => (
+        <g key={x}>
+          <rect x={x} y="-72" width="110" height="60" rx="6" fill="#e6bb91" />
+          <path d={`M${x + 42}-58h26`} stroke="#98745e" strokeWidth="5" strokeLinecap="round" />
+        </g>
+      ))}
+      <ellipse cx="-50" cy="-109" rx="41" ry="13" fill="#7a8c8c" />
+      <ellipse cx="52" cy="-109" rx="32" ry="13" fill="#b3d6da" />
+      <path d="M53-110v-37q0-17 22-17" fill="none" stroke="#8caaa5" strokeWidth="7" />
+      <ellipse cx="230" cy="-111" rx="47" ry="17" fill="#fffcf2" stroke="#d7b48a" strokeWidth="3" />
+      <text x="230" y="-111" fontSize="37" textAnchor="middle">
+        🍕
+      </text>
+      <text x="220" y="40" fontSize="24" textAnchor="middle" fill="#8b725d">
+        음식 집기 ↑
+      </text>
+    </g>
+  );
+}
+function DiningTable() {
+  return (
+    <g data-home-fixture="dining">
+      <ellipse cy="10" rx="160" ry="34" fill="#83694b22" />
+      <path d="M-115-35v65m230-65v65" stroke="#99734f" strokeWidth="17" strokeLinecap="round" />
+      <rect x="-155" y="-85" width="310" height="75" rx="34" fill="#b88b61" />
+      <ellipse cy="-85" rx="155" ry="60" fill="#ebc895" stroke="#b88b61" strokeWidth="6" />
+      {[-85, 85].map((x) => (
+        <g key={x}>
+          <ellipse
+            cx={x}
+            cy="-84"
+            rx="38"
+            ry="21"
+            fill="#fffcf1"
+            stroke="#9ec5c2"
+            strokeWidth="4"
+          />
+          <path d={`M${x - 48}-99v30m4-30v11`} stroke="#a3aba1" strokeWidth="3" />
+        </g>
+      ))}
+      <path d="M0-85v-42" stroke="#7ca77e" strokeWidth="5" />
+      <ellipse cy="-80" rx="16" ry="10" fill="#a9ccc2" />
+      <circle cy="-129" r="13" fill="#eca9a0" />
+      <text y="70" fontSize="24" fill="#8b725d" textAnchor="middle">
+        식탁에서 먹기 ↑
+      </text>
+    </g>
+  );
+}
 export function HomeFurnishings({
   room,
   tier,
@@ -129,94 +199,79 @@ export function HomeFurnishings({
   front?: boolean;
 }) {
   const fixtures = [
-    { id: "sofa" as const, x: 1390, y: 1050 },
+    { id: "sofa" as const, x: 1840, y: 1150 },
     ...homeFurniturePlacements(room, tier),
   ];
+  const standing = fixtures.filter((f) => f.id !== "rug" && f.id !== "window");
   return (
     <g data-furniture-layer={front ? "front" : "back"}>
       {!front && (
-        <g>
-          <rect
-            x="160"
-            y="300"
-            width="130"
-            height="190"
-            rx="15"
-            fill="#bde0dd"
-            stroke="#82a9a4"
-            strokeWidth="5"
-          />
-          <path d="M160 370H290M270 330V350M270 405V440" stroke="#709d99" strokeWidth="6" />
-          <rect
-            x="480"
-            y="300"
-            width="440"
-            height="100"
-            rx="15"
-            fill="#e8bd89"
-            stroke="#c29a6c"
-            strokeWidth="6"
-          />
-          <rect x="510" y="310" width="120" height="65" rx="10" fill="#f8f6df" />
-          <circle cx="540" cy="340" r="15" fill="#758b8f" />
-          <circle cx="600" cy="340" r="15" fill="#758b8f" />
-          <rect x="690" y="310" width="120" height="65" rx="15" fill="#b3d9df" />
-          <path d="M750 330V290H780" fill="none" stroke="#91a5a3" strokeWidth="8" />
-          <rect
-            x="1600"
-            y="1000"
-            width="250"
-            height="150"
-            rx="55"
-            fill="#d3ac7b"
-            stroke="#9c7c60"
-            strokeWidth="7"
-          />
-          {[1645, 1730, 1810].map((x) => (
-            <circle
-              key={x}
-              cx={x}
-              cy="1060"
-              r="26"
-              fill="#fff9de"
-              stroke="#9dc8c5"
-              strokeWidth="4"
-            />
-          ))}
-          <path
-            d="M1580 1010V1130M1870 1010V1130"
-            stroke="#ba9070"
-            strokeWidth="24"
-            strokeLinecap="round"
-          />
+        <>
+          {fixtures
+            .filter((f) => f.id === "rug")
+            .map((f, i) => (
+              <g key={i} transform={`translate(${f.x} ${f.y})`}>
+                <Furniture id="rug" />
+              </g>
+            ))}
+          {fixtures
+            .filter((f) => f.id === "window")
+            .map((f, i) => (
+              <g
+                key={i}
+                data-furniture="window"
+                transform={`translate(${Math.max(600, Math.min(1900, f.x))} 270)`}
+              >
+                <Furniture id="window" />
+              </g>
+            ))}
           {tier >= 2 && (
-            <g>
-              <rect x="1330" y="340" width="550" height="220" rx="80" fill="#e7c1cf" />
-              <path d="M1430 490L1480 400L1530 490Z" fill="#f5d276" />
-              <rect x="1600" y="440" width="60" height="60" rx="9" fill="#89bcde" />
-              <circle cx="1750" cy="460" r="42" fill="#94c996" />
+            <g transform="translate(1600 460)">
+              <ellipse rx="220" ry="85" fill="#e8c9d2" stroke="#fff5e6" strokeWidth="8" />
+              <rect x="-85" y="-40" width="58" height="58" rx="8" fill="#98bdd9" />
+              <path d="m70-56 35 70H35Z" fill="#e8c875" />
+              <circle cx="-5" cy="38" r="26" fill="#a6c99c" />
             </g>
           )}
           {tier >= 4 && (
-            <g>
-              <path d="M1280 250Q1600 330 1970 250" stroke="#d3a34e" fill="none" strokeWidth="5" />
-              {[1350, 1500, 1650, 1800, 1930].map((x, i) => (
-                <path
-                  key={x}
-                  d={`M${x} 270l35 65 35-65Z`}
-                  fill={["#eaa1a5", "#81baca", "#eccf7b"][i % 3]}
-                />
-              ))}
-            </g>
+            <path d="M1280 250Q1600 330 1970 250" stroke="#d3a34e" fill="none" strokeWidth="5" />
           )}
-        </g>
+        </>
       )}
-      {fixtures
+      {[
+        ...standing.map((f, i) => ({
+          key: `f${i}`,
+          y: f.y,
+          node: (
+            <g data-furniture={f.id} transform={`translate(${f.x} ${f.y})`}>
+              <ellipse cy="22" rx={f.id === "plant" ? 45 : 105} ry="18" fill="#83694b22" />
+              <Furniture id={f.id} />
+            </g>
+          ),
+        })),
+        {
+          key: "kitchen",
+          y: 555,
+          node: (
+            <g transform="translate(680 555)">
+              <Kitchen />
+            </g>
+          ),
+        },
+        {
+          key: "table",
+          y: 1070,
+          node: (
+            <g transform="translate(1450 1070)">
+              <DiningTable />
+            </g>
+          ),
+        },
+      ]
         .filter((f) => f.y > playerY === front)
-        .map((f, i) => (
-          <g key={i} data-furniture={f.id} transform={`translate(${f.x} ${f.y})`}>
-            <Furniture id={f.id} />
-          </g>
+        .sort((a, b) => a.y - b.y)
+        .map((f) => (
+          <g key={f.key}>{f.node}</g>
         ))}
     </g>
   );

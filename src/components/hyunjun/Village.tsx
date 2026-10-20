@@ -1,3 +1,4 @@
+import { usePlayerIdentity } from "./useFamilyAccount";
 import { DiveScene } from "./DiveScene";
 import { TruckScene } from "./TruckScene";
 import { usePlaceMission } from "./usePlaceMission";
@@ -147,6 +148,7 @@ function Cottage({ x, y, color, label }: { x: number; y: number; color: string; 
 const mapX = (x: number) => 10 + (x / MAP.width) * 320;
 const mapY = (y: number) => 14 + (y / MAP.height) * 132;
 export function Village() {
+  const identity = usePlayerIdentity();
   const { state, dispatch, ready } = useGame();
   const nav = useNavigate();
   const [seaOpen, setSeaOpen] = useState(false);
@@ -157,7 +159,7 @@ export function Village() {
   const [mini, setMini] = useState<MiniKind | null>(null);
   const [drawing, setDrawing] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
-  const [message, setMessage] = useState("현준아, 오늘은 어디로 가볼까? 길을 따라 걸어가 봐!");
+  const [message, setMessage] = useState("오늘은 어디로 가볼까? 길을 따라 걸어가 봐!");
   const [walking, setWalking] = useState(false);
   const [region, setRegion] = useState<LifeRegion>("village");
   const [lifePos, setLifePos] = useState<Point>({ ...LIFE_SPOTS.mansionInside });
@@ -178,7 +180,7 @@ export function Village() {
     setSubmarine(false);
     setPlane("off");
     setAltitude(0);
-    setMessage("현준이 집 안으로 들어왔어! 부엌에서 음식을 집고 식탁에서 먹어 봐.");
+    setMessage("우리 집 안으로 들어왔어! 부엌에서 음식을 집고 식탁에서 먹어 봐.");
   };
   const backToWorld = () => {
     setRegion("village");
@@ -384,7 +386,6 @@ export function Village() {
     direction: livingDirection,
     vehicle: submarine ? "잠수함" : plane !== "off" ? "비행기" : driving ? "자동차" : null,
   });
-  const district = [...VILLAGES].sort((a, b) => worldDistance(a, pos) - worldDistance(b, pos))[0];
   const nearDrawing = Math.hypot(pos.x - 5010, pos.y - 520) < 110;
   const familyRoom = useFamilyRoom({
     region: "village",
@@ -643,36 +644,11 @@ export function Village() {
   return (
     <Shell
       active="home"
-      title="현준이의 큰 세계 여행"
+      title={`${identity.name}의 큰 세계 여행`}
       subtitle="마을에서 바닷가, 바다와 하늘까지! 왼쪽 조이스틱을 밀어 출발해요."
     >
       <div className="adv-toolbar" hidden={seaOpen || truckOpen}>
         <span>✦ 오늘의 모험은 네 마음대로 · {state.money} 별코인</span>
-        <button
-          onClick={() => {
-            if (living.restaurant) {
-              living.leaveRestaurant();
-              return;
-            }
-            living.setActivity(null);
-            if (region !== "village") {
-              backToWorld();
-              return;
-            }
-            const coastArrival = { x: 6060, y: 1040 };
-            setDiving(false);
-            setSubmarine(false);
-            setPlane("off");
-            setAltitude(0);
-            setSubmerged(false);
-            setDriving(false);
-            setPos(coastArrival);
-            returnPosition = coastArrival;
-            setMessage("바닷가 마을이야! 서쪽 길로 걸어서 마을까지 돌아갈 수 있어.");
-          }}
-        >
-          🌊 {region === "village" ? "해변 안내" : "집 밖으로"}
-        </button>
         <button onClick={() => setGarageOpen(true)} disabled={submarine || plane !== "off"}>
           🚗 자동차 {CARS.length}대
         </button>
@@ -1121,21 +1097,27 @@ export function Village() {
                       />
                     </svg>
                   ) : diving ? (
-                    <Mascot outfit={state.outfit} small moving={walking} diving />
+                    <Mascot
+                      identity={identity.id}
+                      outfit={state.outfit}
+                      small
+                      moving={walking}
+                      diving
+                    />
                   ) : driving ? (
                     <CarArt car={carById(carId)} size={98} />
                   ) : (
-                    <Mascot outfit={state.outfit} small moving={walking} />
+                    <Mascot identity={identity.id} outfit={state.outfit} small moving={walking} />
                   )}
                 </div>
                 <b>
                   {plane !== "off"
-                    ? "현준 비행기"
+                    ? `${identity.name} 비행기`
                     : submarine
-                      ? "현준 잠수함"
+                      ? `${identity.name} 잠수함`
                       : driving
-                        ? "현준 🚗"
-                        : "현준"}
+                        ? `${identity.name} 🚗`
+                        : identity.name}
                 </b>
               </div>
               <WorldOverlay center={pos}>
@@ -1213,20 +1195,21 @@ export function Village() {
                 room={state.room}
                 decor={state.decor}
                 candy={state.halloween.candy}
+                renderPeople={(front) => (
+                  <People
+                    state={state}
+                    scene="home"
+                    player={lifePos}
+                    seconds={living.seconds}
+                    moving={walking}
+                    onTalk={living.setTalk}
+                    helperPosition={living.activity?.helper ?? null}
+                    playerLayer={front ? "front" : "back"}
+                    svg
+                  />
+                )}
                 partyActive={state.halloween.active && living.season}
               />
-              <svg className="home-people" width="2200" height="1500">
-                <People
-                  state={state}
-                  scene="home"
-                  player={lifePos}
-                  seconds={living.seconds}
-                  moving={walking}
-                  onTalk={living.setTalk}
-                  helperPosition={living.activity?.helper ?? null}
-                  svg
-                />
-              </svg>
               <ActivityTargets activity={living.activity} player={lifePos} />
             </>
           )}
@@ -1272,7 +1255,8 @@ export function Village() {
             </div>
           )}
         {region !== "village" && (
-          <div className="hj-life-hud">
+          <details className="hj-life-hud">
+            <summary>🏠 집 메뉴 · Lv.{state.houseTier}</summary>
             <b>{LIFE_REGION_LABELS[region]}</b>
             <small>부엌에서 음식 집기 · 식탁에서 먹기</small>
             <span>💰 {state.money} 별코인</span>
@@ -1287,7 +1271,7 @@ export function Village() {
             {holding && (
               <span>손에 든 음식: {FOOD_MENU.find((food) => food.id === holding)?.name}</span>
             )}
-          </div>
+          </details>
         )}
         {region === "mansion" && decorOpen && (
           <div className="hj-decor-panel" role="group" aria-label="집 안 꾸미기">
@@ -1381,19 +1365,6 @@ export function Village() {
           />
         )}
         <FamilyRoomPanel room={familyRoom} />
-        <div className="adv-location">
-          {living.restaurant
-            ? living.restaurant.name
-            : region !== "village"
-              ? LIFE_REGION_LABELS[region]
-              : nearDrawing
-                ? "별자리 공방"
-                : pos.x >= OCEAN.start - 40
-                  ? "큰 바다"
-                  : pos.x >= 5600
-                    ? "바닷가 마을"
-                    : (district?.name ?? "우리 마을")}
-        </div>
         {mapOpen && region === "village" && (
           <div className="adv-globe" role="dialog" aria-label="세계 지도">
             <header>
@@ -1477,6 +1448,23 @@ export function Village() {
               마을을 누르면 바로 여행! 세계의 동서·남북 끝이 이어져요. 30개 마을을 탐험해 봐!
             </small>
             <div className="adv-destinations">
+              <button
+                onClick={() => {
+                  const arrival = { x: 6060, y: 1040 };
+                  setDiving(false);
+                  setSubmarine(false);
+                  setPlane("off");
+                  setAltitude(0);
+                  setSubmerged(false);
+                  setDriving(false);
+                  setPos(arrival);
+                  returnPosition = arrival;
+                  setMapOpen(false);
+                  setMessage("바닷가에 도착했어! 손님과 인사하고 항구도 구경해 봐.");
+                }}
+              >
+                🌊 바닷가 · 푸드트럭
+              </button>
               {VILLAGES.map((v, i) => (
                 <button
                   key={v.id}
@@ -1510,19 +1498,20 @@ export function Village() {
           <div className="adv-bottom adv-console">
             <p className="adv-touch-hint">{message}</p>
             <Joystick onMove={movement.setStick} />
-            {region === "village" && !living.restaurant && plane === "off" && !submarine && (
-              <button
-                className="hj-car-mode"
-                onClick={() => {
-                  if (driving) {
-                    setDriving(false);
-                  } else setGarageOpen(true);
-                }}
-              >
-                {driving ? "차에서 내리기" : "자동차 타기"}
-              </button>
-            )}
             <div className="adv-action-buttons">
+              {region === "village" && !living.restaurant && plane === "off" && !submarine && (
+                <button
+                  className="hj-car-mode"
+                  onClick={() => {
+                    if (driving) {
+                      setDriving(false);
+                    } else setGarageOpen(true);
+                  }}
+                >
+                  {driving ? "내리기" : "차 타기"}
+                </button>
+              )}
+
               <button
                 className="adv-map-button"
                 onClick={() =>

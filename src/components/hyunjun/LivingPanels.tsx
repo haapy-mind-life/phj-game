@@ -1,3 +1,4 @@
+import { usePlayerIdentity } from "./useFamilyAccount";
 import type { ReturnTypeOfLiving } from "./living-types";
 import { ACTORS } from "@/game/actors";
 import { OUTFITS, FOOD_PRICES, REWARDS } from "@/game/world-content";
@@ -40,6 +41,7 @@ export function ActivityTargets({
   );
 }
 export function LivingPanels({ living }: { living: ReturnTypeOfLiving }) {
+  const identity = usePlayerIdentity();
   const { state, dispatch } = useGame();
   const panel = useRef<HTMLDivElement>(null);
   const { blocked, setTalk, setWardrobe, setMenuOpen } = living;
@@ -60,7 +62,8 @@ export function LivingPanels({ living }: { living: ReturnTypeOfLiving }) {
   return (
     <>
       {(state.companions.length > 0 || living.restaurant || living.scene === "home") && (
-        <div className="living-hud" role="group" aria-label="함께하는 친구들">
+        <details className="living-hud" aria-label="함께하는 친구들">
+          <summary>친구 · 옷장 · 놀이</summary>
           {living.restaurant && (
             <>
               <b>{living.restaurant.name}</b>
@@ -98,7 +101,7 @@ export function LivingPanels({ living }: { living: ReturnTypeOfLiving }) {
               </small>
             </>
           )}
-        </div>
+        </details>
       )}
       {living.activity && (
         <div className="living-activity-hud" role="status">
@@ -195,7 +198,7 @@ export function LivingPanels({ living }: { living: ReturnTypeOfLiving }) {
             )}
             {living.wardrobe && (
               <>
-                <h2>현준이의 옷장</h2>
+                <h2>{identity.name}의 옷장</h2>
                 <p>{state.money} 별코인 · 마음에 드는 옷을 입어 봐!</p>
                 <div className="living-shop">
                   {(["mint", "peach", "lavender"] as const).map((id) => (
@@ -204,7 +207,7 @@ export function LivingPanels({ living }: { living: ReturnTypeOfLiving }) {
                       aria-pressed={state.outfit === id}
                       onClick={() => dispatch({ type: "outfit", outfit: id })}
                     >
-                      <img src={characterUrl(id)} alt="" />
+                      <img src={characterUrl(id, "idle", false, false, identity.id)} alt="" />
                       {id === "mint" ? "민트 토끼" : id === "peach" ? "복숭아 토끼" : "보라 토끼"}
                       <small>가지고 있어요</small>
                     </button>
@@ -224,7 +227,7 @@ export function LivingPanels({ living }: { living: ReturnTypeOfLiving }) {
                           )
                         }
                       >
-                        <img src={characterUrl(o.id)} alt="" />
+                        <img src={characterUrl(o.id, "idle", false, false, identity.id)} alt="" />
                         {o.name}
                         <small>{owned ? "입기" : `${o.cost} 별코인`}</small>
                       </button>

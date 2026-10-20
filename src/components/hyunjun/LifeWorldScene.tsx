@@ -1,3 +1,6 @@
+import type { ReactNode } from "react";
+import { BeachTruck } from "./CoastProps";
+import { usePlayerIdentity } from "./useFamilyAccount";
 import { PlayerAvatar } from "./PlayerAvatar";
 import { HomeFurnishings } from "./HomeFurnishings";
 import type { FurnitureId } from "@/lib/world-model";
@@ -31,6 +34,7 @@ export function LifeWorldScene({
   decor,
   candy,
   partyActive,
+  renderPeople,
 }: {
   region: Exclude<LifeRegion, "village">;
   player: Point;
@@ -46,7 +50,9 @@ export function LifeWorldScene({
   decor: PlacedDecor[];
   candy: string[];
   partyActive: boolean;
+  renderPeople?: (front: boolean) => ReactNode;
 }) {
+  const identity = usePlayerIdentity();
   const dim = LIFE_MAPS[region];
   return (
     <svg
@@ -54,7 +60,7 @@ export function LifeWorldScene({
       width={dim.width}
       height={dim.height}
       viewBox={`0 0 ${dim.width} ${dim.height}`}
-      aria-hidden="true"
+      data-region={region}
     >
       <defs>
         <linearGradient id="hj-ocean-water" x1="0" y1="0" x2="0" y2="1">
@@ -124,31 +130,11 @@ export function LifeWorldScene({
               strokeWidth="8"
             />
             <text y="-305" fontSize="38" fill="#fffef5" textAnchor="middle" fontWeight="bold">
-              현준이 대왕집
+              {identity.name}의 대왕집
             </text>
           </g>
           <g transform="translate(1980 740)">
-            <rect
-              x="-180"
-              y="-120"
-              width="350"
-              height="174"
-              rx="24"
-              fill="#f4b35c"
-              stroke="#f9f3e8"
-              strokeWidth="9"
-            />
-            <rect x="-112" y="-72" width="225" height="80" rx="13" fill="#fff1d0" />
-            <rect x="-88" y="8" width="170" height="14" fill="#e5a86a" />
-            <path d="M-195-120H188L145-200H-145Z" fill="#df8e76" />
-            <circle cx="-98" cy="58" r="40" fill="#485465" />
-            <circle cx="106" cy="58" r="40" fill="#485465" />
-            <text y="-145" fontSize="35" textAnchor="middle" fill="#fff7e5">
-              푸드트럭
-            </text>
-            <text y="-25" textAnchor="middle" fontSize="49">
-              🍕 🥤 🍛
-            </text>
+            <BeachTruck />
           </g>
           <g transform="translate(2270 910)">
             <FriendArt index={0} />
@@ -194,7 +180,7 @@ export function LifeWorldScene({
       )}
       {region === "mansion" && (
         <>
-          <rect width={dim.width} height={dim.height} fill="#efdee2" />
+          <rect width={dim.width} height={dim.height} fill="#dfcdbb" />
           <rect
             x="90"
             y="100"
@@ -210,26 +196,55 @@ export function LifeWorldScene({
           <rect x="1250" y="185" width="770" height="480" rx="28" fill="#f4e5f6" />
           <rect x="130" y="865" width="830" height="410" rx="34" fill="#e2ecfb" />
           <rect x="1205" y="865" width="770" height="410" rx="34" fill="#e7f1d9" />
-          {HOME_WALLS.map((wall, i) => (
-            <rect key={i} {...wall} rx="8" fill="#d8b6a4" />
+          <path d="M104 220V112H2095V220" fill="#f3dbc0" stroke="#c89d80" strokeWidth="10" />
+          <path d="M110 222H2090" stroke="#fff6df" strokeWidth="16" />
+          {[320, 1710].map((x) => (
+            <g key={x} transform={`translate(${x} 135)`}>
+              <rect
+                width="150"
+                height="96"
+                rx="15"
+                fill="#afdce4"
+                stroke="#fff9eb"
+                strokeWidth="12"
+              />
+              <path d="M75 0V96M0 48H150" stroke="#fff9eb" strokeWidth="7" />
+            </g>
           ))}
-          <text x="500" y="275" fontSize="52" fill="#806a57">
+          {HOME_WALLS.map((wall, i) => (
+            <g key={i} data-home-wall={i}>
+              <rect
+                x={wall.x + 8}
+                y={wall.y + 10}
+                width={wall.width}
+                height={wall.height}
+                fill="#9b79652b"
+                rx="8"
+              />
+              <rect {...wall} rx="5" fill="#c49d85" />
+              <rect
+                x={wall.x}
+                y={wall.y - 38}
+                width={wall.width}
+                height={wall.height}
+                rx="5"
+                fill="#f3dbc0"
+                stroke="#c49d85"
+                strokeWidth="3"
+              />
+            </g>
+          ))}
+          <text x="500" y="275" fontSize="32" fill="#a38d74">
             부엌
           </text>
-          <text x="1550" y="270" fontSize="52" fill="#876e8b">
+          <text x="1550" y="270" fontSize="32" fill="#a38d9e">
             큰 놀이방
           </text>
-          <text x="470" y="940" fontSize="52" fill="#6d789d">
+          <text x="470" y="940" fontSize="32" fill="#9b9eb1">
             침실
           </text>
-          <text x="1500" y="930" fontSize="52" fill="#628060">
+          <text x="1500" y="930" fontSize="32" fill="#92a28b">
             식당
-          </text>
-          <text x="920" y="610" fontSize="120" textAnchor="middle">
-            🍕
-          </text>
-          <text x="1400" y="1070" fontSize="105" textAnchor="middle">
-            🍽️
           </text>
           {houseTier < 2 && (
             <g>
@@ -294,7 +309,7 @@ export function LifeWorldScene({
             </text>
           ))}
           <text x="230" y="155" fontSize="48" fill="#846d72">
-            현준이 집 Lv.{houseTier}/4
+            {identity.name}의 집 Lv.{houseTier}/4
           </text>
           <text x={LIFE_SPOTS.mansionExit.x} y="1320" fontSize="62" textAnchor="middle">
             🚪
@@ -386,6 +401,7 @@ export function LifeWorldScene({
           </text>
         </g>
       )}
+      {renderPeople?.(false)}
       {region === "mansion" && <HomeFurnishings room={room} tier={houseTier} playerY={player.y} />}
       <g transform={`translate(${player.x} ${player.y})`}>
         {submarine ? (
@@ -397,7 +413,7 @@ export function LifeWorldScene({
           </>
         ) : (
           <g transform={`scale(${facing} 1)`}>
-            <PlayerAvatar outfit={outfit} moving={moving} svg />
+            <PlayerAvatar identity={identity.id} outfit={outfit} moving={moving} svg />
           </g>
         )}
         {holding && (
@@ -407,9 +423,10 @@ export function LifeWorldScene({
         )}
         <rect x="-74" y="52" width="148" height="35" rx="15" fill="#fff9e0" />
         <text y="77" textAnchor="middle" fontSize="25" fill="#425c52" fontWeight="bold">
-          현준이
+          {identity.name}
         </text>
       </g>
+      {renderPeople?.(true)}
       {region === "mansion" && (
         <HomeFurnishings room={room} tier={houseTier} playerY={player.y} front />
       )}

@@ -1,8 +1,20 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
+import type { Nickname } from "@/game/family-room";
+import { familyIdentity } from "@/game/family-identity";
+import {
+  createContext,
+  createElement,
+  useContext,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import type { Session } from "@supabase/supabase-js";
 import { familyClient, familyConfig } from "@/lib/family-supabase";
 import { parseMembership, type FamilyMembership } from "@/game/family-config";
-export function useFamilyAccount() {
+function useAccountState() {
+  const [previewNickname, setPreviewNickname] = useState<Nickname>("현준");
   const [status, setStatus] = useState<"loading" | "signed-out" | "ready" | "not-member" | "error">(
     familyClient ? "loading" : "signed-out",
   );
@@ -134,5 +146,33 @@ export function useFamilyAccount() {
       setError("연결을 다시 확인해 주세요.");
     }
   }, []);
-  return { mode: familyConfig.mode, status, membership, error, busy, signIn, signOut, retry };
+  return {
+    previewNickname,
+    setPreviewNickname,
+    mode: familyConfig.mode,
+    status,
+    membership,
+    error,
+    busy,
+    signIn,
+    signOut,
+    retry,
+  };
+}
+
+const AccountContext = createContext<ReturnType<typeof useAccountState> | null>(null);
+export function FamilyAccountProvider({ children }: { children: ReactNode }) {
+  const account = useAccountState();
+  return createElement(AccountContext.Provider, { value: account }, children);
+}
+export function useFamilyAccount() {
+  const account = useContext(AccountContext);
+  if (!account) throw new Error("FamilyAccountProvider is required");
+  return account;
+}
+export function usePlayerIdentity() {
+  const account = useFamilyAccount();
+  return familyIdentity(
+    account.membership?.nickname ?? (account.mode === "local" ? account.previewNickname : null),
+  );
 }

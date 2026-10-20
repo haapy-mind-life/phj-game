@@ -1,3 +1,4 @@
+import { usePlayerIdentity } from "./useFamilyAccount";
 import { useState } from "react";
 import {
   FURNITURE,
@@ -19,6 +20,7 @@ const walls: [Wallpaper, string][] = [
   ["rose", "복숭아"],
 ];
 export function House() {
+  const identity = usePlayerIdentity();
   const { state, ready, dispatch, getState } = useGame();
   const [selected, setSelected] = useState<FurnitureId | null>("bed");
   const [msg, setMsg] = useState("가구를 고르고 방의 자리를 톡!");
@@ -36,7 +38,11 @@ export function House() {
     setMsg(`${item.name}를 어디에 둘까?`);
   };
   return (
-    <Shell active="room" title="현준이의 포근한 집" subtitle="가구도 옷도 현준이 마음대로 꾸며요.">
+    <Shell
+      active="room"
+      title={`${identity.name}의 포근한 집`}
+      subtitle="가구도 옷도 마음대로 꾸며요."
+    >
       <div className={`hj-room wall-${state.wallpaper}`}>
         <div className="hj-room-title">HOME SWEET HOME</div>
         <div className="hj-room-grid">
@@ -54,7 +60,7 @@ export function House() {
             </button>
           ))}
         </div>
-        <Mascot outfit={state.outfit} />
+        <Mascot identity={identity.id} outfit={state.outfit} />
       </div>
       <div className="hj-wall-buttons">
         {walls.map(([id, name]) => (
@@ -89,7 +95,7 @@ export function House() {
         </div>
       </section>
       <section className="hj-closet">
-        <h2>오늘의 현준이</h2>
+        <h2>오늘의 {identity.name}</h2>
         <div>
           {outfits.map(([id, name]) => (
             <button
@@ -97,7 +103,7 @@ export function House() {
               className={state.outfit === id ? "selected" : ""}
               onClick={() => dispatch({ type: "outfit", outfit: id })}
             >
-              <Mascot outfit={id} small />
+              <Mascot identity={identity.id} outfit={id} small />
               <span>{name}</span>
             </button>
           ))}

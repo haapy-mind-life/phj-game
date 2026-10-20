@@ -1,3 +1,4 @@
+import { BeachProp, BeachTruck } from "./CoastProps";
 import { FriendArt } from "./FriendArt";
 import { RobotArt } from "./RobotArt";
 import { YARD } from "@/lib/world-model";
@@ -97,9 +98,9 @@ export function UnifiedCoast({
         opacity=".55"
       />
       {[160, 330, 520, 700, 1180, 1330, 1560, 1700].map((y, i) => (
-        <text key={y} x={6900 + (i % 3) * 120 + (i % 2) * 40} y={y} fontSize="120">
-          {i % 3 === 0 ? "🌴" : i % 3 === 1 ? "⛱️" : "🐚"}
-        </text>
+        <g key={y} transform={`translate(${6900 + (i % 3) * 120 + (i % 2) * 40} ${y})`}>
+          <BeachProp kind={i % 3} />
+        </g>
       ))}
       {submerged && (
         <rect
@@ -120,28 +121,9 @@ export function UnifiedCoast({
         />
       ))}
       <g transform={`translate(${COAST.truck.x} ${COAST.truck.y})`}>
-        <rect
-          x="-165"
-          y="-148"
-          width="340"
-          height="175"
-          rx="27"
-          fill="#ffc46e"
-          stroke="#fff9dd"
-          strokeWidth="11"
-        />
-        <path d="M-190-148H190L140-204H-145Z" fill="#e9887e" />
-        <rect x="-109" y="-97" width="220" height="82" rx="15" fill="#fff3c7" />
-        <text y="-42" textAnchor="middle" fontSize="47">
-          🍕 🥤 🍛
-        </text>
-        <circle cx="-101" cy="43" r="33" fill="#535267" />
-        <circle cx="115" cy="43" r="33" fill="#535267" />
-        <text y="-237" textAnchor="middle" fontSize="37" fill="#526b55" fontWeight="bold">
-          현준이 푸드트럭
-        </text>
+        <BeachTruck />
       </g>
-      <g transform={`translate(${COAST.truck.x - 48} ${COAST.truck.y - 195})`}>
+      <g transform={`translate(${COAST.truck.x - 90} ${COAST.truck.y - 165})`}>
         <FriendArt index={4} moving={Math.floor(seconds) % 6 < 2} />
       </g>
       {[0, 1, 2, 3, 4, 5].map((i) => (
@@ -200,7 +182,7 @@ export function UnifiedCoast({
           fill="#4f6670"
           fontWeight="bold"
         >
-          ✈️ 현준이 비행장
+          ✈️ 바닷가 비행장
         </text>
         {parkedPlane && (
           <g transform={`translate(${AIRPORT.x} ${AIRPORT.y})`}>

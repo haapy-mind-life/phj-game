@@ -1,3 +1,4 @@
+import { FamilyAccountProvider } from "../components/hyunjun/useFamilyAccount";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -57,7 +58,9 @@ function Root() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      <FamilyAccountProvider>
+        <Outlet />
+      </FamilyAccountProvider>
     </QueryClientProvider>
   );
 }

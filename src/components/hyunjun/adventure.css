@@ -817,12 +817,7 @@
     max-width: 100%;
   }
   .hj-car-mode {
-    position: fixed;
-    bottom: max(145px, env(safe-area-inset-bottom));
-    right: 14px;
     min-height: 48px;
-    width: 110px;
-    z-index: 41;
   }
 }
 
@@ -1978,7 +1973,7 @@
 
 .hj-family-toggle {
   position: absolute;
-  top: 70px;
+  top: 12px;
   left: 17px;
   z-index: 26;
   min-height: 44px;
@@ -1991,7 +1986,7 @@
 }
 .hj-family-panel {
   position: absolute;
-  top: 122px;
+  top: 64px;
   left: 17px;
   z-index: 27;
   display: flex;
@@ -2096,4 +2091,103 @@
 }
 .hj-family-panel small {
   line-height: 1.5;
+}
+
+/* Right-hand actions share a layout so car/map never occupy the same space. */
+.adv-action-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 232px;
+  max-width: 52%;
+  gap: 8px;
+  align-items: stretch;
+}
+.adv-action-buttons .hj-car-mode,
+.adv-action-buttons .adv-map-button {
+  position: static;
+  width: auto;
+  min-width: 0;
+  min-height: 48px;
+  padding: 8px;
+  font-size: 13px;
+}
+.adv-action-buttons .adv-interact {
+  grid-column: 1 / -1;
+  width: 100%;
+  min-height: 64px;
+  height: auto;
+}
+.adv-action-buttons .adv-map-button:first-child {
+  grid-column: 1 / -1;
+}
+.hj-life-hud summary,
+.living-hud summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 5px 8px;
+}
+.adv-interior .hj-life-hud {
+  max-width: 180px;
+}
+.adv-interior .living-hud {
+  max-width: 190px;
+}
+.adv-interior .hj-life-hud:not([open]),
+.adv-interior .living-hud:not([open]) {
+  padding: 2px 6px;
+}
+@media (max-width: 360px) {
+  .adv-console .adv-joystick {
+    width: 104px;
+    height: 104px;
+  }
+  .adv-action-buttons {
+    gap: 6px;
+  }
+  .adv-action-buttons .hj-car-mode {
+    font-size: 12px;
+  }
+}
+/* Landscape phones keep both hands' controls inside the visible screen. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .kid-world-shell {
+    padding: 4px 8px 0;
+  }
+  .kid-world-shell .hj-heading,
+  .kid-world-shell .adv-toolbar,
+  .kid-world-shell .adv-footer,
+  .kid-world-shell .hj-brand small {
+    display: none;
+  }
+  .kid-world-shell .hj-topbar {
+    height: 48px;
+  }
+  .kid-world-shell .hj-brand {
+    font-size: 20px;
+  }
+  .kid-world-shell .adv-viewport {
+    margin-top: 4px;
+    height: calc(100dvh - 60px);
+    min-height: 0;
+    border-width: 3px;
+    border-radius: 20px;
+  }
+  .kid-world-shell .adv-joystick {
+    width: 104px;
+    height: 104px;
+  }
+  .kid-world-shell .adv-interact {
+    min-height: 54px;
+  }
+  .kid-world-shell .adv-touch-hint {
+    position: fixed;
+    top: 64px;
+    bottom: auto;
+    left: 30%;
+    right: 30%;
+    font-size: 11px;
+    padding: 4px 8px;
+  }
 }

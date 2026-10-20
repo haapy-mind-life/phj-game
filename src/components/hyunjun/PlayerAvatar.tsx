@@ -1,7 +1,9 @@
+import type { FamilyAppearanceId } from "@/game/family-identity";
 import type { Outfit } from "@/lib/world-model";
 import { characterUrl } from "@/game/character-art";
 import { useReducedMotion } from "./useReducedMotion";
 export function PlayerAvatar({
+  identity = "hyunjun",
   outfit = "mint",
   moving = false,
   diving = false,
@@ -10,6 +12,7 @@ export function PlayerAvatar({
   height = 192,
   className,
 }: {
+  identity?: FamilyAppearanceId;
   outfit?: Outfit;
   moving?: boolean;
   diving?: boolean;
@@ -19,10 +22,17 @@ export function PlayerAvatar({
   className?: string;
 }) {
   const reduced = useReducedMotion();
-  const url = characterUrl(outfit, moving ? (diving ? "swim" : "walk") : "idle", diving, reduced);
+  const url = characterUrl(
+    outfit,
+    moving ? (diving ? "swim" : "walk") : "idle",
+    diving,
+    reduced,
+    identity,
+  );
   return svg ? (
     <image
       data-avatar={outfit}
+      data-identity={identity}
       x={-width / 2}
       y={-height * 0.86}
       width={width}
@@ -30,6 +40,13 @@ export function PlayerAvatar({
       href={url}
     />
   ) : (
-    <img data-avatar={outfit} className={className} src={url} alt="" draggable={false} />
+    <img
+      data-avatar={outfit}
+      data-identity={identity}
+      className={className}
+      src={url}
+      alt=""
+      draggable={false}
+    />
   );
 }
