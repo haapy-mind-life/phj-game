@@ -1,8 +1,9 @@
+import { memo } from "react";
 import type { FamilyAppearanceId } from "@/game/family-identity";
 import type { Outfit } from "@/lib/world-model";
 import { characterUrl } from "@/game/character-art";
 import { useReducedMotion } from "./useReducedMotion";
-export function PlayerAvatar({
+export const PlayerAvatar = memo(function PlayerAvatar({
   identity = "hyunjun",
   outfit = "mint",
   moving = false,
@@ -49,4 +50,4 @@ export function PlayerAvatar({
       draggable={false}
     />
   );
-}
+});

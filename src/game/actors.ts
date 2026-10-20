@@ -26,7 +26,18 @@ export function actorScene(
   if (state.guests.includes(actor.id) || actor.id === "dad") return "home";
   return "world";
 }
+// Patrols move at most hypot(65,35) < 75 from their fixed origin.
+export const actorMayBeNear = (actor: Actor, player: Point, radius: number) =>
+  worldDistance(actor, player) <= radius + 75;
+const patrolCache = new WeakMap<Actor, { seconds: number; point: Point }>();
 export function patrolPosition(actor: Actor, seconds: number): Point {
+  const cached = patrolCache.get(actor);
+  if (cached?.seconds === seconds) return { ...cached.point };
+  const point = calculatePatrol(actor, seconds);
+  patrolCache.set(actor, { seconds, point });
+  return { ...point };
+}
+function calculatePatrol(actor: Actor, seconds: number): Point {
   if (actor.kind !== "friend") return { x: actor.x, y: actor.y };
   const phase = (((seconds * 0.045 + actor.index * 0.17) % 1) + 1) % 1;
   const angle = phase * Math.PI * 2;

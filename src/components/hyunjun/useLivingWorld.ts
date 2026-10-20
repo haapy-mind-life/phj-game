@@ -4,6 +4,7 @@ import { useGame } from "@/lib/game-state";
 import type { Point } from "@/game/adventure";
 import {
   ACTORS,
+  actorMayBeNear,
   actorScene,
   patrolPosition,
   nearActor,
@@ -144,7 +145,10 @@ export function useLivingWorld({
   const scene = restaurant ? "restaurant" : region === "mansion" ? "home" : "world";
   const player = restaurant ? inside : region === "mansion" ? lifePos : pos;
   const nearbyActor = ACTORS.filter(
-    (a) => actorScene(a, state, scene) === scene && !state.companions.includes(a.id),
+    (a) =>
+      actorScene(a, state, scene) === scene &&
+      !state.companions.includes(a.id) &&
+      (scene !== "world" || actorMayBeNear(a, player, 180)),
   ).find((a) => {
     let p: Point;
     if (scene === "home") {

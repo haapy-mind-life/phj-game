@@ -39,7 +39,6 @@ export function useFamilyRoom(self: Self) {
   const [participating, setParticipating] = useState(false),
     [remotes, setRemotes] = useState<RemoteMap>({});
   const [error, setError] = useState<string | null>(null),
-    [tick, setTick] = useState(0),
     [status, setStatus] = useState<FamilyConnectionStatus>("disconnected");
   const [id] = useState(newId);
   const latest = useRef(self);
@@ -143,7 +142,6 @@ export function useFamilyRoom(self: Self) {
         last.current = { msg: next, at: now };
       }
       setRemotes((r) => pruneStale(r, now));
-      setTick((n) => n + 1);
     }, SEND_INTERVAL_MS / 2);
     return () => clearInterval(timer);
   }, [participating, id]);
@@ -180,7 +178,6 @@ export function useFamilyRoom(self: Self) {
     status,
     leave,
     sendEmote,
-    tick,
     reconnect: join,
   };
 }

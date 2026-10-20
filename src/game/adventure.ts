@@ -21,39 +21,46 @@ export const PORTALS = [
   { id: "fishing", name: "호숫가 낚시", x: 2030, y: 1080, game: "fishing" },
 ] as const;
 export const clamp = (n: number, a: number, b: number) => Math.max(a, Math.min(b, n));
+// Buildings are fixed world content: resolve overlaps once, not on every player/NPC step.
+const WALK_BLOCKS = [
+  ...NEW_VILLAGES.flatMap((v) =>
+    [-330, 330].flatMap((dx) => {
+      const x = v.x + dx,
+        y = v.y - 260;
+      return RESTAURANTS.some((r) => Math.hypot(r.x - x, r.y - y) < 250)
+        ? []
+        : [{ left: x - 108, right: x + 108, top: y - 98, bottom: y + 78 }];
+    }),
+  ),
+  ...RESTAURANTS.filter((r) => r.id !== "korean").map((r) => ({
+    left: r.x - 150,
+    right: r.x + 150,
+    top: r.y - 200,
+    bottom: r.y - 25,
+  })),
+  ...BLOCKS.map((b) => ({
+    left: b.x - 18,
+    right: b.x + b.w + 18,
+    top: b.y - 18,
+    bottom: b.y + b.h + 18,
+  })),
+];
 export function isWalkable(p: Point) {
   if (p.x > 7328 && p.x < 10238) return false;
-  if (
-    NEW_VILLAGES.some((v) =>
-      [-330, 330].some((dx) => {
-        const x = v.x + dx,
-          y = v.y - 260;
-        if (RESTAURANTS.some((r) => Math.hypot(r.x - x, r.y - y) < 250)) return false;
-        return Math.abs(p.x - x) < 108 && p.y > y - 98 && p.y < y + 78;
-      }),
-    )
-  )
-    return false;
-  if (
-    RESTAURANTS.some(
-      (r) => r.id !== "korean" && Math.abs(p.x - r.x) < 150 && p.y > r.y - 200 && p.y < r.y - 25,
-    )
-  )
-    return false;
-  return !BLOCKS.some(
-    (b) => p.x > b.x - 18 && p.x < b.x + b.w + 18 && p.y > b.y - 18 && p.y < b.y + b.h + 18,
-  );
+  return !WALK_BLOCKS.some((b) => p.x > b.left && p.x < b.right && p.y > b.top && p.y < b.bottom);
 }
 export function stepPlayer(p: Point, d: Point, dt: number, speedMultiplier = 1): Point {
-  const length = Math.hypot(d.x, d.y) || 1;
-  const step = (245 * clamp(dt, 0, 0.05) * clamp(speedMultiplier, 0, 2)) / Math.max(1, length);
+  const length = Math.max(1, Math.hypot(d.x, d.y));
+  // Catch up ordinary slow frames, but never turn a resumed tab into a long jump.
+  const time = dt > 0.25 ? 0.05 : clamp(dt, 0, 0.1),
+    steps = Math.max(1, Math.ceil(time / 0.05));
+  const step = (245 * time * clamp(speedMultiplier, 0, 2)) / length / steps;
   const next = { x: p.x, y: p.y };
-  // Wrap both axes; collision still keeps walking on the connected continent.
-  const candidate = wrapPoint({ x: p.x + d.x * step, y: p.y + d.y * step });
-  const x = candidate.x;
-  if (isWalkable({ x, y: p.y })) next.x = x;
-  const y = candidate.y;
-  if (isWalkable({ x: next.x, y })) next.y = y;
+  for (let i = 0; i < steps; i++) {
+    const candidate = wrapPoint({ x: next.x + d.x * step, y: next.y + d.y * step });
+    if (isWalkable({ x: candidate.x, y: next.y })) next.x = candidate.x;
+    if (isWalkable({ x: next.x, y: candidate.y })) next.y = candidate.y;
+  }
   return next;
 }
 export function cameraAt(p: Point, w: number, h: number): Point {

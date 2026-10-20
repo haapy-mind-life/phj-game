@@ -37,6 +37,32 @@ export function RemotePlayers({
   region: FamilyRegion;
   player: Point;
 }) {
+  const nodes = useRef(new Map<string, HTMLDivElement>());
+  const latest = useRef({ remotes: room.remotes, player });
+  latest.current = { remotes: room.remotes, player };
+  const hasRemotes = visibleRemotes(room.remotes, region).length > 0;
+  useEffect(() => {
+    if (!hasRemotes) return;
+    let frame = 0;
+    const animate = () => {
+      const now = Date.now(),
+        current = latest.current;
+      for (const [id, node] of nodes.current) {
+        const remote = current.remotes[id];
+        if (!remote) continue;
+        const p = screenPoint(drawPosition(remote, now), current.player);
+        const x = `${p.x}px`,
+          y = `${p.y}px`;
+        if (node.style.left !== x) node.style.left = x;
+        if (node.style.top !== y) node.style.top = y;
+        const emote = node.querySelector<HTMLElement>(".hj-remote-emote");
+        if (emote && now - remote.seenAt >= 2000) emote.style.display = "none";
+      }
+      frame = requestAnimationFrame(animate);
+    };
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, [hasRemotes]);
   const now = Date.now();
   return (
     <>
@@ -45,6 +71,10 @@ export function RemotePlayers({
         return (
           <div
             key={r.msg.id}
+            ref={(node) => {
+              if (node) nodes.current.set(r.msg.id, node);
+              else nodes.current.delete(r.msg.id);
+            }}
             className={`adv-player hj-remote${r.msg.moving ? " walking" : ""}`}
             style={{ left: p.x, top: p.y, zIndex: 4 }}
             data-remote={r.msg.nick}
@@ -150,7 +180,7 @@ export function FamilyRoomPanel({ room }: { room: Room }) {
                       className="family-login"
                       aria-label="부모님 가족 계정 로그인"
                     >
-                      <p>가족을 고르고 숫자 암호 6자리만 입력해 주세요.</p>
+                      <p>가족을 고르고 쉬운 숫자 암호 4자리만 입력해 주세요.</p>
                       <div className="family-login-names" role="group" aria-label="로그인할 가족">
                         {NICKNAMES.map((n) => (
                           <button
@@ -187,10 +217,10 @@ export function FamilyRoomPanel({ room }: { room: Room }) {
                           name="password"
                           autoComplete="current-password"
                           inputMode="numeric"
-                          pattern="[0-9]{6}"
-                          minLength={6}
+                          pattern="[0-9]{4}([0-9]{2})?"
+                          minLength={4}
                           maxLength={6}
-                          placeholder="숫자 6자리"
+                          placeholder="숫자 4자리"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           required
@@ -203,6 +233,7 @@ export function FamilyRoomPanel({ room }: { room: Room }) {
                           {showPassword ? "숨기기" : "보기"}
                         </button>
                       </span>
+                      <small>한 번 로그인하면 이 기기에서 자동으로 접속해요.</small>
                       <button type="submit" disabled={account.busy}>
                         {account.busy ? "로그인 중…" : "가족 계정 로그인"}
                       </button>

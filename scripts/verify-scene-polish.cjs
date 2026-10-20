@@ -8,7 +8,7 @@ const accounts = process.env.PHJ_ACCOUNTS_FILE
   ? JSON.parse(fs.readFileSync(process.env.PHJ_ACCOUNTS_FILE, "utf8")).accounts
   : ["아빠", "엄마", "누나", "현준"].map((nickname, i) => ({
       nickname,
-      password: "246813",
+      password: "2468",
       email: ["dad", "mom", "sister", "hyunjun"][i] + "@phj-game.invalid",
     }));
 fs.mkdirSync(out, { recursive: true });

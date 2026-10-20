@@ -115,20 +115,22 @@ export function stepLifePlayer(
 ): Point {
   const size = LIFE_MAPS[region];
   const length = Math.max(1, Math.hypot(direction.x, direction.y));
-  const time = Math.min(0.05, Math.max(0, dt));
+  const time = dt > 0.25 ? 0.05 : Math.min(0.1, Math.max(0, dt)),
+    steps = Math.max(1, Math.ceil(time / 0.05));
   const speed = region === "deep-sea" ? 320 : 245;
-  const nextX = position.x + (direction.x * speed * time) / length;
-  const nextY = position.y + (direction.y * speed * time) / length;
-  if (region === "mansion") {
-    const x = canWalkHome({ x: nextX, y: position.y }, houseTier) ? nextX : position.x;
-    const y = canWalkHome({ x, y: nextY }, houseTier) ? nextY : position.y;
-    return { x, y };
+  const next = { x: position.x, y: position.y };
+  for (let i = 0; i < steps; i++) {
+    const nextX = next.x + (direction.x * speed * time) / length / steps;
+    const nextY = next.y + (direction.y * speed * time) / length / steps;
+    if (region === "mansion") {
+      if (canWalkHome({ x: nextX, y: next.y }, houseTier)) next.x = nextX;
+      if (canWalkHome({ x: next.x, y: nextY }, houseTier)) next.y = nextY;
+    } else {
+      next.x = Math.min(region === "coast" ? 3300 : size.width - 45, Math.max(45, nextX));
+      next.y = Math.min(size.height - 45, Math.max(45, nextY));
+    }
   }
-  const maxX = region === "coast" ? 3300 : size.width - 45;
-  return {
-    x: Math.min(maxX, Math.max(45, nextX)),
-    y: Math.min(size.height - 45, Math.max(45, nextY)),
-  };
+  return next;
 }
 export const LIFE_REGION_LABELS: Record<LifeRegion, string> = {
   village: "열 개 마을",

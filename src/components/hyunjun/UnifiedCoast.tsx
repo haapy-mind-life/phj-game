@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { BeachProp, BeachTruck } from "./CoastProps";
 import { FriendArt } from "./FriendArt";
 import { RobotArt } from "./RobotArt";
@@ -10,7 +11,7 @@ import {
   OCEAN_DISCOVERIES,
   RUNWAY,
 } from "@/game/unified-world";
-export function UnifiedCoast({
+export const UnifiedCoast = memo(function UnifiedCoast({
   seconds = 0,
   parkedPlane,
   submarine,
@@ -288,7 +289,7 @@ export function UnifiedCoast({
       )}
     </svg>
   );
-}
+});
 export function GrowingHome({ tier }: { tier: number }) {
   const level = HOUSE_TIERS[Math.min(4, Math.max(1, tier)) - 1]!;
   const floors = tier > 1 ? 2 : 1;
