@@ -25,3 +25,15 @@ test("membership and topic require a family UUID, known nickname and normalized 
   assert.equal(familyTopic(m.family_id, "abc234"), "family:" + m.family_id + ":ABC234");
   assert.throws(() => familyTopic(m.family_id, "ABC10O"));
 });
+
+test("family has a stable private space without asking players for a room code", async () => {
+  const { familySpaceTopic } = await import("./family-config.ts");
+  const id = "abcdefab-1111-4111-8111-abcdefabcdef";
+  const other = "22222222-2222-4222-8222-222222222222";
+  assert.equal(familySpaceTopic(id), familySpaceTopic(id.toUpperCase()));
+  assert.match(
+    familySpaceTopic(id),
+    /^family:abcdefab-1111-4111-8111-abcdefabcdef:[A-HJ-NP-Z2-9]{6}$/,
+  );
+  assert.notEqual(familySpaceTopic(id), familySpaceTopic(other));
+});
