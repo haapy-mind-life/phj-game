@@ -46,3 +46,7 @@ export function familyTopic(familyId: string, code: string) {
   if (!uuid.test(familyId) || !clean) throw new Error("Invalid family room");
   return `family:${familyId.toLowerCase()}:${clean}`;
 }
+
+// Internal channel suffix; family UUID + RLS isolates each family. Players never enter it.
+export const FAMILY_SPACE_CODE = "FAM222";
+export const familySpaceTopic = (familyId: string) => familyTopic(familyId, FAMILY_SPACE_CODE);

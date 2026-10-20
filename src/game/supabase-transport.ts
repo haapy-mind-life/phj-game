@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { familyTopic } from "./family-config.ts";
+import { familySpaceTopic } from "./family-config.ts";
 import { MAX_ROOM_PLAYERS, parsePlayerMessage, type PlayerMessage } from "./family-room.ts";
 import type { FamilyTransport, FamilyConnectionStatus } from "./family-transport.ts";
 export function presenceIds(state: unknown): string[] {
@@ -25,10 +25,9 @@ export function presenceIds(state: unknown): string[] {
 export function createSupabaseTransport(
   client: Pick<SupabaseClient, "channel" | "removeChannel">,
   familyId: string,
-  code: string,
   selfId: string,
 ): FamilyTransport {
-  const channel = client.channel(familyTopic(familyId, code), {
+  const channel = client.channel(familySpaceTopic(familyId), {
     config: { private: true, broadcast: { self: false, ack: true }, presence: { key: selfId } },
   });
   let closed = false,

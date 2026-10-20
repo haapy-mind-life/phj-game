@@ -49,16 +49,28 @@ fs.mkdirSync(out, { recursive: true });
       assert.equal(await page.locator('.family-login input[type="email"]').count(), 0);
       await page.getByLabel("암호", { exact: true }).fill("246813");
       await page.getByRole("button", { name: "가족 계정 로그인", exact: true }).click();
+      if (name !== "unlisted") {
+        await page.waitForFunction(() => {
+          const toggle = document.querySelector(".hj-family-toggle");
+          return (
+            /가족 \d+명/.test(toggle.textContent) &&
+            toggle.getAttribute("aria-expanded") === "false"
+          );
+        });
+        assert.equal(
+          await page.locator(".hj-family-toggle").getAttribute("aria-expanded"),
+          "false",
+        );
+        await page.locator(".hj-family-toggle").click();
+        assert.equal(await page.getByRole("button", { name: "방 만들기", exact: true }).count(), 0);
+        assert.equal(await page.getByLabel("방 코드", { exact: true }).count(), 0);
+      }
       return { page, context };
     }
     const dad = await pageFor("dad");
-    await dad.page.getByRole("button", { name: "방 만들기", exact: true }).click();
     await dad.page.getByText("가족과 연결됐어요", { exact: true }).waitFor();
-    const code = await dad.page.locator(".hj-family-panel strong").innerText();
     await dad.page.waitForTimeout(6500);
     const mom = await pageFor("mom", true);
-    await mom.page.getByLabel("방 코드", { exact: true }).fill(code);
-    await mom.page.getByRole("button", { name: "들어가기", exact: true }).click();
     await mom.page.getByText("가족과 연결됐어요", { exact: true }).waitFor();
     const logout = mom.page.getByRole("button", { name: "이 기기 로그아웃", exact: true });
     await logout.scrollIntoViewIfNeeded();
@@ -108,14 +120,25 @@ fs.mkdirSync(out, { recursive: true });
     await mom.page.screenshot({ path: out + "/connected-phone.png" });
     await dad.page.screenshot({ path: out + "/connected-tablet.png" });
     console.log(
-      "PASS private SDK channel, late join, independent contexts, purchased outfit, idle heartbeat and repeated emote",
+      "PASS automatic private family space, no room controls, late join, independent contexts, purchased outfit, idle heartbeat and repeated emote",
+    );
+    await mom.page.evaluate(() =>
+      window.dispatchEvent(new PageTransitionEvent("pagehide", { persisted: true })),
+    );
+    await dad.page.locator('[data-remote="엄마"]').first().waitFor({ state: "detached" });
+    await mom.page.evaluate(() =>
+      window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true })),
+    );
+    await mom.page.getByText("가족과 연결됐어요", { exact: true }).waitFor();
+    await dad.page.locator('[data-remote="엄마"]').first().waitFor();
+    console.log(
+      "PASS page navigation leaves explicitly and back-cache restoration reconnects automatically",
     );
     await fetch(fixture + "/__fixture/disconnect", { method: "POST" });
     await mom.page.waitForTimeout(5000);
     await mom.page.getByText("가족과 연결됐어요", { exact: true }).waitFor();
     await dad.page.getByText("가족과 연결됐어요", { exact: true }).waitFor();
     await dad.page.locator('[data-remote="엄마"]').first().waitFor();
-    assert.equal(await mom.page.locator(".hj-family-panel strong").innerText(), code);
     console.log("PASS reconnect restores room and stationary avatars");
     await mom.page.getByRole("button", { name: "가족방 닫기", exact: true }).click();
     await mom.page.getByRole("button", { name: "지도", exact: true }).click();
@@ -136,8 +159,6 @@ fs.mkdirSync(out, { recursive: true });
     await dad.page.waitForTimeout(1000);
     assert.equal(await dad.page.locator('[data-remote="엄마"]').count(), 0);
     const other = await pageFor("other");
-    await other.page.getByLabel("방 코드", { exact: true }).fill(code);
-    await other.page.getByRole("button", { name: "들어가기", exact: true }).click();
     await other.page.getByText("가족과 연결됐어요", { exact: true }).waitFor();
     await other.page.waitForTimeout(3000);
     assert.equal(await other.page.locator("[data-remote]").count(), 0);
@@ -153,11 +174,11 @@ fs.mkdirSync(out, { recursive: true });
     );
     await unlisted.context.close();
     console.log(
-      "PASS interior visibility, immediate presence leave, same-code family separation and unenrolled-account denial",
+      "PASS interior visibility, immediate presence leave, automatic-space family separation and unenrolled-account denial",
     );
     await dad.page.reload();
     await dad.page.locator(".hj-family-toggle").click();
-    await dad.page.getByRole("button", { name: "방 만들기", exact: true }).waitFor();
+    await dad.page.getByText("가족과 연결됐어요", { exact: true }).waitFor();
     assert.equal(
       await dad.page.locator(".family-login").count(),
       0,

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   EMOTES,
   NICKNAMES,
@@ -70,18 +70,25 @@ const statusLabel = {
 };
 export function FamilyRoomPanel({ room }: { room: Room }) {
   const [open, setOpen] = useState(false),
-    [input, setInput] = useState(""),
     [loginName, setLoginName] = useState<Nickname>(rememberedLoginName),
     [showPassword, setShowPassword] = useState(false),
     [password, setPassword] = useState("");
   const account = room.account,
     online = account.mode === "supabase",
     canJoin = account.mode === "local" || account.status === "ready";
-  const count = Object.keys(room.remotes).length + (room.code ? 1 : 0);
+  const count = Object.keys(room.remotes).length + (room.participating ? 1 : 0);
+  const pendingLogin = useRef(false);
+  useEffect(() => {
+    if (pendingLogin.current && account.status === "ready" && room.status === "connected") {
+      pendingLogin.current = false;
+      setOpen(false);
+    }
+  }, [account.status, room.status]);
   async function login(e: FormEvent) {
     e.preventDefault();
+    pendingLogin.current = true;
     try {
-      await account.signIn(LOGIN_EMAIL[loginName], password);
+      if (!(await account.signIn(LOGIN_EMAIL[loginName], password))) pendingLogin.current = false;
     } finally {
       setPassword("");
       setShowPassword(false);
@@ -91,14 +98,16 @@ export function FamilyRoomPanel({ room }: { room: Room }) {
     <>
       <button className="hj-family-toggle" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
         👨‍👩‍👧{" "}
-        {room.code
+        {room.participating
           ? room.status === "connected"
-            ? `가족방 ${count}명`
-            : "가족방 연결 확인"
-          : "가족방"}
+            ? `가족 ${count}명`
+            : "가족 연결 중"
+          : online
+            ? "가족 로그인"
+            : "함께 놀기"}
       </button>
       {open && (
-        <section className="hj-family-panel" role="group" aria-label="가족방">
+        <section className="hj-family-panel" role="group" aria-label="가족과 함께">
           <header>
             <b>함께 놀기</b>
             <button onClick={() => setOpen(false)} aria-label="가족방 닫기">
@@ -215,46 +224,21 @@ export function FamilyRoomPanel({ room }: { room: Room }) {
               )}
               {canJoin && (
                 <>
-                  {room.code ? (
-                    <>
-                      <p>
-                        방 코드 <strong>{room.code}</strong>
-                      </p>
-                      <p role="status">{statusLabel[room.status]}</p>
-                      <div>
-                        {EMOTES.map((e) => (
-                          <button
-                            key={e}
-                            aria-label={`인사 ${e}`}
-                            disabled={room.status !== "connected"}
-                            onClick={() => room.sendEmote(e)}
-                          >
-                            {e}
-                          </button>
-                        ))}
-                      </div>
-                      {room.status !== "connected" && (
-                        <button onClick={() => room.reconnect()}>다시 연결</button>
-                      )}
-                      <button onClick={room.leave}>방 나가기</button>
-                    </>
-                  ) : (
-                    <>
-                      <button onClick={() => room.create()}>방 만들기</button>
-                      <div>
-                        <input
-                          value={input}
-                          maxLength={6}
-                          placeholder="방 코드 6자리"
-                          aria-label="방 코드"
-                          autoCapitalize="characters"
-                          autoComplete="off"
-                          spellCheck={false}
-                          onChange={(e) => setInput(e.target.value.toUpperCase())}
-                        />
-                        <button onClick={() => room.join(input)}>들어가기</button>
-                      </div>
-                    </>
+                  <p role="status">{statusLabel[room.status]}</p>
+                  <div>
+                    {EMOTES.map((e) => (
+                      <button
+                        key={e}
+                        aria-label={`인사 ${e}`}
+                        disabled={room.status !== "connected"}
+                        onClick={() => room.sendEmote(e)}
+                      >
+                        {e}
+                      </button>
+                    ))}
+                  </div>
+                  {(room.status === "disconnected" || room.status === "full") && (
+                    <button onClick={() => room.reconnect()}>다시 연결</button>
                   )}
                   {room.error && <p role="alert">{room.error}</p>}
                   {online && (
@@ -268,7 +252,10 @@ export function FamilyRoomPanel({ room }: { room: Room }) {
                       이 기기 로그아웃
                     </button>
                   )}
-                  <small>지상 마을에서 서로 보고 인사해요. 돈·집·농장은 각자 저장돼요.</small>
+                  <small>
+                    로그인하면 가족과 자동으로 만나요. 지상 마을에서 서로 보고 인사해요.
+                    돈·집·농장은 각자 저장돼요.
+                  </small>
                 </>
               )}
             </>
