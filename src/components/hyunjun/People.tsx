@@ -1,6 +1,7 @@
 import { canWalkRestaurant } from "@/game/restaurant";
 import {
   ACTORS,
+  actorMayBeNear,
   actorScene,
   patrolPosition,
   nearActor,
@@ -64,7 +65,9 @@ export function People({
   const assigned: Point[] = [];
   const people = ACTORS.filter(
     (a) =>
-      actorScene(a, state, scene) === scene && !(hideFollowers && state.companions.includes(a.id)),
+      actorScene(a, state, scene) === scene &&
+      !(hideFollowers && state.companions.includes(a.id)) &&
+      (scene !== "world" || state.companions.includes(a.id) || actorMayBeNear(a, player, 1000)),
   )
     .map((actor) => {
       const followed = state.companions.indexOf(actor.id);

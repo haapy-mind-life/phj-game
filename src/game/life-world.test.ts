@@ -109,3 +109,13 @@ test("every unlocked room, exit and party candy is reachable from the entry", ()
     }
   }
 });
+
+test("house walking keeps its speed on slow frames while wall checks remain bounded", () => {
+  let smooth = { x: 650, y: 800 },
+    slow = { ...smooth };
+  for (let i = 0; i < 60; i++)
+    smooth = stepLifePlayer("mansion", smooth, { x: 1, y: 0 }, 1 / 60, 4);
+  for (let i = 0; i < 10; i++) slow = stepLifePlayer("mansion", slow, { x: 1, y: 0 }, 0.1, 4);
+  assert.ok(Math.abs(smooth.x - slow.x) < 0.001);
+  assert.ok(canWalkHome(slow, 4));
+});

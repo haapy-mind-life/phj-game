@@ -1,4 +1,4 @@
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useContext, memo, useMemo, type ReactNode } from "react";
 import type { Point } from "@/game/adventure";
 import { MAP } from "@/game/adventure";
 import { visibleOffsets, worldDistance } from "@/game/world-space";
@@ -18,19 +18,22 @@ export function WorldCopies({
   return (
     <>
       {visibleOffsets(center, w, h).map((o) => (
-        <div
-          className="world-copy"
-          key={`${o.x},${o.y}`}
-          style={{
-            width: MAP.width,
-            height: MAP.height,
-            transform: `translate(${o.x}px,${o.y}px)`,
-          }}
-        >
-          <CopyOffset.Provider value={o}>{children}</CopyOffset.Provider>
-        </div>
+        <WorldCopy key={`${o.x},${o.y}`} x={o.x} y={o.y}>
+          {children}
+        </WorldCopy>
       ))}
     </>
+  );
+}
+function WorldCopy({ x, y, children }: { x: number; y: number; children: ReactNode }) {
+  const offset = useMemo(() => ({ x, y }), [x, y]);
+  return (
+    <div
+      className="world-copy"
+      style={{ width: MAP.width, height: MAP.height, transform: `translate(${x}px,${y}px)` }}
+    >
+      <CopyOffset.Provider value={offset}>{children}</CopyOffset.Provider>
+    </div>
   );
 }
 /** Keep mission paint surfaces bounded, including wrapped world copies. */
@@ -51,7 +54,7 @@ export function WorldOverlay({ center, children }: { center: Point; children: Re
     </svg>
   );
 }
-export function WorldExpansion({
+const WorldExpansionArt = memo(function WorldExpansionArt({
   center,
   season,
   layer = "ground",
@@ -203,6 +206,22 @@ export function WorldExpansion({
       )}
     </svg>
   );
+});
+
+// Background tiles have generous overscan; only rebuild them when entering another tile.
+export function WorldExpansion({
+  center,
+  season,
+  layer = "ground",
+}: {
+  center: Point;
+  season: boolean;
+  layer?: "ground" | "landmarks";
+}) {
+  const x = Math.floor(center.x / 256) * 256,
+    y = Math.floor(center.y / 256) * 256;
+  const tile = useMemo(() => ({ x, y }), [x, y]);
+  return <WorldExpansionArt center={tile} season={season} layer={layer} />;
 }
 
 export function LegacySection({

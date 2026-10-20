@@ -35,3 +35,13 @@ export function visibleOffsets(center: Point, w: number, h: number) {
   if (center.y + h / 2 > WORLD_SIZE.height) ys.push(WORLD_SIZE.height);
   return xs.flatMap((x) => ys.map((y) => ({ x, y })));
 }
+/** Conservative viewport culling, including the world's wrapped edges. */
+export function worldRectVisible(
+  center: Point,
+  w: number,
+  h: number,
+  rect: { x: number; y: number; width: number; height: number },
+) {
+  const delta = worldDelta(center, { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 });
+  return Math.abs(delta.x) <= (w + rect.width) / 2 && Math.abs(delta.y) <= (h + rect.height) / 2;
+}

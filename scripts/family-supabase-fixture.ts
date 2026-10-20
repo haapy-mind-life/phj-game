@@ -178,7 +178,11 @@ const server = Bun.serve({
       const user =
         u.searchParams.get("grant_type") === "refresh_token"
           ? users.find((x) => body["refresh_token"] === "refresh-" + x.id)
-          : users.find((x) => body["email"] === x.email && body["password"] === "246813");
+          : users.find(
+              (x) =>
+                body["email"] === x.email &&
+                (body["password"] === "246813" || body["password"] === "family-pin:2468"),
+            );
       return user
         ? json(session(user))
         : json(

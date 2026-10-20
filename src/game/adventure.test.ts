@@ -127,3 +127,14 @@ test("a companion visibly walks to nearby treasure only after the player partici
   assert.ok(g.assisted >= 1 && g.assisted <= 2);
   assert.ok(g.helper.x > g.player.x);
 });
+
+test("walking distance is stable at 10fps and 60fps without teleporting after a long pause", () => {
+  const start = { x: 1350, y: 920 };
+  let smooth = { ...start },
+    slow = { ...start };
+  for (let i = 0; i < 60; i++) smooth = stepPlayer(smooth, { x: 0, y: 1 }, 1 / 60);
+  for (let i = 0; i < 10; i++) slow = stepPlayer(slow, { x: 0, y: 1 }, 0.1);
+  assert.ok(Math.abs(smooth.y - slow.y) < 0.001);
+  const resumed = stepPlayer(start, { x: 0, y: 1 }, 30);
+  assert.ok(resumed.y - start.y <= 24.501);
+});

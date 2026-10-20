@@ -1,3 +1,4 @@
+import { familyAuthPassword } from "@/game/family-pin";
 import type { ReactNode } from "react";
 import type { Nickname } from "@/game/family-room";
 import { familyIdentity } from "@/game/family-identity";
@@ -108,7 +109,7 @@ function useAccountState() {
     try {
       const { error: problem } = await familyClient.auth.signInWithPassword({
         email: email.trim(),
-        password,
+        password: familyAuthPassword(password),
       });
       if (problem) {
         setError("선택한 가족과 암호를 확인해 주세요.");

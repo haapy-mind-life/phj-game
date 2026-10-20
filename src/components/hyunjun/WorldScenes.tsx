@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { MAP, type Point } from "@/game/adventure";
 import {
   CAMP,
@@ -88,7 +89,7 @@ function MapBuilding({ x, y, title, color, symbol }: (typeof buildings)[number])
   );
 }
 
-export function WorldScenes({
+function WorldScenesArt({
   player,
   call,
   phase,
@@ -302,3 +303,19 @@ export function WorldScenes({
     </svg>
   );
 }
+export const WorldScenes = memo(WorldScenesArt, (a, b) => {
+  if (
+    a.call !== b.call ||
+    a.phase !== b.phase ||
+    a.progress !== b.progress ||
+    a.thiefStep !== b.thiefStep ||
+    a.siren !== b.siren ||
+    a.diving !== b.diving ||
+    a.camping !== b.camping
+  )
+    return false;
+  return (
+    (!a.siren && !(a.call && a.phase === "dispatched")) ||
+    (a.player.x === b.player.x && a.player.y === b.player.y)
+  );
+});
