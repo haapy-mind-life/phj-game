@@ -1,3 +1,4 @@
+import { usePlayerIdentity } from "./useFamilyAccount";
 import { ACTORS } from "@/game/actors";
 import { PersonArt } from "./People";
 import { useEffect, useRef, useState } from "react";
@@ -24,6 +25,7 @@ const INFO = {
   },
 };
 export function MiniGame({ kind, onClose }: { kind: MiniKind; onClose: () => void }) {
+  const identity = usePlayerIdentity();
   const { state, dispatch, getState } = useGame();
   const game = useRef(newMini(kind));
   const id = useRef("");
@@ -193,11 +195,17 @@ export function MiniGame({ kind, onClose }: { kind: MiniKind; onClose: () => voi
                 <text x="500" y="230" fontSize="44">
                   🐟
                 </text>
-                <image href={characterUrl(state.outfit)} x="65" y="275" width="75" height="90" />
+                <image
+                  href={characterUrl(state.outfit, "idle", false, false, identity.id)}
+                  x="65"
+                  y="275"
+                  width="75"
+                  height="90"
+                />
               </>
             ) : (
               <image
-                href={characterUrl(state.outfit)}
+                href={characterUrl(state.outfit, "idle", false, false, identity.id)}
                 x={g.player.x - 30}
                 y={g.player.y - 65}
                 width="60"

@@ -1,3 +1,4 @@
+import { usePlayerIdentity } from "./useFamilyAccount";
 import { useEffect, useRef, useState } from "react";
 import { useGame } from "@/lib/game-state";
 import {
@@ -13,6 +14,7 @@ import { FriendArt } from "./FriendArt";
 import { Joystick } from "./Joystick";
 import { useMovement } from "./useMovement";
 export function TruckScene({ onClose }: { onClose: () => void }) {
+  const identity = usePlayerIdentity();
   const { state, dispatch } = useGame(),
     owned = state.ownedCars.includes("car-101"),
     capacity = state.carUpgrades["car-101"]?.special ? 2 : 1;
@@ -121,7 +123,13 @@ export function TruckScene({ onClose }: { onClose: () => void }) {
         <path d="M170 170H490L460 120H200Z" fill="#65b8ac" />
         <g transform="translate(300 310)">
           {owned && nearKitchen ? (
-            <PlayerAvatar outfit={state.outfit} svg width={100} height={135} />
+            <PlayerAvatar
+              identity={identity.id}
+              outfit={state.outfit}
+              svg
+              width={100}
+              height={135}
+            />
           ) : !owned ? (
             <g transform="translate(-43 -110)">
               <FriendArt index={4} moving={game.ingredients.length > 0} />
@@ -139,7 +147,7 @@ export function TruckScene({ onClose }: { onClose: () => void }) {
         <circle cx="210" cy="375" r="32" fill="#42576a" />
         <circle cx="490" cy="375" r="32" fill="#42576a" />
         <text x="340" y="95" textAnchor="middle" fontSize="31" fill="#684d3e">
-          {owned ? "현준이의 냠냠 트럭" : "친구와 함께 장사 연습"}
+          {owned ? `${identity.name}의 냠냠 트럭` : "친구와 함께 장사 연습"}
         </text>
         {[0, 1, 2].map((i) => {
           const served = i < game.served,
@@ -172,6 +180,7 @@ export function TruckScene({ onClose }: { onClose: () => void }) {
         {(!owned || !nearKitchen) && (
           <g transform={`translate(${pos.x} ${pos.y})`}>
             <PlayerAvatar
+              identity={identity.id}
               outfit={state.outfit}
               svg
               moving={!!(direction.current().x || direction.current().y)}
@@ -184,7 +193,8 @@ export function TruckScene({ onClose }: { onClose: () => void }) {
               </text>
             )}
             <text y="35" textAnchor="middle" fill="#725038" fontSize="24">
-              현준이{owned ? "" : " · 요리 도우미"}
+              {identity.name}
+              {owned ? "" : " · 요리 도우미"}
             </text>
           </g>
         )}

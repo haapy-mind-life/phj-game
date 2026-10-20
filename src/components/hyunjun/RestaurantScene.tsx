@@ -1,3 +1,4 @@
+import { usePlayerIdentity } from "./useFamilyAccount";
 import { PlayerAvatar } from "./PlayerAvatar";
 import { RESTAURANT_ROOM as ROOM, type RESTAURANTS } from "@/game/world-content";
 import type { Point } from "@/game/adventure";
@@ -28,6 +29,7 @@ export function RestaurantScene({
   seconds: number;
   onTalk: (id: string) => void;
 }) {
+  const identity = usePlayerIdentity();
   return (
     <svg
       width={ROOM.width}
@@ -100,7 +102,7 @@ export function RestaurantScene({
       />
       <g transform={`translate(${player.x} ${player.y})`}>
         <g transform={`scale(${facing} 1)`}>
-          <PlayerAvatar outfit={state.outfit} moving={moving} svg />
+          <PlayerAvatar identity={identity.id} outfit={state.outfit} moving={moving} svg />
         </g>
         {(meal !== null || carrying) && (
           <text x="65" y="-60" fontSize="62">
@@ -108,7 +110,7 @@ export function RestaurantScene({
           </text>
         )}
         <text textAnchor="middle" y="35" fontSize="26" fill="#405b64">
-          현준이
+          {identity.name}
         </text>
       </g>
     </svg>

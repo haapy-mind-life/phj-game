@@ -1,3 +1,4 @@
+import { FamilyAccountProvider } from "./components/hyunjun/useFamilyAccount";
 /**
  * Static-hosting entry point for GitHub Pages and other file hosts.
  * The existing TanStack Start app remains unchanged: this entry uses the
@@ -25,7 +26,9 @@ const queryClient = new QueryClient();
 const rootRoute = createRootRoute({
   component: () => (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      <FamilyAccountProvider>
+        <Outlet />
+      </FamilyAccountProvider>
     </QueryClientProvider>
   ),
   notFoundComponent: () => (

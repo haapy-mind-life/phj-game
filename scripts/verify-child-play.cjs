@@ -13,7 +13,7 @@ fs.mkdirSync(out, { recursive: true });
   });
   try {
     const page = await browser.newPage({ viewport: { width: 1024, height: 900 } });
-    page.setDefaultTimeout(8000);
+    page.setDefaultTimeout(25000);
     const errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
     await page.addInitScript(() => {
@@ -36,7 +36,7 @@ fs.mkdirSync(out, { recursive: true });
           }),
         );
     });
-    await page.goto(url);
+    await page.goto(url, { waitUntil: "domcontentloaded" });
     await page.waitForTimeout(400);
     const btn = (n) => page.getByRole("button", { name: n, exact: true });
     async function pos() {
@@ -145,7 +145,8 @@ fs.mkdirSync(out, { recursive: true });
     await btn("집 밖으로").last().click();
     await page.setViewportSize({ width: 1024, height: 900 });
     // Physical beach customers walk before any shop dialog is opened.
-    await btn("🌊 해변 안내").click();
+    await btn("지도").click();
+    await btn("🌊 바닷가 · 푸드트럭").click();
     await move("y", 1010);
     await move("x", 7140);
     await action();

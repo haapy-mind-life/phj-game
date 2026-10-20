@@ -1,3 +1,4 @@
+import { usePlayerIdentity } from "./useFamilyAccount";
 import { useEffect, useRef, useState } from "react";
 import { useGame } from "@/lib/game-state";
 import { DIVE_SIZE, DIVE_TREASURES, stepDive } from "@/game/place-play";
@@ -9,6 +10,7 @@ import { FriendArt } from "./FriendArt";
 import { DadArt } from "./DadArt";
 import { RobotArt } from "./RobotArt";
 export function DiveScene({ onClose }: { onClose: () => void }) {
+  const identity = usePlayerIdentity();
   const { state, dispatch } = useGame();
   const reduced = useReducedMotion();
   const [pos, setPos] = useState({ x: 350, y: 170 }),
@@ -194,7 +196,7 @@ export function DiveScene({ onClose }: { onClose: () => void }) {
             y="-51"
             width="50"
             height="67"
-            href={characterUrl(state.outfit, "idle", false, reduced)}
+            href={characterUrl(state.outfit, "idle", false, reduced, identity.id)}
           />
           <circle cx="53" cy="-15" r="30" fill="#a4e8f0" stroke="#e6a54b" strokeWidth="7" />
           {state.companions[0] === "dad" ? (

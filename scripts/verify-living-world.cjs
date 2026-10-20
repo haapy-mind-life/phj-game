@@ -24,12 +24,12 @@ async function family() {
       localStorage.setItem("hyunjun-game-v2", JSON.stringify({ version: 2, money: 5000 }));
   });
   await page.clock.setFixedTime(new Date("2026-10-18T03:00:00Z"));
-  await page.goto(previewUrl);
+  await page.goto(previewUrl, { waitUntil: "domcontentloaded" });
   await page.waitForTimeout(300);
   const mode = async () =>
     (await page.locator('svg[aria-label$="실내"]').count())
       ? "restaurant"
-      : (await page.locator(".home-people").count())
+      : (await page.locator('.hj-life-scene[data-region="mansion"]').count())
         ? "home"
         : "world";
   async function pos() {
@@ -87,7 +87,7 @@ async function family() {
   await page.getByRole("button", { name: /같이 가자/ }).click();
   assert.equal(await page.locator('[data-person="dad"]').count(), 1);
   await page.screenshot({ path: path.join(output, "family-home.png") });
-  await btn("🌊 집 밖으로").click();
+  await page.locator(".adv-map-button").click();
   assert.equal(
     await page.locator('[data-person="dad"]').evaluateAll(
       (es) =>
@@ -132,6 +132,7 @@ async function family() {
   console.log("PASS restaurant enter/order/eat/3 deliveries/exit");
   await home();
   assert.equal(await page.locator('[data-person="friend-new-1"]').count(), 1);
+  await page.locator(".living-hud > summary").click();
   await btn("옷장 · 의상 가게").click();
   await page.getByRole("button", { name: /별빛 마법사/ }).click();
   assert.ok(
@@ -155,9 +156,9 @@ async function family() {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({ path: path.join(output, "family-phone.png") });
   await page.setViewportSize({ width: 1280, height: 800 });
-  await btn("🌊 집 밖으로").click();
+  await page.locator(".adv-map-button").click();
   await town(11, "벚꽃 마을");
-  await btn("자동차 타기").click();
+  await btn("차 타기").click();
   await page
     .locator(".kid-car-list article")
     .nth(1)
@@ -179,7 +180,7 @@ async function explore() {
   page.on("pageerror", (e) => errors.push(e.message));
   const b = (n) => page.getByRole("button", { name: n, exact: true });
   await page.clock.setFixedTime(new Date("2026-10-18T03:00:00Z"));
-  await page.goto(previewUrl);
+  await page.goto(previewUrl, { waitUntil: "domcontentloaded" });
   await page.waitForTimeout(300);
   const pos = () =>
     page
@@ -228,7 +229,8 @@ async function explore() {
   await page.screenshot({ path: path.join(output, "festival.png") });
   await b("놀이 마치기").click();
   console.log("PASS outdoor festival reward");
-  await b("🌊 해변 안내").click();
+  await b("지도").click();
+  await b("🌊 바닷가 · 푸드트럭").click();
   await page.keyboard.down("ArrowRight");
   for (let i = 0; i < 65; i++) {
     if (await b("잠수함 타기").count()) break;
@@ -305,7 +307,7 @@ async function input() {
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.clock.setFixedTime(new Date("2026-10-18T03:00:00Z"));
-  await page.goto(previewUrl);
+  await page.goto(previewUrl, { waitUntil: "domcontentloaded" });
   await page.waitForTimeout(300);
   const pos = () =>
     page
@@ -403,7 +405,7 @@ async function season() {
       }),
     ),
   );
-  await page.goto(previewUrl);
+  await page.goto(previewUrl, { waitUntil: "domcontentloaded" });
   const b = (n) => page.getByRole("button", { name: n, exact: true });
   await b("지도").click();
   await b("21. 호박 마을").click();
@@ -435,7 +437,7 @@ async function restaurants() {
   page.setDefaultTimeout(7000);
   const b = (n) => page.getByRole("button", { name: n, exact: true });
   await page.clock.setFixedTime(new Date("2026-10-18T03:00:00Z"));
-  await page.goto(previewUrl);
+  await page.goto(previewUrl, { waitUntil: "domcontentloaded" });
   async function p() {
     if (await page.locator('svg[aria-label$="실내"]').count())
       return page
@@ -503,7 +505,7 @@ async function seams() {
   page.on("pageerror", (e) => errors.push(e.message));
   const b = (n) => page.getByRole("button", { name: n, exact: true });
   await page.clock.setFixedTime(new Date("2026-10-18T03:00:00Z"));
-  await page.goto(previewUrl);
+  await page.goto(previewUrl, { waitUntil: "domcontentloaded" });
   await page.waitForTimeout(300);
   const pos = () =>
     page

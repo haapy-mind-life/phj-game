@@ -1,3 +1,4 @@
+import { usePlayerIdentity } from "./useFamilyAccount";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   advanceRun,
@@ -24,6 +25,9 @@ const view = (r: Run) => ({
 });
 
 export function Runner() {
+  const identity = usePlayerIdentity();
+  const identityRef = useRef(identity.id);
+  identityRef.current = identity.id;
   const { state, ready, dispatch, getState } = useGame();
   const canvas = useRef<HTMLCanvasElement>(null);
   const run = useRef<Run | null>(null);
@@ -91,7 +95,7 @@ export function Runner() {
       const current = run.current!;
       advanceRun(current, last ? (time - last) / 1000 : 0);
       last = time;
-      drawRunner(ctx, current, outfit.current);
+      drawRunner(ctx, current, outfit.current, identityRef.current);
       if (time - lastUi > 90) {
         setV(view(current));
         lastUi = time;

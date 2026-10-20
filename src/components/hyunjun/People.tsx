@@ -35,6 +35,7 @@ export function People({
   svg = false,
   helperPosition,
   hideFollowers = false,
+  playerLayer,
 }: {
   state: GameState;
   scene: ActorScene;
@@ -45,6 +46,7 @@ export function People({
   svg?: boolean;
   helperPosition?: Point | null;
   hideFollowers?: boolean;
+  playerLayer?: "back" | "front";
 }) {
   const trail = useRef<Point[]>([]);
   const key = useRef(scene);
@@ -123,51 +125,55 @@ export function People({
   if (svg)
     return (
       <>
-        {people.map(({ actor, p, moving, near }) => (
-          <g
-            key={actor.id}
-            data-person={actor.id}
-            role="button"
-            tabIndex={near ? 0 : -1}
-            aria-label={`${actor.name} · 이야기`}
-            style={{ pointerEvents: "all", cursor: near ? "pointer" : "default" }}
-            onClick={() => {
-              if (near) onTalk(actor.id);
-            }}
-            onKeyDown={(e) => {
-              if (near && (e.key === "Enter" || e.key === " ")) {
-                e.preventDefault();
-                e.stopPropagation();
-                onTalk(actor.id);
-              }
-            }}
-            transform={`translate(${p.x - 65} ${p.y - 185}) scale(1.3)`}
-          >
-            <PersonArt actor={actor} moving={moving} />
-            <text x="48" y="162" textAnchor="middle" fontSize="22" fill="#405b64">
-              {actor.name}
-            </text>
-          </g>
-        ))}
+        {people
+          .filter(({ p }) => !playerLayer || p.y > player.y === (playerLayer === "front"))
+          .map(({ actor, p, moving, near }) => (
+            <g
+              key={actor.id}
+              data-person={actor.id}
+              role="button"
+              tabIndex={near ? 0 : -1}
+              aria-label={`${actor.kind === "dad" ? "도우미 아빠" : actor.name} · 이야기`}
+              style={{ pointerEvents: "all", cursor: near ? "pointer" : "default" }}
+              onClick={() => {
+                if (near) onTalk(actor.id);
+              }}
+              onKeyDown={(e) => {
+                if (near && (e.key === "Enter" || e.key === " ")) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onTalk(actor.id);
+                }
+              }}
+              transform={`translate(${p.x - 65} ${p.y - 185}) scale(1.3)`}
+            >
+              <PersonArt actor={actor} moving={moving} />
+              <text x="48" y="162" textAnchor="middle" fontSize="22" fill="#405b64">
+                {actor.kind === "dad" ? "도우미 아빠" : actor.name}
+              </text>
+            </g>
+          ))}
       </>
     );
   return (
     <>
-      {people.map(({ actor, p, near, moving }) => (
-        <button
-          key={actor.id}
-          data-person={actor.id}
-          className={`living-person ${near ? "near" : ""}`}
-          style={{ left: p.x, top: p.y }}
-          onClick={() => {
-            if (near) onTalk(actor.id);
-          }}
-          aria-label={`${actor.name} · 이야기`}
-        >
-          <PersonArt actor={actor} moving={moving} />
-          <b>{actor.name}</b>
-        </button>
-      ))}
+      {people
+        .filter(({ p }) => !playerLayer || p.y > player.y === (playerLayer === "front"))
+        .map(({ actor, p, near, moving }) => (
+          <button
+            key={actor.id}
+            data-person={actor.id}
+            className={`living-person ${near ? "near" : ""}`}
+            style={{ left: p.x, top: p.y }}
+            onClick={() => {
+              if (near) onTalk(actor.id);
+            }}
+            aria-label={`${actor.kind === "dad" ? "도우미 아빠" : actor.name} · 이야기`}
+          >
+            <PersonArt actor={actor} moving={moving} />
+            <b>{actor.kind === "dad" ? "도우미 아빠" : actor.name}</b>
+          </button>
+        ))}
     </>
   );
 }

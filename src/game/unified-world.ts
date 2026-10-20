@@ -14,7 +14,7 @@ export const HOUSE_TIERS = [
   { tier: 1, name: "아담한 집", cost: 0 },
   { tier: 2, name: "넓은 2층 집", cost: 100 },
   { tier: 3, name: "멋진 대저택", cost: 350 },
-  { tier: 4, name: "현준이 성", cost: 850 },
+  { tier: 4, name: "우리 가족 성", cost: 850 },
 ] as const;
 export function nearWorld(a: Point, b: Point, range = 180) {
   return worldDistance(a, b) <= range;

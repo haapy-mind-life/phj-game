@@ -7,7 +7,6 @@ import {
   shouldSend,
   type Emote,
   type FamilyRegion,
-  type Nickname,
   type PlayerMessage,
   type RemoteMap,
 } from "@/game/family-room";
@@ -38,7 +37,6 @@ const newId = () => {
 export function useFamilyRoom(self: Self) {
   const account = useFamilyAccount();
   const [participating, setParticipating] = useState(false),
-    [nick, setNick] = useState<Nickname>("현준"),
     [remotes, setRemotes] = useState<RemoteMap>({});
   const [error, setError] = useState<string | null>(null),
     [tick, setTick] = useState(0),
@@ -46,6 +44,8 @@ export function useFamilyRoom(self: Self) {
   const [id] = useState(newId);
   const latest = useRef(self);
   latest.current = self;
+  const nick = account.previewNickname,
+    setNick = account.setPreviewNickname;
   const nickRef = useRef(nick);
   nickRef.current = account.membership?.nickname ?? nick;
   const transport = useRef<FamilyTransport | null>(null),

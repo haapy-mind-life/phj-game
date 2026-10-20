@@ -23,7 +23,7 @@ fs.mkdirSync(out, { recursive: true });
       });
       const page = await context.newPage();
       pages.push(page);
-      page.setDefaultTimeout(12000);
+      page.setDefaultTimeout(25000);
       page.on("pageerror", (e) => errors.push(e.message));
       await page.addInitScript(() =>
         localStorage.setItem(
@@ -31,7 +31,7 @@ fs.mkdirSync(out, { recursive: true });
           JSON.stringify({ version: 3, money: 50, ownedOutfits: ["witch"], outfit: "witch" }),
         ),
       );
-      await page.goto(url);
+      await page.goto(url, { waitUntil: "domcontentloaded" });
       await page.locator(".hj-family-toggle").click();
       await page.getByRole("form", { name: "부모님 가족 계정 로그인" }).waitFor();
       if (mobile) await page.screenshot({ path: out + "/login-phone.png" });

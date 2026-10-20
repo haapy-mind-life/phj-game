@@ -1,15 +1,21 @@
+import type { FamilyAppearanceId } from "./family-identity";
 import { OUTFITS } from "./world-content";
 import { GROUND, HEIGHT, PLAYER_X, WIDTH, type Run } from "./runner-engine";
 import type { Outfit } from "@/lib/world-model";
 import { characterUrl } from "./character-art";
-const portraits = new Map<Outfit, HTMLImageElement>();
+const portraits = new Map<string, HTMLImageElement>();
 const colors: Record<string, string> = {
   mint: "#7bb9a2",
   peach: "#e9a08d",
   lavender: "#a99dca",
   ...Object.fromEntries(OUTFITS.map((o) => [o.id, o.color])),
 };
-export function drawRunner(c: CanvasRenderingContext2D, r: Run, outfit: Outfit) {
+export function drawRunner(
+  c: CanvasRenderingContext2D,
+  r: Run,
+  outfit: Outfit,
+  identity: FamilyAppearanceId = "hyunjun",
+) {
   c.clearRect(0, 0, WIDTH, HEIGHT);
   c.fillStyle = r.stage === 4 ? "#ddecf2" : "#e7f3e3";
   c.fillRect(0, 0, WIDTH, HEIGHT);
@@ -74,11 +80,11 @@ export function drawRunner(c: CanvasRenderingContext2D, r: Run, outfit: Outfit) 
   c.translate(PLAYER_X, r.y);
   const s = r.combat.giantTimer > 0 ? 1.25 : 1;
   c.scale(s, s);
-  let portrait = portraits.get(outfit);
+  let portrait = portraits.get(`${identity}:${outfit}`);
   if (!portrait) {
     portrait = new Image();
-    portrait.src = characterUrl(outfit);
-    portraits.set(outfit, portrait);
+    portrait.src = characterUrl(outfit, "idle", false, false, identity);
+    portraits.set(`${identity}:${outfit}`, portrait);
   }
   if (portrait.complete && portrait.naturalWidth) {
     c.drawImage(portrait, -42, -80, 84, 102);

@@ -1,3 +1,4 @@
+import { familyIdentity } from "@/game/family-identity";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   EMOTES,
@@ -52,7 +53,11 @@ export function RemotePlayers({
               <span className="hj-remote-emote">{r.msg.emote}</span>
             )}
             <div style={{ transform: `scaleX(${r.msg.facing})` }}>
-              <PlayerAvatar outfit={r.msg.outfit} moving={r.msg.moving} />
+              <PlayerAvatar
+                identity={familyIdentity(r.msg.nick).id}
+                outfit={r.msg.outfit}
+                moving={r.msg.moving}
+              />
             </div>
             <b>{r.msg.nick}</b>
           </div>
