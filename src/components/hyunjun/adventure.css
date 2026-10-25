@@ -987,6 +987,24 @@
 .hj-life-hud small {
   font-size: 11px;
 }
+/* Content inside <details> does not follow the flex column, so stack the actions explicitly. */
+.hj-life-hud > summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+.hj-life-hud > button {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  border: 2px solid #e6cf9f;
+  background: #fff3d2;
+  color: #5b4a2c;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.25;
+}
 .hj-food-backdrop {
   position: fixed;
   inset: 0;
