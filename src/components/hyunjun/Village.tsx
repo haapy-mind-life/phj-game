@@ -356,7 +356,7 @@ export function Village() {
         next === 0
           ? "🚧 새 빌딩 공사 시작! 다시 벽돌을 쌓아 보자."
           : next >= CONSTRUCTION.floors
-            ? "🎉 빌딩 완성! " + identity.name + "이가 지은 빌딩이야!"
+            ? "🎉 빌딩 완성! 내가 지은 빌딩이야!"
             : "🧱 쿵쿵! " + next + "층까지 올렸어!",
       );
       return;
