@@ -96,6 +96,65 @@ export function RemotePlayers({
     </>
   );
 }
+/** Family members inside the same interior (home or a restaurant), drawn at room scale. */
+export function RemoteInteriorPlayers({
+  room,
+  region,
+  width,
+  height,
+}: {
+  room: Room;
+  region: FamilyRegion;
+  width: number;
+  height: number;
+}) {
+  const list = visibleRemotes(room.remotes, region);
+  const [now, setNow] = useState(Date.now);
+  useEffect(() => {
+    if (!list.length) return;
+    let frame = 0;
+    const tick = () => {
+      setNow(Date.now());
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [list.length]);
+  if (!list.length) return null;
+  return (
+    <svg
+      className="hj-remote-interior"
+      width={width}
+      height={height}
+      style={{ position: "absolute", left: 0, top: 0, pointerEvents: "none", zIndex: 4 }}
+      aria-hidden="true"
+    >
+      {list.map((r) => {
+        const p = drawPosition(r, now);
+        return (
+          <g key={r.msg.id} transform={`translate(${p.x} ${p.y})`} data-remote={r.msg.nick}>
+            <g transform={`scale(${r.msg.facing} 1)`}>
+              <PlayerAvatar
+                identity={familyIdentity(r.msg.nick).id}
+                outfit={r.msg.outfit}
+                moving={r.msg.moving}
+                svg
+              />
+            </g>
+            {r.msg.emote && now - r.seenAt < 2000 && (
+              <text y="-190" textAnchor="middle" fontSize="54">
+                {r.msg.emote}
+              </text>
+            )}
+            <text textAnchor="middle" y="35" fontSize="26" fill="#405b64" fontWeight="bold">
+              {r.msg.nick}
+            </text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
 const statusLabel = {
   connecting: "가족방 연결 중",
   connected: "가족과 연결됐어요",

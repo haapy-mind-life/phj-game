@@ -1,5 +1,5 @@
 import { WORLD_SIZE, worldDelta, wrapPoint } from "./world-space.ts";
-import { OUTFITS as SHOP_OUTFITS } from "./world-content.ts";
+import { OUTFITS as SHOP_OUTFITS, RESTAURANTS, RESTAURANT_ROOM } from "./world-content.ts";
 import { LIFE_MAPS } from "./life-world.ts";
 import type { Outfit } from "../lib/world-model.ts";
 
@@ -15,8 +15,18 @@ export const NICKNAMES = ["현준", "아빠", "엄마", "누나"] as const;
 export type Nickname = (typeof NICKNAMES)[number];
 export const EMOTES = ["👋", "😀", "❤️", "⭐", "🎃", "🍕"] as const;
 export type Emote = (typeof EMOTES)[number];
-export const REGIONS = ["village", "coast", "mansion", "deep-sea"] as const;
+// Each restaurant interior is its own region so family members inside the same one see each other.
+export const RESTAURANT_REGIONS = RESTAURANTS.map((r) => `restaurant-${r.id}` as const);
+export const REGIONS = ["village", "coast", "mansion", "deep-sea", ...RESTAURANT_REGIONS] as const;
 export type FamilyRegion = (typeof REGIONS)[number];
+export const restaurantRegion = (id: (typeof RESTAURANTS)[number]["id"]): FamilyRegion =>
+  `restaurant-${id}`;
+const regionLimits = (region: FamilyRegion) =>
+  region === "village"
+    ? WORLD_SIZE
+    : region === "coast" || region === "mansion" || region === "deep-sea"
+      ? LIFE_MAPS[region]
+      : RESTAURANT_ROOM;
 const OUTFITS = ["mint", "peach", "lavender", ...SHOP_OUTFITS.map((o) => o.id)] as const;
 
 export type PlayerMessage = {
@@ -62,7 +72,7 @@ export function parsePlayerMessage(input: unknown): PlayerMessage | null {
   if (input === null || typeof input !== "object") return null;
   const m = input as Record<string, unknown>;
   const region = m["region"];
-  const limits = has(REGIONS, region) && region !== "village" ? LIFE_MAPS[region] : WORLD_SIZE;
+  const limits = has(REGIONS, region) ? regionLimits(region) : WORLD_SIZE;
   const x = num(m["x"], limits.width);
   const y = num(m["y"], limits.height);
   const t = num(m["t"], 1e15);

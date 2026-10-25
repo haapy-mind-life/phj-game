@@ -5,9 +5,10 @@ import { worldDistance, wrapPoint, isOcean } from "./world-space.ts";
 import { VILLAGES } from "./villages.ts";
 import { RESTAURANTS, FESTIVALS } from "./world-content.ts";
 
-test("30 villages and six distinct restaurants preserve legacy locations", () => {
+test("30 villages and eight restaurants (three McDonald's) preserve legacy locations", () => {
   assert.equal(VILLAGES.length, 30);
-  assert.equal(RESTAURANTS.length, 6);
+  assert.equal(RESTAURANTS.length, 8);
+  assert.equal(RESTAURANTS.filter((r) => r.kind === "burger").length, 3);
   assert.equal(VILLAGES[0]!.x, 480);
   assert.equal(new Set(VILLAGES.map((v) => v.id)).size, 30);
   for (const v of VILLAGES) assert.ok(!isOcean(v));

@@ -4,7 +4,7 @@ import type { Point } from "./adventure.ts";
 export type LifeRegion = "village" | "coast" | "mansion" | "deep-sea";
 export const LIFE_MAPS = {
   coast: { width: 3800, height: 1800 },
-  mansion: { width: 2200, height: 1500 },
+  mansion: { width: 2950, height: 1500 },
   "deep-sea": { width: 4200, height: 1800 },
 } as const;
 
@@ -49,8 +49,14 @@ export function homeFurniturePlacements(room: (FurnitureId | null)[], tier: numb
   ];
   return room.flatMap((id, i) => (id && slots[i] ? [{ id, ...slots[i]! }] : []));
 }
+/** Tier 5 opens an east palace wing (pool + slide) through a door from the dining room. */
+export const PALACE_WING = { left: 2200, right: 2820, doorTop: 940, doorBottom: 1120 };
 export function canWalkHome(p: Point, houseTier = 4) {
-  if (p.x < 140 || p.x > 2060 || p.y < 240 || p.y > 1300) return false;
+  if (p.x > 2060) {
+    if (houseTier < 5 || p.y < 240 || p.y > 1300 || p.x > PALACE_WING.right) return false;
+    return p.x >= PALACE_WING.left || (p.y > PALACE_WING.doorTop && p.y < PALACE_WING.doorBottom);
+  }
+  if (p.x < 140 || p.y < 240 || p.y > 1300) return false;
   if (houseTier < 2 && p.x > 1240 && p.y < 710) return false;
   if (houseTier < 3 && p.x < 980 && p.y > 790) return false;
   return !HOME_WALLS.some(

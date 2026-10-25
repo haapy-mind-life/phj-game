@@ -28,7 +28,7 @@ test("sea is real wide area with submarine constrained to ocean", () => {
 test("house upgrades have stable monotone progression", () => {
   assert.deepEqual(
     HOUSE_TIERS.map((t) => t.cost),
-    [0, 100, 350, 850],
+    [0, 100, 350, 850, 1500],
   );
   assert.ok(nearWorld(COAST.truck, COAST.truck));
 });

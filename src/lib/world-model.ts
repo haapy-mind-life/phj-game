@@ -1,4 +1,5 @@
 import { CARS, canBuyCar, ENGINE_COST, SPECIAL_COST, type CarUpgrade } from "../game/cars.ts";
+import { HOME_LOTS, type HomeLotId } from "../game/kid-world.ts";
 import {
   ACTOR_IDS,
   OUTFITS,
@@ -153,6 +154,8 @@ export type GameState = {
   settledFoodSales: string[];
   visitedSeaTreasures: string[];
   houseTier: number;
+  /** Which `HOME_LOTS` entry the family home stands on; "original" is the legacy x≈480 house. */
+  homeLot: HomeLotId;
   decor: PlacedDecor[];
   yard: YardId[];
   halloween: Halloween;
@@ -291,7 +294,12 @@ export function migrateSave(input: unknown): GameState {
         : [],
       completed: object(raw["halloween"])["completed"] === true,
     },
-    houseTier: [1, 2, 3, 4].includes(raw["houseTier"] as number) ? (raw["houseTier"] as number) : 1,
+    houseTier: [1, 2, 3, 4, 5].includes(raw["houseTier"] as number)
+      ? (raw["houseTier"] as number)
+      : 1,
+    homeLot: HOME_LOTS.some((l) => l.id === raw["homeLot"])
+      ? (raw["homeLot"] as HomeLotId)
+      : "original",
     version: 3,
     money: Math.min(
       1e12,
@@ -377,7 +385,8 @@ export type WorldAction =
   | { type: "toggle-yard"; id: YardId }
   | { type: "start-party"; now?: string }
   | { type: "collect-candy"; id: string; now?: string }
-  | { type: "upgrade-house" };
+  | { type: "upgrade-house" }
+  | { type: "move-house"; lot: string };
 export function reduceWorld(state: GameState, action: WorldAction): GameState {
   if (action.type === "companion") {
     if (!ACTOR_IDS.includes(action.id)) return state;
@@ -478,11 +487,16 @@ export function reduceWorld(state: GameState, action: WorldAction): GameState {
   }
 
   if (action.type === "upgrade-house") {
-    const prices = [0, 100, 350, 850];
-    if (state.houseTier >= 4) return state;
+    const prices = [0, 100, 350, 850, 1500];
+    if (state.houseTier >= 5) return state;
     const cost = prices[state.houseTier]!;
     if (state.money < cost) return state;
     return { ...state, houseTier: state.houseTier + 1, money: state.money - cost };
+  }
+  if (action.type === "move-house") {
+    // Moving is free: the house keeps its level, furniture and yard decorations.
+    if (!HOME_LOTS.some((l) => l.id === action.lot) || state.homeLot === action.lot) return state;
+    return { ...state, homeLot: action.lot as HomeLotId };
   }
   if (action.type === "sell-food") {
     const menu: Record<string, number> = {

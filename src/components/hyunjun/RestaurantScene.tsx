@@ -63,6 +63,25 @@ export function RestaurantScene({
       <g transform="translate(380 260)">
         <FriendArt index={5} />
       </g>
+      {restaurant.kind === "burger" && (
+        <g data-burger-crowd="inside">
+          {/* Busy burger restaurant: more crew behind the counter and customers on a bench. */}
+          {[230, 530].map((x, i) => (
+            <g key={x} transform={`translate(${x} 260)`}>
+              <FriendArt index={11 + i * 4} />
+            </g>
+          ))}
+          <rect x="150" y="840" width="420" height="40" rx="14" fill="#c9a17d" />
+          {[170, 290, 410].map((x, i) => (
+            <g key={x} transform={`translate(${x} 740)`}>
+              <FriendArt index={2 + i * 5} />
+            </g>
+          ))}
+          <text x="360" y="930" textAnchor="middle" fontSize="26" fill="#76614f">
+            🍔 손님이 엄청 많아!
+          </text>
+        </g>
+      )}
       <rect x="180" y="370" width="570" height="70" rx="18" fill={restaurant.color} />
       <text x="430" y="490" textAnchor="middle" fontSize="30" fill="#76614f">
         주문 · 음식 받기

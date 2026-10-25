@@ -1,3 +1,4 @@
+import { HOUSE_TIERS } from "@/game/unified-world";
 import type { ReactNode } from "react";
 import { BeachTruck } from "./CoastProps";
 import { usePlayerIdentity } from "./useFamilyAccount";
@@ -270,7 +271,54 @@ export function LifeWorldScene({
               </text>
             </g>
           )}
-          {houseTier === 4 && (
+          <g data-palace-wing={houseTier >= 5 ? "open" : "locked"}>
+            <rect
+              x="2130"
+              y="100"
+              width="760"
+              height="1260"
+              rx="70"
+              fill="#fff9e6"
+              stroke="#d8b6a4"
+              strokeWidth="24"
+            />
+            <rect x="2085" y="930" width="140" height="200" fill="#fff9e6" />
+            <rect x="2240" y="230" width="580" height="460" rx="60" fill="#7fd3ea" />
+            <path
+              d="M2280 330q60-25 120 0t120 0t120 0t120 0M2280 460q60-25 120 0t120 0t120 0t120 0"
+              stroke="#d6f6ff"
+              strokeWidth="10"
+              fill="none"
+            />
+            <text x="2530" y="610" fontSize="40" textAnchor="middle" fill="#1d6b8a">
+              🏊 궁전 수영장
+            </text>
+            <path d="M2330 1250L2560 820H2660L2720 1250" fill="#f4b7d0" />
+            <path d="M2330 1250L2560 820" stroke="#e97fac" strokeWidth="24" />
+            <text x="2610" y="800" fontSize="40" textAnchor="middle" fill="#9a4a6d">
+              🛝 미끄럼틀
+            </text>
+            {houseTier < 5 && (
+              <g>
+                <rect
+                  x="2130"
+                  y="100"
+                  width="760"
+                  height="1260"
+                  rx="70"
+                  fill="#e2d9d3"
+                  opacity=".95"
+                />
+                <text x="2510" y="720" fontSize="34" textAnchor="middle" fill="#866f76">
+                  5단계 증축 후
+                </text>
+                <text x="2510" y="770" fontSize="34" textAnchor="middle" fill="#866f76">
+                  궁전 날개 열림 🚧
+                </text>
+              </g>
+            )}
+          </g>
+          {houseTier >= 4 && (
             <g>
               <text x="1050" y="137" fontSize="74" textAnchor="middle">
                 👑 🏰 👑
@@ -309,7 +357,7 @@ export function LifeWorldScene({
             </text>
           ))}
           <text x="230" y="155" fontSize="48" fill="#846d72">
-            {identity.name}의 집 Lv.{houseTier}/4
+            {identity.name}의 집 Lv.{houseTier}/{HOUSE_TIERS.length}
           </text>
           <text x={LIFE_SPOTS.mansionExit.x} y="1320" fontSize="62" textAnchor="middle">
             🚪

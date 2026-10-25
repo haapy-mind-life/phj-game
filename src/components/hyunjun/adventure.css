@@ -2191,3 +2191,62 @@
     padding: 4px 8px;
   }
 }
+/* Child request 2026-10-25: the plane can fly under the sea. */
+.hj-under-sea {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: linear-gradient(180deg, #2a8fc755, #0c3f7a88);
+}
+.hj-under-sea span {
+  position: absolute;
+  font-size: 44px;
+  animation: hj-bubble-rise 5s linear infinite;
+}
+.hj-under-sea span:nth-child(1) {
+  left: 12%;
+  animation-delay: -1s;
+}
+.hj-under-sea span:nth-child(2) {
+  left: 30%;
+  animation-delay: -3s;
+  font-size: 30px;
+}
+.hj-under-sea span:nth-child(3) {
+  left: 58%;
+  animation-delay: -2s;
+}
+.hj-under-sea span:nth-child(4) {
+  left: 75%;
+  animation-delay: -4s;
+  font-size: 26px;
+}
+.hj-under-sea span:nth-child(5) {
+  left: 88%;
+  animation-delay: -0.5s;
+}
+@keyframes hj-bubble-rise {
+  from {
+    transform: translateY(110%);
+    top: 90%;
+  }
+  to {
+    transform: translateY(-120%);
+    top: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hj-under-sea span {
+    animation: none;
+    top: 40%;
+  }
+}
+.hj-plane-player.under svg {
+  filter: saturate(0.8) hue-rotate(-12deg) drop-shadow(0 0 18px #bff4ff);
+}
+.hj-parked-plane {
+  position: absolute;
+  transform: translate(-50%, -60%);
+  pointer-events: none;
+}

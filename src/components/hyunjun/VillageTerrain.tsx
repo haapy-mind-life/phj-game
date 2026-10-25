@@ -1,3 +1,4 @@
+import { EmptyLot } from "./KidWorldArt";
 import { memo } from "react";
 import { MAP, PORTALS } from "@/game/adventure";
 import { VILLAGES } from "@/game/villages";
@@ -60,7 +61,8 @@ function Cottage({ x, y, color, label }: { x: number; y: number; color: string; 
 export const VillageTerrain = memo(function VillageTerrain({
   houseTier,
   yard,
-}: Pick<GameState, "houseTier" | "yard">) {
+  homeLot = "original",
+}: Pick<GameState, "houseTier" | "yard"> & { homeLot?: string }) {
   return (
     <svg
       className="adv-terrain"
@@ -166,10 +168,14 @@ export const VillageTerrain = memo(function VillageTerrain({
       {[986, 1006, 1026, 1046].map((y) => (
         <path key={y} d={`M1985 ${y}h100`} stroke="#a78165" strokeWidth="3" />
       ))}
-      <g transform="translate(245 155)">
-        <GrowingHome tier={houseTier} />
-        <YardDecor items={yard} />
-      </g>
+      {homeLot === "original" ? (
+        <g transform="translate(245 155)">
+          <GrowingHome tier={houseTier} />
+          <YardDecor items={yard} />
+        </g>
+      ) : (
+        <EmptyLot x={480} y={565} name="원래 우리 동네" />
+      )}
       <Cottage x={2100} y={1170} color="#92b8a0" label="FARM" />
       <g transform="translate(2260 300)">
         <rect x="5" y="15" width="30" height="155" rx="10" fill="#f2bd70" />

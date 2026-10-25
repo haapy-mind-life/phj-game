@@ -1,4 +1,5 @@
-import { worldDistance, wrapPoint, isOcean } from "./world-space.ts";
+import { worldDistance, wrapPoint } from "./world-space.ts";
+import { islandAt, isSeaWater } from "./kid-world.ts";
 import { isWalkable, MAP, type Point } from "./adventure.ts";
 export const COAST = {
   truck: { x: 6310, y: 920 },
@@ -15,6 +16,7 @@ export const HOUSE_TIERS = [
   { tier: 2, name: "넓은 2층 집", cost: 100 },
   { tier: 3, name: "멋진 대저택", cost: 350 },
   { tier: 4, name: "우리 가족 성", cost: 850 },
+  { tier: 5, name: "엄청 넓은 궁전", cost: 1500 },
 ] as const;
 export function nearWorld(a: Point, b: Point, range = 180) {
   return worldDistance(a, b) <= range;
@@ -42,9 +44,16 @@ export const PLANE_SPEED = 520;
 export function onRunway(p: Point) {
   return p.x >= RUNWAY.x1 && p.x <= RUNWAY.x2 && Math.abs(p.y - RUNWAY.y) <= RUNWAY.half;
 }
+/** Land on the runway, open land, or an island — never on open water. */
 export function canLandPlane(p: Point) {
-  return onRunway(p) || (!isOcean(p) && isWalkable(p));
+  return onRunway(p) || isWalkable(p);
 }
+/** Islands have no runway, so the plane may also take off anywhere on an island. */
+export function canTakeOff(p: Point) {
+  return onRunway(p) || !!islandAt(p);
+}
+/** The plane can dive under (and come back up from) open sea water only. */
+export const canPlaneDive = isSeaWater;
 export function stepPlane(p: Point, d: Point, dt: number): Point {
   const t = Math.min(0.05, Math.max(0, dt)),
     len = Math.max(1, Math.hypot(d.x, d.y));

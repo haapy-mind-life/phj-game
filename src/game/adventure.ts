@@ -1,5 +1,6 @@
 import { WORLD_SIZE, wrapPoint, worldDistance, isOcean } from "./world-space.ts";
 import { RESTAURANTS, NEW_VILLAGES } from "./world-content.ts";
+import { BIG_RESTAURANT_SCALE, KID_WORLD_BLOCKS, islandAt } from "./kid-world.ts";
 export type Point = { x: number; y: number };
 export type MiniKind = "treasure" | "stars" | "fishing";
 // Preserve the original 0..5600 villages. The coast and ocean are contiguous eastern ground.
@@ -32,12 +33,11 @@ const WALK_BLOCKS = [
         : [{ left: x - 108, right: x + 108, top: y - 98, bottom: y + 78 }];
     }),
   ),
-  ...RESTAURANTS.filter((r) => r.id !== "korean").map((r) => ({
-    left: r.x - 150,
-    right: r.x + 150,
-    top: r.y - 200,
-    bottom: r.y - 25,
-  })),
+  ...RESTAURANTS.filter((r) => r.id !== "korean").map((r) => {
+    const k = r.kind === "burger" ? BIG_RESTAURANT_SCALE : 1;
+    return { left: r.x - 150 * k, right: r.x + 150 * k, top: r.y - 200 * k, bottom: r.y - 25 };
+  }),
+  ...KID_WORLD_BLOCKS,
   ...BLOCKS.map((b) => ({
     left: b.x - 18,
     right: b.x + b.w + 18,
@@ -46,7 +46,7 @@ const WALK_BLOCKS = [
   })),
 ];
 export function isWalkable(p: Point) {
-  if (p.x > 7328 && p.x < 10238) return false;
+  if (p.x > 7328 && p.x < 10238 && !islandAt(p)) return false;
   return !WALK_BLOCKS.some((b) => p.x > b.left && p.x < b.right && p.y > b.top && p.y < b.bottom);
 }
 export function stepPlayer(p: Point, d: Point, dt: number, speedMultiplier = 1): Point {

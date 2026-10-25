@@ -1,3 +1,4 @@
+import { homeLot } from "@/game/kid-world";
 import { stepRestaurant } from "@/game/restaurant";
 import { useEffect, useRef, useState } from "react";
 import { useGame } from "@/lib/game-state";
@@ -241,7 +242,7 @@ export function useLivingWorld({
     if (
       nearbyActor &&
       !portalHasPriority(pos, scene) &&
-      !(scene === "world" && worldDistance(pos, { x: 480, y: 565 }) < 185)
+      !(scene === "world" && worldDistance(pos, homeLot(state.homeLot)) < 185)
     ) {
       setTalk(nearbyActor.id);
       return true;
@@ -266,7 +267,7 @@ export function useLivingWorld({
     if (
       nearbyActor &&
       !portalHasPriority(pos, scene) &&
-      !(scene === "world" && worldDistance(pos, { x: 480, y: 565 }) < 185)
+      !(scene === "world" && worldDistance(pos, homeLot(state.homeLot)) < 185)
     )
       return `${nearbyActor.name} 대화`;
     return null;
