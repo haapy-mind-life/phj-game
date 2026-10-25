@@ -53,7 +53,7 @@
 - 기존 회귀:
   - `verify-child-play.cjs` PASS
   - `verify-living-world.cjs`의 family·explore·input·restaurants·seams PASS
-  - `season`은 FAIL: 접힌 `집 메뉴` 안의 `🎨 집 안 꾸미기` 버튼을 찾지 못함. 이번 변경 전 `main`(ceea989) 빌드에서도 똑같이 실패하므로 기존 문제이고, 이번 변경 범위가 아님.
+  - `season`: 처음에는 FAIL이었다. `🎨 집 안 꾸미기` 버튼이 접힌 `집 메뉴` 안으로 옮겨졌는데 테스트가 메뉴를 열지 않았기 때문이고, 이번 변경 전 `main`(ceea989)에서도 똑같이 실패했다. 후속 수정으로 테스트가 메뉴를 먼저 열게 바꿔 PASS. 이제 6개 시나리오 전체가 PASS.
 - CI·배포·실제 기기(삼성 브라우저·S Pen)·현준이 직접 플레이: **NOT RUN**. push·merge는 하지 않았음.
 
 ![바닷속을 나는 비행기](images/17-plane-under-phone.png)
