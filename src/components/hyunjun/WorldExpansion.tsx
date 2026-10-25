@@ -3,6 +3,17 @@ import type { Point } from "@/game/adventure";
 import { MAP } from "@/game/adventure";
 import { visibleOffsets, worldDistance } from "@/game/world-space";
 import { NEW_VILLAGES, RESTAURANTS, FESTIVALS } from "@/game/world-content";
+import { BIG_RESTAURANT_SCALE } from "@/game/kid-world";
+import { BurgerCrowd, KidIslands, KidLandmarks } from "./KidWorldArt";
+
+/** Home/construction state the expanded world draws; unchanged values keep the tile memoized. */
+export type KidWorldView = {
+  homeLot: string;
+  houseTier: number;
+  yard: readonly string[];
+  floors: number;
+};
+const NO_KID_VIEW: KidWorldView = { homeLot: "original", houseTier: 1, yard: [], floors: 0 };
 const CopyOffset = createContext<Point>({ x: 0, y: 0 });
 export function WorldCopies({
   center,
@@ -58,10 +69,12 @@ const WorldExpansionArt = memo(function WorldExpansionArt({
   center,
   season,
   layer = "ground",
+  kid = NO_KID_VIEW,
 }: {
   center: Point;
   season: boolean;
   layer?: "ground" | "landmarks";
+  kid?: KidWorldView;
 }) {
   const offset = useContext(CopyOffset);
   const left = Math.floor((center.x - offset.x - 768) / 256) * 256,
@@ -93,6 +106,7 @@ const WorldExpansionArt = memo(function WorldExpansionArt({
             strokeWidth="12"
             strokeDasharray="80 50"
           />
+          <KidIslands center={center} />
           {[1200, 3800, 6400, 12800, 17000].map((x) => (
             <path key={x} d={`M${x} 0V${MAP.height}`} stroke="#f5e7c9" strokeWidth="100" />
           ))}
@@ -142,32 +156,36 @@ const WorldExpansionArt = memo(function WorldExpansionArt({
       )}
       {layer === "landmarks" && (
         <>
+          <KidLandmarks center={center} {...kid} />
           {RESTAURANTS.filter((r) => worldDistance(r, center) < 1400).map((r) => (
             <g key={r.id} transform={`translate(${r.x} ${r.y})`} data-restaurant={r.id}>
-              <rect
-                x="-155"
-                y="-210"
-                width="310"
-                height="210"
-                rx="24"
-                fill="#fff2d8"
-                stroke="#d8b99b"
-                strokeWidth="6"
-              />
-              <path d="M-178-206H178L145-275H-145Z" fill={r.color} />
-              <rect x="-153" y="-145" width="306" height="40" fill={r.color} />
-              <text
-                y="-169"
-                textAnchor="middle"
-                fontSize="35"
-                fontWeight="bold"
-                fill={r.id === "mcdonalds" ? "#ffdb53" : "#fff8df"}
-              >
-                {r.id === "mcdonalds" ? "M" : r.mark}
-              </text>
-              <rect x="-34" y="-82" width="68" height="82" rx="13" fill="#8eaaaa" />
-              <rect x="-125" y="-81" width="65" height="54" rx="9" fill="#b9e0df" />
-              <rect x="60" y="-81" width="65" height="54" rx="9" fill="#b9e0df" />
+              <g transform={r.kind === "burger" ? `scale(${BIG_RESTAURANT_SCALE})` : undefined}>
+                <rect
+                  x="-155"
+                  y="-210"
+                  width="310"
+                  height="210"
+                  rx="24"
+                  fill="#fff2d8"
+                  stroke="#d8b99b"
+                  strokeWidth="6"
+                />
+                <path d="M-178-206H178L145-275H-145Z" fill={r.color} />
+                <rect x="-153" y="-145" width="306" height="40" fill={r.color} />
+                <text
+                  y="-169"
+                  textAnchor="middle"
+                  fontSize="35"
+                  fontWeight="bold"
+                  fill={r.kind === "burger" ? "#ffdb53" : "#fff8df"}
+                >
+                  {r.mark}
+                </text>
+                <rect x="-34" y="-82" width="68" height="82" rx="13" fill="#8eaaaa" />
+                <rect x="-125" y="-81" width="65" height="54" rx="9" fill="#b9e0df" />
+                <rect x="60" y="-81" width="65" height="54" rx="9" fill="#b9e0df" />
+              </g>
+              {r.kind === "burger" && <BurgerCrowd />}
               <text y="40" textAnchor="middle" fontSize="27" fill="#5c6659">
                 {r.name}
               </text>
@@ -213,15 +231,17 @@ export function WorldExpansion({
   center,
   season,
   layer = "ground",
+  kid,
 }: {
   center: Point;
   season: boolean;
   layer?: "ground" | "landmarks";
+  kid?: KidWorldView;
 }) {
   const x = Math.floor(center.x / 256) * 256,
     y = Math.floor(center.y / 256) * 256;
   const tile = useMemo(() => ({ x, y }), [x, y]);
-  return <WorldExpansionArt center={tile} season={season} layer={layer} />;
+  return <WorldExpansionArt center={tile} season={season} layer={layer} kid={kid ?? NO_KID_VIEW} />;
 }
 
 export function LegacySection({

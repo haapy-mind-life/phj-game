@@ -24,6 +24,9 @@ export function DiveScene({ onClose }: { onClose: () => void }) {
     collected = useRef<string[]>([]),
     rewarded = useRef(false),
     inkUntil = useRef(0);
+  // Child request 2026-10-25: a long submarine that carries passengers.
+  // Party members ride first; the remaining seats go to friendly passengers.
+  const passengers = [...state.companions.slice(0, 4), "p3", "p6", "p9", "p12"].slice(0, 4);
   const near = DIVE_TREASURES.find(
     (t) => !found.includes(t.id) && Math.hypot(t.x - pos.x, t.y - pos.y) < 110,
   );
@@ -177,50 +180,50 @@ export function DiveScene({ onClose }: { onClose: () => void }) {
           </g>
         ))}
         <g transform={`translate(${pos.x} ${pos.y})`} data-testid="submarine">
-          <ellipse cx="95" rx="180" ry="110" fill="url(#kid-beam)" />
-          <path d="M-86-20L-125-55V35L-86 15" fill="#f4b34c" />
+          <ellipse cx="150" rx="200" ry="110" fill="url(#kid-beam)" />
+          <path d="M-205-20L-250-60V40L-205 15" fill="#f4b34c" />
           <rect
-            x="-100"
-            y="-60"
-            width="210"
-            height="100"
-            rx="50"
+            x="-215"
+            y="-62"
+            width="440"
+            height="104"
+            rx="52"
             fill="#ffc95e"
             stroke="#fff2bd"
             strokeWidth="7"
           />
-          <path d="M10-62V-110H60" stroke="#e9ad43" strokeWidth="16" fill="none" />
-          <circle cx="-28" cy="-15" r="34" fill="#a4e8f0" stroke="#e6a54b" strokeWidth="7" />
+          <path d="M40-64V-115H95" stroke="#e9ad43" strokeWidth="16" fill="none" />
+          <circle cx="-150" cy="-12" r="36" fill="#a4e8f0" stroke="#e6a54b" strokeWidth="7" />
           <image
-            x="-53"
-            y="-51"
-            width="50"
-            height="67"
+            x="-176"
+            y="-50"
+            width="52"
+            height="70"
             href={characterUrl(state.outfit, "idle", false, reduced, identity.id)}
           />
-          <circle cx="53" cy="-15" r="30" fill="#a4e8f0" stroke="#e6a54b" strokeWidth="7" />
-          {state.companions[0] === "dad" ? (
-            <g transform="translate(35 -43) scale(.32)">
-              <DadArt />
+          {passengers.map((who, i) => (
+            <g key={i} transform={`translate(${-70 + i * 72} -12)`} data-passenger={who}>
+              <circle r="29" fill="#a4e8f0" stroke="#e6a54b" strokeWidth="6" />
+              {who === "dad" ? (
+                <g transform="translate(-18 -28) scale(.3)">
+                  <DadArt />
+                </g>
+              ) : who === "robot" ? (
+                <g transform="translate(-18 -28) scale(.3)">
+                  <RobotArt />
+                </g>
+              ) : (
+                <g transform="translate(-20 -27) scale(.42)">
+                  <FriendArt index={Number(who.replace(/\D/g, "")) || i * 3 + 2} />
+                </g>
+              )}
             </g>
-          ) : state.companions[0] === "robot" ? (
-            <g transform="translate(35 -43) scale(.32)">
-              <RobotArt />
-            </g>
-          ) : state.companions.length > 0 ? (
-            <g transform="translate(33 -43) scale(.45)">
-              <FriendArt index={2} />
-            </g>
-          ) : (
-            <text x="53" y="-5" textAnchor="middle" fontSize="24">
-              ★
-            </text>
-          )}
+          ))}
         </g>
       </svg>
       <header className="kid-scene-header">
         <b>
-          🐠 {Math.round(pos.y / 10)}m · 💎 {found.length}/3
+          🐠 {Math.round(pos.y / 10)}m · 💎 {found.length}/3 · 🧑‍🤝‍🧑 승객 {passengers.length}명
         </b>
         <button onClick={onClose}>↑ 수면 · 항구로</button>
       </header>

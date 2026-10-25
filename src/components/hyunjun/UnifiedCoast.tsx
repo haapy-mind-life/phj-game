@@ -291,7 +291,7 @@ export const UnifiedCoast = memo(function UnifiedCoast({
   );
 });
 export function GrowingHome({ tier }: { tier: number }) {
-  const level = HOUSE_TIERS[Math.min(4, Math.max(1, tier)) - 1]!;
+  const level = HOUSE_TIERS[Math.min(HOUSE_TIERS.length, Math.max(1, tier)) - 1]!;
   const floors = tier > 1 ? 2 : 1;
   return (
     <svg
@@ -358,7 +358,7 @@ export function GrowingHome({ tier }: { tier: number }) {
       <text x="285" y="405" fill="#4d675d" fontSize="33" fontWeight="bold" textAnchor="middle">
         {level.name}
       </text>
-      {tier === 4 && (
+      {tier >= 4 && (
         <>
           <path
             d="M75 130V36H135V130M440 130V36H501V130"
@@ -367,7 +367,7 @@ export function GrowingHome({ tier }: { tier: number }) {
             strokeWidth="12"
           />
           <text x="280" y="15" textAnchor="middle" fontSize="45">
-            👑
+            {tier >= 5 ? "👑 🏊 👑" : "👑"}
           </text>
         </>
       )}

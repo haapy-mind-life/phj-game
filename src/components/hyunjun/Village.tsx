@@ -14,7 +14,15 @@ import { worldDistance, isOcean } from "@/game/world-space";
 import { RESTAURANT_ROOM } from "@/game/world-content";
 import { RobotArt } from "./RobotArt";
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  CONSTRUCTION,
+  homeLot,
+  islandAt,
+  nearKidSpot,
+  LANDMARKS,
+  type KidSpot,
+} from "@/game/kid-world";
 import {
   CANDY_SPOTS,
   candySpotsForHouse,
@@ -53,6 +61,8 @@ import {
   AIRPORT,
   RUNWAY,
   canLandPlane,
+  canPlaneDive,
+  canTakeOff,
   nearWorld,
   onRunway,
   stepPlane,
@@ -115,11 +125,17 @@ export function Village() {
   const [robotFollowing, setRobotFollowing] = useState(false);
   const [submarine, setSubmarine] = useState(false);
   const [plane, setPlane] = useState<"off" | "ground" | "air">("off");
+  // The plane may also fly under open sea water; it pops back up when the sea ends.
+  const [planeUnder, setPlaneUnder] = useState(false);
+  // A plane left on an island stays there so the player can fly back.
+  const [planeSpot, setPlaneSpot] = useState<Point | null>(null);
+  const [buildFloors, setBuildFloors] = useState(0);
   const [altitude, setAltitude] = useState(0);
   const [submerged, setSubmerged] = useState(false);
   const [truckOpen, setTruckOpen] = useState(false);
   const nearLife = (point: Point, range = 180) => nearWorld(pos, point, range);
-  const atOriginalHouse = nearWorld(pos, { x: 480, y: 565 }, 185);
+  const home = homeLot(state.homeLot);
+  const atHome = nearWorld(pos, home, 185);
   const goHomeInside = () => {
     setRegion("mansion");
     setDiving(false);
@@ -127,19 +143,20 @@ export function Village() {
     setDriving(false);
     setSubmarine(false);
     setPlane("off");
+    setPlaneUnder(false);
     setAltitude(0);
     setMessage("우리 집 안으로 들어왔어! 부엌에서 음식을 집고 식탁에서 먹어 봐.");
   };
   const backToWorld = () => {
     setRegion("village");
-    setPos({ x: 480, y: 610 });
-    returnPosition = { x: 480, y: 610 };
+    setPos({ x: home.x, y: home.y + 45 });
+    returnPosition = { x: home.x, y: home.y + 45 };
     setMessage("내가 키운 집 앞으로 돌아왔어!");
   };
   const upgradeHome = () => {
     const next = HOUSE_TIERS[state.houseTier];
     if (!next) {
-      setMessage("우리 집이 최고의 성으로 완성됐어!");
+      setMessage("우리 집이 엄청 넓은 궁전으로 완성됐어!");
       return;
     }
     if (state.money < next.cost) {
@@ -184,29 +201,61 @@ export function Village() {
         setMessage("폭신한 침대에서 쭉 기지개! 다시 신나게 놀자.");
         return;
       }
+      if (nearWorld(lifePos, { x: 2525, y: 450 }, 260) && state.houseTier >= 5) {
+        setMessage("첨벙! 궁전 수영장에서 신나게 수영했어! 🏊");
+        return;
+      }
+      if (nearWorld(lifePos, { x: 2525, y: 1030 }, 260) && state.houseTier >= 5) {
+        setMessage("슝~ 궁전 미끄럼틀 최고! 🛝");
+        return;
+      }
       setMessage("침대에서 쉬거나 부엌과 식탁을 찾아가 봐!");
       return;
     }
     if (plane !== "off") {
       if (plane === "air") {
+        if (canPlaneDive(pos)) {
+          setPlaneUnder(!planeUnder);
+          setMessage(
+            planeUnder
+              ? "하늘로 슝! 다시 바다 위를 날고 있어."
+              : "바닷속으로 슝! 물고기 사이를 날아 봐. 바다가 끝나도 쭉 갈 수 있어!",
+          );
+          return;
+        }
         if (!canLandPlane(pos)) {
-          setMessage("바다 위에는 착륙할 수 없어! 땅이나 활주로를 찾아 봐.");
+          setMessage("여기는 착륙할 수 없어! 땅이나 활주로, 섬을 찾아 봐.");
           return;
         }
         setPlane("ground");
+        const island = islandAt(pos);
         setMessage(
-          onRunway(pos) ? "활주로에 사뿐히 착륙!" : "땅에 착륙했어! 비행기에서 내릴 수 있어.",
+          onRunway(pos)
+            ? "활주로에 사뿐히 착륙!"
+            : island
+              ? island.name + "에 착륙했어! 내리기를 누르고 섬을 구경해 봐."
+              : "땅에 착륙했어! 비행기에서 내릴 수 있어.",
         );
         return;
       }
-      if (onRunway(pos)) {
+      if (canTakeOff(pos)) {
         setPlane("air");
-        setMessage("이륙! 조이스틱으로 하늘을 날아 큰 바다까지 가 봐.");
+        setMessage(
+          onRunway(pos)
+            ? "이륙! 바다 위를 날다가 바닷속으로도 들어가 봐. 섬과 나라도 찾아 봐!"
+            : "섬에서 이륙! 쭉 날아가 보자.",
+        );
         return;
       }
-      setPlane("off");
-      setAltitude(0);
-      setMessage("비행기에서 내렸어. 활주로에서 다시 탈 수 있어.");
+      leavePlane();
+      return;
+    }
+    if (planeSpot && nearLife(planeSpot, 220) && !submarine) {
+      setDriving(false);
+      setPlane("ground");
+      setPos({ ...planeSpot });
+      setPlaneSpot(null);
+      setMessage("비행기 탑승! 한 번 더 누르면 섬에서 이륙해요.");
       return;
     }
     if (nearLife(AIRPORT, 260) && !submarine) {
@@ -241,7 +290,7 @@ export function Village() {
       setMessage(submerged ? "잠수함이 수면으로 올라왔어." : "잠수함이 바닷속 깊이 잠수했어!");
       return;
     }
-    if (atOriginalHouse) {
+    if (atHome) {
       goHomeInside();
       return;
     }
@@ -275,8 +324,58 @@ export function Village() {
       setMessage(robotFollowing ? "로봇이 여기서 쉬고 있어." : "아빠 로봇이 함께 따라다녀!");
       return;
     }
+    const island = islandAt(pos);
+    if (island) {
+      setMessage(island.emoji + " " + island.name + "에 왔어! 섬 구경 신난다!");
+      return;
+    }
     setMessage("집·푸드트럭·항구에 가까이 가서 행동을 눌러 봐.");
   };
+  const leavePlane = () => {
+    setPlane("off");
+    setPlaneUnder(false);
+    setAltitude(0);
+    const island = islandAt(pos);
+    if (island) {
+      setPlaneSpot({ ...pos });
+      setMessage(island.name + "에 내렸어! 비행기 옆에서 다시 탈 수 있어.");
+    } else {
+      setPlaneSpot(null);
+      setMessage("비행기에서 내렸어. 활주로에서 다시 탈 수 있어.");
+    }
+  };
+  const actKid = (spot: KidSpot) => {
+    if (spot.kind === "landmark") {
+      setMessage(spot.landmark.emoji + " " + spot.landmark.words);
+      return;
+    }
+    if (spot.kind === "construction") {
+      const next = buildFloors >= CONSTRUCTION.floors ? 0 : buildFloors + 1;
+      setBuildFloors(next);
+      setMessage(
+        next === 0
+          ? "🚧 새 빌딩 공사 시작! 다시 벽돌을 쌓아 보자."
+          : next >= CONSTRUCTION.floors
+            ? "🎉 빌딩 완성! " + identity.name + "이가 지은 빌딩이야!"
+            : "🧱 쿵쿵! " + next + "층까지 올렸어!",
+      );
+      return;
+    }
+    dispatch({ type: "move-house", lot: spot.lot.id });
+    setMessage(
+      "🚚 이사 완료! " +
+        spot.lot.name +
+        "에 우리 집이 생겼어. 문 앞에서 행동을 누르면 들어갈 수 있어.",
+    );
+  };
+  const kidSpotLabel = (spot: KidSpot) =>
+    spot.kind === "landmark"
+      ? spot.landmark.name + " 구경"
+      : spot.kind === "construction"
+        ? buildFloors >= CONSTRUCTION.floors
+          ? "새 공사 시작"
+          : "공사 돕기 · 벽돌 쌓기"
+        : "여기로 이사하기";
   const actionLifeLabel = () => {
     if (region === "mansion") {
       if (nearWorld(lifePos, LIFE_SPOTS.mansionExit, 180)) return "집 밖으로";
@@ -290,20 +389,32 @@ export function Village() {
         return "사탕 줍기";
       if (nearWorld(lifePos, LIFE_SPOTS.mansionKitchen, 300)) return "음식 집기";
       if (nearWorld(lifePos, LIFE_SPOTS.mansionDining, 310) && holding) return "음식 먹기";
+      if (state.houseTier >= 5 && nearWorld(lifePos, { x: 2525, y: 450 }, 260)) return "수영하기";
+      if (state.houseTier >= 5 && nearWorld(lifePos, { x: 2525, y: 1030 }, 260))
+        return "미끄럼틀 타기";
       return "집 탐험";
     }
-    if (plane === "air") return canLandPlane(pos) ? "착륙하기" : "하늘 비행 중";
-    if (plane === "ground") return onRunway(pos) ? "이륙하기" : "비행기에서 내리기";
+    if (plane === "air")
+      return canPlaneDive(pos)
+        ? planeUnder
+          ? "하늘로 슝"
+          : "바닷속으로 슝"
+        : canLandPlane(pos)
+          ? "착륙하기"
+          : "하늘 비행 중";
+    if (plane === "ground") return canTakeOff(pos) ? "이륙하기" : "비행기에서 내리기";
+    if (planeSpot && nearLife(planeSpot, 220) && !submarine) return "비행기 타기";
     if (nearLife(AIRPORT, 260) && !submarine) return "비행기 타기";
     if (submarine) {
       if (nearLife(COAST.harbor, 220) || nearLife({ x: 10200, y: 1010 }, 220)) return "잠수함 하차";
       if (OCEAN_DISCOVERIES.some((site) => nearLife(site, 190))) return "바다 보물 발견";
       return submerged ? "수면으로 상승" : "바닷속 잠수";
     }
-    if (atOriginalHouse) return "우리 집 들어가기";
+    if (atHome) return "우리 집 들어가기";
     if (nearLife(COAST.truck, 275)) return "푸드트럭 영업";
     if (nearLife(COAST.harbor, 290) || nearLife({ x: 10300, y: 1010 }, 250)) return "잠수함 타기";
     if (nearLife(COAST.robot, 240)) return "아빠 로봇 동행";
+    if (islandAt(pos)) return "섬 구경";
     return "주변 살펴보기";
   };
   const [garageOpen, setGarageOpen] = useState(false);
@@ -321,7 +432,9 @@ export function Village() {
   const [facing, setFacing] = useState(1);
   const consoleShown = !mini && !drawing && !mapOpen && !garageOpen && !truckOpen;
   const viewport = useRef<HTMLDivElement>(null);
-  const nearby = nearestPortal(pos);
+  const portal = nearestPortal(pos);
+  // After moving house, the old lot is an empty lot rather than the decorating entrance.
+  const nearby = portal?.id === "house" && state.homeLot !== "original" ? null : portal;
   const livingDirection = useRef<() => Point>(() => ({ x: 0, y: 0 }));
   const living = useLivingWorld({
     pos,
@@ -375,6 +488,19 @@ export function Village() {
           ) ?? null)
       : null;
   const mission = missionPlay.mission;
+  const kidSpot =
+    region === "village" && !living.restaurant && plane === "off" && !submarine && !seaOpen
+      ? nearKidSpot(pos, state.homeLot)
+      : null;
+  const kidView = useMemo(
+    () => ({
+      homeLot: state.homeLot,
+      houseTier: state.houseTier,
+      yard: state.yard,
+      floors: buildFloors,
+    }),
+    [state.homeLot, state.houseTier, state.yard, buildFloors],
+  );
   const interact = () => {
     if (
       !ready ||
@@ -397,18 +523,16 @@ export function Village() {
       setStation(nearbyStation);
       return;
     }
+    if (kidSpot) {
+      actKid(kidSpot);
+      return;
+    }
     if (living.interact()) return;
     if (region === "mansion") {
       actionLife();
       return;
     }
-    if (
-      plane !== "off" ||
-      submarine ||
-      atOriginalHouse ||
-      pos.x > 5700 ||
-      nearWorld(pos, AIRPORT, 260)
-    ) {
+    if (plane !== "off" || submarine || atHome || pos.x > 5700 || nearWorld(pos, AIRPORT, 260)) {
       actionLife();
       return;
     }
@@ -467,6 +591,11 @@ export function Village() {
   livingDirection.current = movement.direction;
   const direction = useRef(movement.direction);
   direction.current = movement.direction;
+  useEffect(() => {
+    if (!planeUnder || (plane === "air" && canPlaneDive(pos))) return;
+    setPlaneUnder(false);
+    if (plane === "air") setMessage("바다가 끝났어! 비행기가 물 밖으로 나와서 쭉 날아가.");
+  }, [pos, plane, planeUnder]);
   useEffect(() => {
     if (!viewport.current) return;
     const observer = new ResizeObserver(([entry]) => {
@@ -588,7 +717,9 @@ export function Village() {
       ? missionPlay.label
       : nearbyStation
         ? "놀이 시작"
-        : living.label();
+        : kidSpot
+          ? kidSpotLabel(kidSpot)
+          : living.label();
   return (
     <Shell
       active="home"
@@ -601,7 +732,9 @@ export function Village() {
           🚗 자동차 {CARS.length}대
         </button>
         {region === "village" && (
-          <span>🏠 우리 집 Lv.{state.houseTier}/4 · ✈️ 비행장은 바닷가 남쪽</span>
+          <span>
+            🏠 우리 집 Lv.{state.houseTier}/{HOUSE_TIERS.length} · ✈️ 비행장은 바닷가 남쪽
+          </span>
         )}
         <button onClick={() => setMapOpen((v) => !v)} aria-expanded={mapOpen}>
           지도 {mapOpen ? "접기" : "보기"}
@@ -617,6 +750,15 @@ export function Village() {
         }
         tabIndex={0}
       >
+        {plane === "air" && planeUnder && (
+          <div className="hj-under-sea" aria-hidden="true">
+            <span>🐠</span>
+            <span>🫧</span>
+            <span>🐟</span>
+            <span>🫧</span>
+            <span>🐙</span>
+          </div>
+        )}
         <div
           className="adv-map"
           aria-hidden={seaOpen || truckOpen}
@@ -654,7 +796,11 @@ export function Village() {
             <WorldCopies center={pos} w={size.w} h={size.h}>
               <WorldExpansion center={pos} season={living.season} />
               <LegacySection center={pos} w={size.w} h={size.h}>
-                <VillageTerrain houseTier={state.houseTier} yard={state.yard} />
+                <VillageTerrain
+                  houseTier={state.houseTier}
+                  yard={state.yard}
+                  homeLot={state.homeLot}
+                />
                 {worldRectVisible(pos, size.w, size.h, {
                   x: 5500,
                   y: -250,
@@ -681,27 +827,41 @@ export function Village() {
                   diving={diving}
                   camping={camping}
                 />
-                {PORTALS.map((g) => (
-                  <div
-                    className={`adv-gate ${nearby?.id === g.id ? "near" : ""}`}
-                    key={g.id}
-                    style={{ left: g.x, top: g.y }}
-                  >
-                    <span>
-                      {g.id === "runner"
-                        ? "달리기"
-                        : g.id === "house"
-                          ? "꾸미기"
-                          : g.id === "farm"
-                            ? "키우기"
-                            : "놀기"}
-                    </span>
-                    <b>{g.name}</b>
-                    <i />
-                  </div>
-                ))}
+                {PORTALS.filter((g) => g.id !== "house" || state.homeLot === "original").map(
+                  (g) => (
+                    <div
+                      className={`adv-gate ${nearby?.id === g.id ? "near" : ""}`}
+                      key={g.id}
+                      style={{ left: g.x, top: g.y }}
+                    >
+                      <span>
+                        {g.id === "runner"
+                          ? "달리기"
+                          : g.id === "house"
+                            ? "꾸미기"
+                            : g.id === "farm"
+                              ? "키우기"
+                              : "놀기"}
+                      </span>
+                      <b>{g.name}</b>
+                      <i />
+                    </div>
+                  ),
+                )}
               </LegacySection>
-              <WorldExpansion center={pos} season={living.season} layer="landmarks" />
+              <WorldExpansion center={pos} season={living.season} layer="landmarks" kid={kidView} />
+              {planeSpot && plane === "off" && (
+                <div className="hj-parked-plane" style={{ left: planeSpot.x, top: planeSpot.y }}>
+                  <svg
+                    width="200"
+                    height="120"
+                    viewBox="-140 -80 280 170"
+                    aria-label="섬에 세운 비행기"
+                  >
+                    <PlaneArt />
+                  </svg>
+                </div>
+              )}
               {
                 <People
                   state={state}
@@ -755,7 +915,7 @@ export function Village() {
                 className={`adv-player ${walking ? "walking" : ""}`}
                 style={{ left: pos.x, top: pos.y }}
               >
-                {plane === "air" && (
+                {plane === "air" && !planeUnder && (
                   <div
                     className="hj-plane-shadow"
                     style={{
@@ -767,9 +927,11 @@ export function Village() {
                 <div style={{ transform: `scaleX(${facing})` }}>
                   {plane !== "off" ? (
                     <div
-                      className="hj-plane-player"
+                      className={`hj-plane-player${planeUnder ? " under" : ""}`}
                       style={{
-                        transform: `translateY(${-altitude * 70}px) scale(${1 + altitude * 0.35})`,
+                        transform: planeUnder
+                          ? "translateY(10px) scale(1.15)"
+                          : `translateY(${-altitude * 70}px) scale(${1 + altitude * 0.35})`,
                       }}
                     >
                       <svg
@@ -859,7 +1021,7 @@ export function Village() {
                 </div>
                 <b>
                   {plane !== "off"
-                    ? `${identity.name} 비행기`
+                    ? `${identity.name} 비행기${planeUnder ? " 🫧" : ""}`
                     : submarine
                       ? `${identity.name} 잠수함`
                       : driving
@@ -961,22 +1123,18 @@ export function Village() {
             </>
           )}
         </div>
-        {region === "village" &&
-          !living.restaurant &&
-          atOriginalHouse &&
-          !seaOpen &&
-          !truckOpen && (
-            <button
-              className="kid-home-upgrade"
-              onClick={upgradeHome}
-              disabled={state.houseTier >= 4}
-            >
-              🏡{" "}
-              {state.houseTier >= 4
-                ? "집 완성!"
-                : `집 확장 · ${HOUSE_TIERS[state.houseTier]!.cost} 별코인`}
-            </button>
-          )}
+        {region === "village" && !living.restaurant && atHome && !seaOpen && !truckOpen && (
+          <button
+            className="kid-home-upgrade"
+            onClick={upgradeHome}
+            disabled={state.houseTier >= HOUSE_TIERS.length}
+          >
+            🏡{" "}
+            {state.houseTier >= HOUSE_TIERS.length
+              ? "집 완성!"
+              : `집 확장 · ${HOUSE_TIERS[state.houseTier]!.cost} 별코인`}
+          </button>
+        )}
         {mission &&
           !mission.done &&
           region === "village" &&
@@ -1212,6 +1370,34 @@ export function Village() {
               >
                 🌊 바닷가 · 푸드트럭
               </button>
+              {[
+                { label: "✈️ 비행장 · 섬 여행", x: AIRPORT.x, y: AIRPORT.y - 120 },
+                ...LANDMARKS.map((l) => ({ label: l.emoji + " " + l.name, x: l.x, y: l.y + 90 })),
+                { label: "🚧 공사장", x: CONSTRUCTION.x, y: CONSTRUCTION.y + 90 },
+                { label: "🍔 맥도날드 시티점", x: 4700, y: 2470 },
+                { label: "🍔 맥도날드 바닷가점", x: 13200, y: 1820 },
+                ...(state.homeLot !== "original"
+                  ? [{ label: "🏠 이사 간 우리 집", x: home.x, y: home.y + 60 }]
+                  : []),
+              ].map((d) => (
+                <button
+                  key={d.label}
+                  onClick={() => {
+                    const arrival = { x: d.x, y: d.y };
+                    setDiving(false);
+                    setPlane("off");
+                    setPlaneUnder(false);
+                    setAltitude(0);
+                    setDriving(false);
+                    setPos(arrival);
+                    returnPosition = arrival;
+                    setMapOpen(false);
+                    setMessage(d.label + "에 도착했어!");
+                  }}
+                >
+                  {d.label}
+                </button>
+              ))}
               {VILLAGES.map((v, i) => (
                 <button
                   key={v.id}
@@ -1246,6 +1432,11 @@ export function Village() {
             <p className="adv-touch-hint">{message}</p>
             <Joystick onMove={movement.setStick} />
             <div className="adv-action-buttons">
+              {plane === "ground" && (
+                <button className="hj-car-mode" onClick={leavePlane}>
+                  내리기
+                </button>
+              )}
               {region === "village" && !living.restaurant && plane === "off" && !submarine && (
                 <button
                   className="hj-car-mode"
@@ -1284,7 +1475,7 @@ export function Village() {
                   (region === "mansion" ||
                   plane !== "off" ||
                   submarine ||
-                  atOriginalHouse ||
+                  atHome ||
                   pos.x > 5700 ||
                   nearWorld(pos, AIRPORT, 260)
                     ? actionLifeLabel()
