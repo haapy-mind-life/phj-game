@@ -7,10 +7,31 @@ import {
   normalizeRoomCode,
   parsePlayerMessage,
   pruneStale,
+  restaurantRegion,
   shouldSend,
   visibleRemotes,
   type PlayerMessage,
 } from "./family-room.ts";
+import { RESTAURANTS, RESTAURANT_ROOM } from "./world-content.ts";
+
+test("every restaurant interior is a shared family region with room-sized bounds", () => {
+  for (const r of RESTAURANTS) {
+    const region = restaurantRegion(r.id);
+    const inside = parsePlayerMessage(msg({ region, x: 750, y: 860 }));
+    assert.equal(inside?.region, region, r.id);
+    assert.equal(parsePlayerMessage(msg({ region, x: RESTAURANT_ROOM.width + 1 })), null);
+  }
+  const mcd = restaurantRegion("mcdonalds");
+  const remotes = applyMessage({}, msg({ region: mcd, x: 750, y: 860 }), "me", 0);
+  assert.equal(visibleRemotes(remotes, mcd).length, 1);
+  assert.equal(visibleRemotes(remotes, restaurantRegion("pizza")).length, 0);
+  assert.equal(visibleRemotes(remotes, "village").length, 0);
+  assert.equal(
+    visibleRemotes(applyMessage({}, msg({ region: "mansion", x: 650, y: 650 }), "me", 0), "mansion")
+      .length,
+    1,
+  );
+});
 
 const msg = (over: Partial<PlayerMessage> = {}): PlayerMessage => ({
   id: "abcd-1",

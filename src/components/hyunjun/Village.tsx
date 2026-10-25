@@ -50,7 +50,8 @@ import { CarArt } from "./CarArt";
 import { carById, CARS } from "@/game/cars";
 import { WorldScenes } from "./WorldScenes";
 import { LifeWorldScene } from "./LifeWorldScene";
-import { FamilyRoomPanel, RemotePlayers } from "./FamilyRoom";
+import { FamilyRoomPanel, RemoteInteriorPlayers, RemotePlayers } from "./FamilyRoom";
+import { restaurantRegion, type FamilyRegion } from "@/game/family-room";
 import { useFamilyRoom } from "./useFamilyRoom";
 import { UnifiedCoast, PlaneArt } from "./UnifiedCoast";
 import {
@@ -448,22 +449,26 @@ export function Village() {
     vehicle: submarine ? "잠수함" : plane !== "off" ? "비행기" : driving ? "자동차" : null,
   });
   const nearDrawing = Math.hypot(pos.x - 5010, pos.y - 520) < 110;
+  // Family members stay visible to each other outdoors, at home, and inside every restaurant.
+  const familyRegion: FamilyRegion = living.restaurant
+    ? restaurantRegion(living.restaurant.id)
+    : region === "mansion"
+      ? "mansion"
+      : "village";
+  const familyPoint = living.restaurant ? living.inside : region === "mansion" ? lifePos : pos;
   const familyRoom = useFamilyRoom({
-    region: "village",
-    x: pos.x,
-    y: pos.y,
+    region: familyRegion,
+    x: familyPoint.x,
+    y: familyPoint.y,
     facing: facing === -1 ? -1 : 1,
     outfit: state.outfit,
     moving: walking,
     active:
-      region === "village" &&
-      !living.restaurant &&
+      (familyRegion !== "village" || (plane === "off" && !submarine)) &&
       !seaOpen &&
-      !submarine &&
       !truckOpen &&
       !mini &&
-      !drawing &&
-      plane === "off",
+      !drawing,
   });
   const missionPlay = usePlaceMission(
     pos,
@@ -780,18 +785,26 @@ export function Village() {
           }}
         >
           {living.restaurant ? (
-            <RestaurantScene
-              restaurant={living.restaurant}
-              player={living.inside}
-              state={state}
-              moving={walking}
-              facing={facing}
-              meal={living.meal}
-              carrying={!!living.job?.carrying}
-              customerIndex={living.job?.delivered ?? 0}
-              seconds={living.seconds}
-              onTalk={living.setTalk}
-            />
+            <>
+              <RestaurantScene
+                restaurant={living.restaurant}
+                player={living.inside}
+                state={state}
+                moving={walking}
+                facing={facing}
+                meal={living.meal}
+                carrying={!!living.job?.carrying}
+                customerIndex={living.job?.delivered ?? 0}
+                seconds={living.seconds}
+                onTalk={living.setTalk}
+              />
+              <RemoteInteriorPlayers
+                room={familyRoom}
+                region={familyRegion}
+                width={RESTAURANT_ROOM.width}
+                height={RESTAURANT_ROOM.height}
+              />
+            </>
           ) : region === "village" ? (
             <WorldCopies center={pos} w={size.w} h={size.h}>
               <WorldExpansion center={pos} season={living.season} />
@@ -1120,6 +1133,14 @@ export function Village() {
                 partyActive={state.halloween.active && living.season}
               />
               <ActivityTargets activity={living.activity} player={lifePos} />
+              {region === "mansion" && (
+                <RemoteInteriorPlayers
+                  room={familyRoom}
+                  region="mansion"
+                  width={LIFE_MAPS.mansion.width}
+                  height={LIFE_MAPS.mansion.height}
+                />
+              )}
             </>
           )}
         </div>
