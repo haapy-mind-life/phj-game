@@ -417,6 +417,8 @@ async function season() {
   await page.waitForTimeout(650);
   await page.keyboard.up("ArrowUp");
   await b("우리 집 들어가기").click();
+  // Home actions live in the collapsible home menu so the phone scene stays visible.
+  await page.locator(".hj-life-hud > summary").click();
   await b("🎨 집 안 꾸미기").click();
   assert.ok(await b("🎃 파티는 10월에 열려요").isDisabled());
   assert.equal(
