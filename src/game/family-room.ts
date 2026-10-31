@@ -1,3 +1,4 @@
+import { TOWN_BUILDINGS } from "./building-interiors.ts";
 import { WORLD_SIZE, worldDelta, wrapPoint } from "./world-space.ts";
 import { OUTFITS as SHOP_OUTFITS, RESTAURANTS, RESTAURANT_ROOM } from "./world-content.ts";
 import { LIFE_MAPS } from "./life-world.ts";
@@ -17,7 +18,16 @@ export const EMOTES = ["👋", "😀", "❤️", "⭐", "🎃", "🍕"] as const
 export type Emote = (typeof EMOTES)[number];
 // Each restaurant interior is its own region so family members inside the same one see each other.
 export const RESTAURANT_REGIONS = RESTAURANTS.map((r) => `restaurant-${r.id}` as const);
-export const REGIONS = ["village", "coast", "mansion", "deep-sea", ...RESTAURANT_REGIONS] as const;
+export const BUILDING_REGIONS = TOWN_BUILDINGS.map((b) => `building-${b.id}` as const);
+export const buildingRegion = (id: string): FamilyRegion => `building-${id}`;
+export const REGIONS = [
+  "village",
+  "coast",
+  "mansion",
+  "deep-sea",
+  ...RESTAURANT_REGIONS,
+  ...BUILDING_REGIONS,
+] as const;
 export type FamilyRegion = (typeof REGIONS)[number];
 export const restaurantRegion = (id: (typeof RESTAURANTS)[number]["id"]): FamilyRegion =>
   `restaurant-${id}`;
