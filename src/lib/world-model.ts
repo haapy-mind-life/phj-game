@@ -1,5 +1,12 @@
 import { CARS, canBuyCar, ENGINE_COST, SPECIAL_COST, type CarUpgrade } from "../game/cars.ts";
 import { HOME_LOTS, type HomeLotId } from "../game/kid-world.ts";
+import { isRobotId, type RobotSpeciesId } from "../game/robot-catalog.ts";
+import {
+  applyCardUse,
+  meetRobot,
+  normalizeRobots,
+  type RobotProgress,
+} from "../game/robot-engine.ts";
 import {
   ACTOR_IDS,
   OUTFITS,
@@ -159,6 +166,7 @@ export type GameState = {
   decor: PlacedDecor[];
   yard: YardId[];
   halloween: Halloween;
+  robots: RobotProgress;
 };
 export const PLOT_COUNT = 6;
 export const TICKET_PRICE = 50000;
@@ -294,6 +302,7 @@ export function migrateSave(input: unknown): GameState {
         : [],
       completed: object(raw["halloween"])["completed"] === true,
     },
+    robots: normalizeRobots(raw["robots"]),
     houseTier: [1, 2, 3, 4, 5].includes(raw["houseTier"] as number)
       ? (raw["houseTier"] as number)
       : 1,
@@ -382,12 +391,21 @@ export type WorldAction =
   | { type: "explore-sea"; id: string }
   | { type: "place-decor"; id: DecorId; x: number; y: number }
   | { type: "remove-decor"; index: number }
+  | { type: "robot-meet" | "robot-card"; id: RobotSpeciesId }
   | { type: "toggle-yard"; id: YardId }
   | { type: "start-party"; now?: string }
   | { type: "collect-candy"; id: string; now?: string }
   | { type: "upgrade-house" }
   | { type: "move-house"; lot: string };
 export function reduceWorld(state: GameState, action: WorldAction): GameState {
+  if (action.type === "robot-meet" || action.type === "robot-card") {
+    if (!isRobotId(action.id)) return state;
+    const robots =
+      action.type === "robot-meet"
+        ? meetRobot(state.robots, action.id)
+        : applyCardUse(state.robots, action.id).progress;
+    return robots === state.robots ? state : { ...state, robots };
+  }
   if (action.type === "companion") {
     if (!ACTOR_IDS.includes(action.id)) return state;
     const target = action.mode === "follow" ? state.companions : state.guests;

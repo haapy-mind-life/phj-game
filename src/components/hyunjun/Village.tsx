@@ -9,6 +9,9 @@ import { usePlaceMission } from "./usePlaceMission";
 import { DELIVERY_GARAGE, MISSION_LABELS, type MissionKind } from "@/game/place-play";
 import { WorldExpansion, WorldCopies, LegacySection, WorldOverlay } from "./WorldExpansion";
 import { People } from "./People";
+import { RobotWorld } from "./RobotWorld";
+import { RobotSpeciesArt } from "./RobotSpeciesArt";
+import { useRobotWorld } from "./useRobotWorld";
 import { RestaurantScene } from "./RestaurantScene";
 import { useLivingWorld } from "./useLivingWorld";
 import { LivingPanels, ActivityTargets } from "./LivingPanels";
@@ -447,6 +450,21 @@ export function Village() {
     direction: livingDirection,
     vehicle: submarine ? "잠수함" : plane !== "off" ? "비행기" : driving ? "자동차" : null,
   });
+  const robot = useRobotWorld({
+    pos,
+    seconds: living.seconds,
+    allowed:
+      region === "village" &&
+      !living.interior &&
+      plane === "off" &&
+      !submarine &&
+      !driving &&
+      !diving,
+    state,
+    dispatch,
+    message: setMessage,
+  });
+  const robotSpeed = robot.riding ? 1.25 : 1;
   const nearDrawing = Math.hypot(pos.x - 5010, pos.y - 520) < 110;
   // Each interior has its own family region; outdoor anchors stay fixed while inside.
   const familyRegion: FamilyRegion = living.building
@@ -533,6 +551,7 @@ export function Village() {
       actKid(kidSpot);
       return;
     }
+    if (robot.act()) return;
     if (living.interact()) return;
     if (region === "mansion") {
       actionLife();
@@ -647,7 +666,7 @@ export function Village() {
                     p,
                     d,
                     dt,
-                    driving ? 1.48 * (state.carUpgrades[carId]?.engine ? 1.15 : 1) : 1,
+                    driving ? 1.48 * (state.carUpgrades[carId]?.engine ? 1.15 : 1) : robotSpeed,
                   );
           returnPosition = submarine
             ? { x: COAST.harbor.x - 150, y: COAST.harbor.y + 40 }
@@ -683,6 +702,7 @@ export function Village() {
     living.interior,
     living.blocked,
     living.ink,
+    robotSpeed,
   ]);
   const sceneScale = living.interior
     ? Math.min(0.7, Math.max(0.35, size.w / 1500))
@@ -719,6 +739,7 @@ export function Village() {
           ),
         };
   const travelTo = (arrival: Point, words: string) => {
+    robot.dismount();
     if (living.building) living.leaveBuilding();
     if (living.restaurant) living.leaveRestaurant();
     setRegion("village");
@@ -741,7 +762,7 @@ export function Village() {
         ? "놀이 시작"
         : kidSpot && kidSpot.kind !== "landmark"
           ? kidSpotLabel(kidSpot)
-          : living.label();
+          : (robot.label() ?? living.label());
   return (
     <Shell
       active="home"
@@ -923,6 +944,9 @@ export function Village() {
                   helperPosition={living.activity?.helper ?? null}
                 />
               }
+              {region === "village" && !living.interior && (
+                <RobotWorld player={pos} roaming={robot.roaming} nearTarget={robot.nearTarget} />
+              )}
               <LegacySection center={pos} w={size.w} h={size.h}>
                 {" "}
                 <div
@@ -1062,6 +1086,13 @@ export function Village() {
                       moving={walking}
                       diving
                     />
+                  ) : robot.riding ? (
+                    <RobotSpeciesArt
+                      robot={robot.riding}
+                      moving={walking}
+                      size={92}
+                      label={`${identity.name}가 탄 ${robot.riding.name}`}
+                    />
                   ) : driving ? (
                     <CarArt car={carById(carId)} size={98} />
                   ) : (
@@ -1075,7 +1106,9 @@ export function Village() {
                       ? `${identity.name} 잠수함`
                       : driving
                         ? `${identity.name} 🚗`
-                        : identity.name}
+                        : robot.riding
+                          ? `${identity.name} 🤖`
+                          : identity.name}
                 </b>
               </div>
               <WorldOverlay center={pos}>
@@ -1467,6 +1500,11 @@ export function Village() {
         {!mini && !drawing && !mapOpen && !garageOpen && !truckOpen && !seaOpen && !station && (
           <div className="adv-bottom adv-console">
             <p className="adv-touch-hint">{message}</p>
+            {robot.riding && (
+              <p className="hj-robot-card" data-robot-card>
+                🃏 {robot.riding.name} 카드 {robot.uses}/7
+              </p>
+            )}
             <Joystick onMove={movement.setStick} />
             <div className="adv-action-buttons">
               {plane === "ground" && (
@@ -1474,17 +1512,26 @@ export function Village() {
                   내리기
                 </button>
               )}
-              {region === "village" && !living.interior && plane === "off" && !submarine && (
-                <button
-                  className="hj-car-mode"
-                  onClick={() => {
-                    if (driving) {
-                      setDriving(false);
-                    } else setGarageOpen(true);
-                  }}
-                >
-                  {driving ? "내리기" : "차 타기"}
+              {robot.riding ? (
+                <button className="hj-car-mode" onClick={robot.dismount}>
+                  내리기
                 </button>
+              ) : (
+                region === "village" &&
+                !living.interior &&
+                plane === "off" &&
+                !submarine && (
+                  <button
+                    className="hj-car-mode"
+                    onClick={() => {
+                      if (driving) {
+                        setDriving(false);
+                      } else setGarageOpen(true);
+                    }}
+                  >
+                    {driving ? "내리기" : "차 타기"}
+                  </button>
+                )
               )}
 
               <button
