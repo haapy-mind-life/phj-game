@@ -1,3 +1,5 @@
+import { BuildingScene } from "./BuildingScene";
+import { buildingRegion } from "@/game/family-room";
 import { worldRectVisible } from "@/game/world-space";
 import { VillageTerrain } from "./VillageTerrain";
 import { usePlayerIdentity } from "./useFamilyAccount";
@@ -346,10 +348,7 @@ export function Village() {
     }
   };
   const actKid = (spot: KidSpot) => {
-    if (spot.kind === "landmark") {
-      setMessage(spot.landmark.emoji + " " + spot.landmark.words);
-      return;
-    }
+    if (spot.kind === "landmark") return;
     if (spot.kind === "construction") {
       const next = buildFloors >= CONSTRUCTION.floors ? 0 : buildFloors + 1;
       setBuildFloors(next);
@@ -371,7 +370,7 @@ export function Village() {
   };
   const kidSpotLabel = (spot: KidSpot) =>
     spot.kind === "landmark"
-      ? spot.landmark.name + " 구경"
+      ? spot.landmark.name + " 들어가기"
       : spot.kind === "construction"
         ? buildFloors >= CONSTRUCTION.floors
           ? "새 공사 시작"
@@ -449,13 +448,15 @@ export function Village() {
     vehicle: submarine ? "잠수함" : plane !== "off" ? "비행기" : driving ? "자동차" : null,
   });
   const nearDrawing = Math.hypot(pos.x - 5010, pos.y - 520) < 110;
-  // Family members stay visible to each other outdoors, at home, and inside every restaurant.
-  const familyRegion: FamilyRegion = living.restaurant
-    ? restaurantRegion(living.restaurant.id)
-    : region === "mansion"
-      ? "mansion"
-      : "village";
-  const familyPoint = living.restaurant ? living.inside : region === "mansion" ? lifePos : pos;
+  // Each interior has its own family region; outdoor anchors stay fixed while inside.
+  const familyRegion: FamilyRegion = living.building
+    ? buildingRegion(living.building.id)
+    : living.restaurant
+      ? restaurantRegion(living.restaurant.id)
+      : region === "mansion"
+        ? "mansion"
+        : "village";
+  const familyPoint = living.interior ? living.inside : region === "mansion" ? lifePos : pos;
   const familyRoom = useFamilyRoom({
     region: familyRegion,
     x: familyPoint.x,
@@ -473,7 +474,7 @@ export function Village() {
   const missionPlay = usePlaceMission(
     pos,
     region === "village" &&
-      !living.restaurant &&
+      !living.interior &&
       !seaOpen &&
       !truckOpen &&
       !garageOpen &&
@@ -485,7 +486,7 @@ export function Village() {
     setMessage,
   );
   const nearbyStation: MissionKind | null =
-    region === "village" && !living.restaurant && plane === "off" && !seaOpen
+    region === "village" && !living.interior && plane === "off" && !seaOpen
       ? worldDistance(pos, DELIVERY_GARAGE) < 180
         ? "delivery"
         : ((["police", "fire", "ambulance"] as const).find(
@@ -494,7 +495,7 @@ export function Village() {
       : null;
   const mission = missionPlay.mission;
   const kidSpot =
-    region === "village" && !living.restaurant && plane === "off" && !submarine && !seaOpen
+    region === "village" && !living.interior && plane === "off" && !submarine && !seaOpen
       ? nearKidSpot(pos, state.homeLot)
       : null;
   const kidView = useMemo(
@@ -518,7 +519,7 @@ export function Village() {
       living.blocked
     )
       return;
-    if (mission && !mission.done && region === "village" && !living.restaurant) {
+    if (mission && !mission.done && region === "village" && !living.interior) {
       if (driving && carById(carId).kind === (mission.kind === "delivery" ? "sport" : mission.kind))
         missionPlay.act();
       else setMessage("차고에서 이 놀이에 맞는 자동차를 타고 와 봐!");
@@ -528,7 +529,7 @@ export function Village() {
       setStation(nearbyStation);
       return;
     }
-    if (kidSpot) {
+    if (kidSpot && kidSpot.kind !== "landmark") {
       actKid(kidSpot);
       return;
     }
@@ -632,9 +633,9 @@ export function Village() {
       setWalking(moving);
       if (d.x) setFacing(d.x > 0 ? 1 : -1);
       const dt = last ? (now - last) / 1000 : 0;
-      if (moving && region === "mansion" && !living.restaurant)
+      if (moving && region === "mansion" && !living.interior)
         setLifePos((p) => stepLifePlayer("mansion", p, d, dt, state.houseTier));
-      if (moving && region === "village" && !living.restaurant)
+      if (moving && region === "village" && !living.interior)
         setPos((p) => {
           const next = submarine
             ? stepSubmarine(p, d, dt)
@@ -679,16 +680,16 @@ export function Village() {
     submarine,
     plane,
     state.houseTier,
-    living.restaurant,
+    living.interior,
     living.blocked,
     living.ink,
   ]);
-  const sceneScale = living.restaurant
+  const sceneScale = living.interior
     ? Math.min(0.7, Math.max(0.35, size.w / 1500))
     : region === "mansion"
       ? 0.6
       : 1;
-  const camera = living.restaurant
+  const camera = living.interior
     ? {
         x: Math.max(
           0,
@@ -717,12 +718,28 @@ export function Village() {
             ),
           ),
         };
+  const travelTo = (arrival: Point, words: string) => {
+    if (living.building) living.leaveBuilding();
+    if (living.restaurant) living.leaveRestaurant();
+    setRegion("village");
+    setDiving(false);
+    setSubmarine(false);
+    setPlane("off");
+    setPlaneUnder(false);
+    setAltitude(0);
+    setSubmerged(false);
+    setDriving(false);
+    setPos(arrival);
+    returnPosition = arrival;
+    setMapOpen(false);
+    setMessage(words);
+  };
   const livingActionLabel =
-    mission && !mission.done && region === "village" && !living.restaurant
+    mission && !mission.done && region === "village" && !living.interior
       ? missionPlay.label
       : nearbyStation
         ? "놀이 시작"
-        : kidSpot
+        : kidSpot && kidSpot.kind !== "landmark"
           ? kidSpotLabel(kidSpot)
           : living.label();
   return (
@@ -746,12 +763,14 @@ export function Village() {
         </button>
       </div>
       <div
-        className={`adv-viewport${region === "mansion" || living.restaurant ? " adv-interior" : ""}`}
+        className={`adv-viewport${region === "mansion" || living.interior ? " adv-interior" : ""}`}
         ref={viewport}
         aria-label={
-          region === "mansion"
-            ? "직접 걸어 다니는 우리 집 실내"
-            : "왼쪽 조이스틱으로 이동하는 서른 개 마을"
+          living.building
+            ? `직접 걸어 다니는 ${living.building.name} 실내`
+            : region === "mansion"
+              ? "직접 걸어 다니는 우리 집 실내"
+              : "왼쪽 조이스틱으로 이동하는 서른 개 마을"
         }
         tabIndex={0}
       >
@@ -769,12 +788,12 @@ export function Village() {
           aria-hidden={seaOpen || truckOpen}
 
           style={{
-            width: living.restaurant
+            width: living.interior
               ? 1500
               : region === "village"
                 ? MAP.width
                 : LIFE_MAPS[region].width,
-            height: living.restaurant
+            height: living.interior
               ? 1100
               : region === "village"
                 ? MAP.height
@@ -784,7 +803,24 @@ export function Village() {
             visibility: seaOpen || truckOpen ? "hidden" : "visible",
           }}
         >
-          {living.restaurant ? (
+          {living.building ? (
+            <>
+              <BuildingScene
+                building={living.building}
+                onTalk={living.setTalk}
+                player={living.inside}
+                state={state}
+                moving={walking}
+                facing={facing}
+              />
+              <RemoteInteriorPlayers
+                room={familyRoom}
+                region={familyRegion}
+                width={1500}
+                height={1100}
+              />
+            </>
+          ) : living.restaurant ? (
             <>
               <RestaurantScene
                 restaurant={living.restaurant}
@@ -1144,7 +1180,7 @@ export function Village() {
             </>
           )}
         </div>
-        {region === "village" && !living.restaurant && atHome && !seaOpen && !truckOpen && (
+        {region === "village" && !living.interior && atHome && !seaOpen && !truckOpen && (
           <button
             className="kid-home-upgrade"
             onClick={upgradeHome}
@@ -1159,7 +1195,7 @@ export function Village() {
         {mission &&
           !mission.done &&
           region === "village" &&
-          !living.restaurant &&
+          !living.interior &&
           !seaOpen &&
           !truckOpen &&
           !mapOpen && (
@@ -1376,17 +1412,10 @@ export function Village() {
             <div className="adv-destinations">
               <button
                 onClick={() => {
-                  const arrival = { x: 6060, y: 1040 };
-                  setDiving(false);
-                  setSubmarine(false);
-                  setPlane("off");
-                  setAltitude(0);
-                  setSubmerged(false);
-                  setDriving(false);
-                  setPos(arrival);
-                  returnPosition = arrival;
-                  setMapOpen(false);
-                  setMessage("바닷가에 도착했어! 손님과 인사하고 항구도 구경해 봐.");
+                  travelTo(
+                    { x: 6060, y: 1040 },
+                    "바닷가에 도착했어! 손님과 인사하고 항구도 구경해 봐.",
+                  );
                 }}
               >
                 🌊 바닷가 · 푸드트럭
@@ -1404,16 +1433,7 @@ export function Village() {
                 <button
                   key={d.label}
                   onClick={() => {
-                    const arrival = { x: d.x, y: d.y };
-                    setDiving(false);
-                    setPlane("off");
-                    setPlaneUnder(false);
-                    setAltitude(0);
-                    setDriving(false);
-                    setPos(arrival);
-                    returnPosition = arrival;
-                    setMapOpen(false);
-                    setMessage(d.label + "에 도착했어!");
+                    travelTo({ x: d.x, y: d.y }, d.label + "에 도착했어!");
                   }}
                 >
                   {d.label}
@@ -1423,12 +1443,10 @@ export function Village() {
                 <button
                   key={v.id}
                   onClick={() => {
-                    const next = { x: v.x, y: v.y + 65 };
-                    setDiving(false);
-                    setPos(next);
-                    returnPosition = next;
-                    setMapOpen(false);
-                    setMessage(`${v.name}에 도착했어! ${v.friend}에게 인사해 봐.`);
+                    travelTo(
+                      { x: v.x, y: v.y + 65 },
+                      `${v.name}에 도착했어! ${v.friend}에게 인사해 봐.`,
+                    );
                   }}
                 >
                   {i + 1}. {v.name}
@@ -1438,9 +1456,7 @@ export function Village() {
             <button
               className="adv-workshop"
               onClick={() => {
-                setPos({ x: 5010, y: 550 });
-                returnPosition = { x: 5010, y: 550 };
-                setMapOpen(false);
+                travelTo({ x: 5010, y: 550 }, "별자리 공방에 도착했어!");
                 setDrawing(true);
               }}
             >
@@ -1458,7 +1474,7 @@ export function Village() {
                   내리기
                 </button>
               )}
-              {region === "village" && !living.restaurant && plane === "off" && !submarine && (
+              {region === "village" && !living.interior && plane === "off" && !submarine && (
                 <button
                   className="hj-car-mode"
                   onClick={() => {
@@ -1474,22 +1490,26 @@ export function Village() {
               <button
                 className="adv-map-button"
                 onClick={() =>
-                  living.restaurant
-                    ? living.leaveRestaurant()
-                    : region === "village"
-                      ? setMapOpen(true)
-                      : region === "coast"
-                        ? goHomeInside()
-                        : backToWorld()
+                  living.building
+                    ? living.leaveBuilding()
+                    : living.restaurant
+                      ? living.leaveRestaurant()
+                      : region === "village"
+                        ? setMapOpen(true)
+                        : region === "coast"
+                          ? goHomeInside()
+                          : backToWorld()
                 }
               >
-                {living.restaurant
-                  ? "식당 밖으로"
-                  : region === "village"
-                    ? "지도"
-                    : region === "coast"
-                      ? "큰 집"
-                      : "집 밖으로"}
+                {living.building
+                  ? "건물 밖으로"
+                  : living.restaurant
+                    ? "식당 밖으로"
+                    : region === "village"
+                      ? "지도"
+                      : region === "coast"
+                        ? "큰 집"
+                        : "집 밖으로"}
               </button>
               <button className="adv-interact" onClick={interact} disabled={!ready}>
                 {livingActionLabel ??

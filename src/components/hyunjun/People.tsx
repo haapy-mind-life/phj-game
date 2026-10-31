@@ -37,6 +37,7 @@ export function People({
   helperPosition,
   hideFollowers = false,
   playerLayer,
+  canWalkInside = canWalkRestaurant,
 }: {
   state: GameState;
   scene: ActorScene;
@@ -48,6 +49,7 @@ export function People({
   helperPosition?: Point | null;
   hideFollowers?: boolean;
   playerLayer?: "back" | "front";
+  canWalkInside?: (p: Point) => boolean;
 }) {
   const trail = useRef<Point[]>([]);
   const key = useRef(scene);
@@ -80,7 +82,7 @@ export function People({
             ? canWalkHome(q, state.houseTier)
             : scene === "world"
               ? isWalkable(q)
-              : canWalkRestaurant(q);
+              : canWalkInside(q);
         if (index < 0 || !safe(p) || assigned.some((q) => Math.hypot(q.x - p.x, q.y - p.y) < 50)) {
           const offsets =
             scene === "home"
