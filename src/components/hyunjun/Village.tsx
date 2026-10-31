@@ -10,7 +10,7 @@ import { DELIVERY_GARAGE, MISSION_LABELS, type MissionKind } from "@/game/place-
 import { WorldExpansion, WorldCopies, LegacySection, WorldOverlay } from "./WorldExpansion";
 import { People } from "./People";
 import { RobotWorld } from "./RobotWorld";
-import { RobotSpeciesArt } from "./RobotSpeciesArt";
+import { FusionArt } from "./RobotSpeciesArt";
 import { useRobotWorld } from "./useRobotWorld";
 import { RestaurantScene } from "./RestaurantScene";
 import { useLivingWorld } from "./useLivingWorld";
@@ -945,7 +945,13 @@ export function Village() {
                 />
               }
               {region === "village" && !living.interior && (
-                <RobotWorld player={pos} roaming={robot.roaming} nearTarget={robot.nearTarget} />
+                <RobotWorld
+                  player={pos}
+                  roaming={robot.roaming}
+                  villain={robot.villain}
+                  level={state.robots.wins + 1}
+                  nearVillain={robot.nearVillain}
+                />
               )}
               <LegacySection center={pos} w={size.w} h={size.h}>
                 {" "}
@@ -1087,11 +1093,12 @@ export function Village() {
                       diving
                     />
                   ) : robot.riding ? (
-                    <RobotSpeciesArt
-                      robot={robot.riding}
+                    <FusionArt
+                      team={robot.team}
+                      grades={robot.grades}
                       moving={walking}
                       size={92}
-                      label={`${identity.name}가 탄 ${robot.riding.name}`}
+                      label={`${identity.name}가 탄 ${robot.ridingName}`}
                     />
                   ) : driving ? (
                     <CarArt car={carById(carId)} size={98} />
@@ -1499,12 +1506,15 @@ export function Village() {
         )}
         {!mini && !drawing && !mapOpen && !garageOpen && !truckOpen && !seaOpen && !station && (
           <div className="adv-bottom adv-console">
-            <p className="adv-touch-hint">{message}</p>
-            {robot.riding && (
-              <p className="hj-robot-card" data-robot-card>
-                🃏 {robot.riding.name} 카드 {robot.uses}/7
-              </p>
-            )}
+            <p className="adv-touch-hint">
+              {message}
+              {robot.riding && (
+                <span className="hj-robot-card" data-robot-card>
+                  🃏 {robot.riding.name} 카드 {robot.uses}/7 · ⚡ {robot.energy}/{robot.energyMax} ·
+                  🔩 {robot.parts}
+                </span>
+              )}
+            </p>
             <Joystick onMove={movement.setStick} />
             <div className="adv-action-buttons">
               {plane === "ground" && (
@@ -1513,9 +1523,16 @@ export function Village() {
                 </button>
               )}
               {robot.riding ? (
-                <button className="hj-car-mode" onClick={robot.dismount}>
-                  내리기
-                </button>
+                <>
+                  <button className="hj-car-mode" onClick={robot.dismount}>
+                    내리기
+                  </button>
+                  {robot.fuseLabel && (
+                    <button className="hj-car-mode hj-fuse-button" onClick={robot.fuse}>
+                      {robot.fuseLabel}
+                    </button>
+                  )}
+                </>
               ) : (
                 region === "village" &&
                 !living.interior &&
@@ -1534,7 +1551,9 @@ export function Village() {
                 )
               )}
 
+              {/* Riding keeps three buttons (get off, fusion, action); map travel gets off anyway. */}
               <button
+                hidden={!!robot.riding}
                 className="adv-map-button"
                 onClick={() =>
                   living.building

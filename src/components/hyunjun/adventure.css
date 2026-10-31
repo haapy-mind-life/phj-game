@@ -2287,8 +2287,40 @@
   padding: 3px 8px;
   white-space: nowrap;
 }
-.hj-practice.near b {
-  background: #ffe3a8;
+.hj-villain b {
+  background: #f6d6cf;
+}
+.hj-villain.near b {
+  background: #ffb9a8;
+}
+.hj-villain.retreating {
+  opacity: 0.75;
+  transform: translate(-30%, -95%) rotate(-8deg);
+  transition: transform 0.8s ease-out;
+}
+.hj-villain-hp {
+  width: 90px;
+  height: 10px;
+  border-radius: 6px;
+  background: #ffffffcc;
+  border: 2px solid #5b3d31;
+  overflow: hidden;
+}
+.hj-villain-hp i {
+  display: block;
+  height: 100%;
+  background: #e05a4f;
+  transition: width 0.25s;
+}
+.hj-fusion.stage-2,
+.hj-fusion.stage-3 {
+  animation: hj-fuse 0.6s ease-out;
+}
+@keyframes hj-fuse {
+  from {
+    filter: brightness(2.2);
+    transform: scale(0.8);
+  }
 }
 .hj-mech.moving .hj-mech-leg.left {
   animation: hj-limb 0.6s ease-in-out infinite alternate;
@@ -2297,9 +2329,11 @@
   animation: hj-limb 0.6s ease-in-out infinite alternate-reverse;
 }
 .hj-robot-card {
-  align-self: flex-start;
+  display: block;
+  width: fit-content;
+  margin: 4px auto 0;
   font-size: 14px;
   font-weight: 700;
   background: #fff3c9;
-  margin: 0 0 4px;
+  white-space: normal;
 }

@@ -5,6 +5,8 @@ import {
   applyCardUse,
   meetRobot,
   normalizeRobots,
+  upgradeRobot,
+  winBattle,
   type RobotProgress,
 } from "../game/robot-engine.ts";
 import {
@@ -391,19 +393,30 @@ export type WorldAction =
   | { type: "explore-sea"; id: string }
   | { type: "place-decor"; id: DecorId; x: number; y: number }
   | { type: "remove-decor"; index: number }
-  | { type: "robot-meet" | "robot-card"; id: RobotSpeciesId }
+  | { type: "robot-meet" | "robot-card" | "robot-upgrade"; id: RobotSpeciesId }
+  | { type: "robot-win"; win: number }
   | { type: "toggle-yard"; id: YardId }
   | { type: "start-party"; now?: string }
   | { type: "collect-candy"; id: string; now?: string }
   | { type: "upgrade-house" }
   | { type: "move-house"; lot: string };
 export function reduceWorld(state: GameState, action: WorldAction): GameState {
-  if (action.type === "robot-meet" || action.type === "robot-card") {
+  if (action.type === "robot-win") {
+    const robots = winBattle(state.robots, action.win);
+    return robots === state.robots ? state : { ...state, robots };
+  }
+  if (
+    action.type === "robot-meet" ||
+    action.type === "robot-card" ||
+    action.type === "robot-upgrade"
+  ) {
     if (!isRobotId(action.id)) return state;
     const robots =
       action.type === "robot-meet"
         ? meetRobot(state.robots, action.id)
-        : applyCardUse(state.robots, action.id).progress;
+        : action.type === "robot-card"
+          ? applyCardUse(state.robots, action.id).progress
+          : upgradeRobot(state.robots, action.id);
     return robots === state.robots ? state : { ...state, robots };
   }
   if (action.type === "companion") {

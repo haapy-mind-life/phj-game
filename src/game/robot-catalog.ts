@@ -34,7 +34,7 @@ export const ROBOTS: readonly RobotSpecies[] = [
     color: "#4f7fd1",
     accent: "#f2f6ff",
     mark: "none",
-    home: { x: 1150, y: 850 },
+    home: { x: 1250, y: 750 },
     starter: true,
     unlocks: "rb-thunder-police",
   },
@@ -97,7 +97,7 @@ export const ROBOTS: readonly RobotSpecies[] = [
     color: "#7a5cc9",
     accent: "#9ef3ff",
     mark: "laser",
-    home: { x: 1350, y: 750 },
+    home: { x: 1200, y: 1000 },
     starter: false,
   },
 ];
@@ -105,9 +105,22 @@ export const ROBOT_IDS: readonly string[] = ROBOTS.map((r) => r.id);
 export const robotById = (id: RobotSpeciesId) => ROBOTS.find((r) => r.id === id)!;
 export const isRobotId = (v: unknown): v is RobotSpeciesId =>
   typeof v === "string" && ROBOT_IDS.includes(v);
-/** A practice robot that stands still so cards can be used before villains arrive (PR-B). */
-export const PRACTICE_TARGET = { x: 1300, y: 1200 };
-export const PRACTICE_RANGE = 230;
+/** Where the villain robot from the made-up rusty gear empire waits (RBQ-09 provisional). */
+export const VILLAIN_SPOT = { x: 1350, y: 1450 };
+export const VILLAIN_NAME = "녹슨 톱니 로봇";
+export const BATTLE_RANGE = 230;
+/** The robot workshop turns parts won from villains into upgrades. */
+export const WORKSHOP = { x: 850, y: 1500 };
+export const WORKSHOP_RANGE = 170;
+export const GRADES = ["일반", "강화", "강철", "황금", "다이아몬드", "궁극"] as const;
+/** Phase 1 only goes from 일반 to 강화; later grades come with the 24 robot designs. */
+export const MAX_GRADE = 1;
+export const UPGRADE_COST = 3;
+export const WIN_PARTS = 2;
+export const MAX_FUSION = 3;
+export const ROBOT_ENERGY = 5;
+export const VILLAIN_HIT_MS = 3000;
+export const VILLAIN_RESPAWN_MS = 12000;
 export const MEET_RANGE = 130;
 export const CARD_COOLDOWN_MS = 1500;
 // Same idea as friend patrols in actors.ts: a slow deterministic loop around home.
