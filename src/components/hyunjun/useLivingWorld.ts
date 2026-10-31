@@ -1,3 +1,9 @@
+import {
+  nearTownBuilding,
+  TOWN_BUILDINGS,
+  BUILDING_ROOM,
+  stepBuilding,
+} from "@/game/building-interiors";
 import { homeLot } from "@/game/kid-world";
 import { stepRestaurant } from "@/game/restaurant";
 import { useEffect, useRef, useState } from "react";
@@ -53,6 +59,9 @@ export function useLivingWorld({
   const { state, dispatch, getState } = useGame();
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const restaurant = restaurantId ? restaurantById(restaurantId)! : null;
+  const [buildingId, setBuildingId] = useState<string | null>(null);
+  const building = TOWN_BUILDINGS.find((b) => b.id === buildingId) ?? null;
+  const interior = !!restaurant || !!building;
   const [inside, setInside] = useState<Point>(ROOM.entry);
   const returnAnchor = useRef(pos);
   const [meal, setMeal] = useState<number | null>(null);
@@ -120,22 +129,21 @@ export function useLivingWorld({
     message("함께 놀이 성공! 별코인을 받았어!");
   }, [activity, dispatch, message]);
   useEffect(() => {
-    if (!restaurant) return;
+    if (!interior) return;
     let raf = 0,
       last = 0;
     const loop = (t: number) => {
       const dt = last ? Math.min(0.05, (t - last) / 1000) : 0;
       last = t;
-      if (!menuOpen && !talk) {
+      if (!suspended && !menuOpen && !talk) {
         const d = direction.current();
-        const len = Math.max(1, Math.hypot(d.x, d.y));
-        setInside((p) => stepRestaurant(p, d, dt));
+        setInside((p) => (building ? stepBuilding : stepRestaurant)(p, d, dt));
       }
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [restaurant, menuOpen, talk, direction]);
+  }, [interior, building, suspended, menuOpen, talk, direction]);
   useEffect(() => {
     setActivity((a) =>
       a && ((a.kind === "home" && region !== "mansion") || (a.kind === "sea" && !submarine))
@@ -143,8 +151,8 @@ export function useLivingWorld({
         : a,
     );
   }, [region, submarine]);
-  const scene = restaurant ? "restaurant" : region === "mansion" ? "home" : "world";
-  const player = restaurant ? inside : region === "mansion" ? lifePos : pos;
+  const scene = interior ? "restaurant" : region === "mansion" ? "home" : "world";
+  const player = interior ? inside : region === "mansion" ? lifePos : pos;
   const nearbyActor = ACTORS.filter(
     (a) =>
       actorScene(a, state, scene) === scene &&
@@ -162,6 +170,7 @@ export function useLivingWorld({
     scene === "world" && !submarine
       ? RESTAURANTS.find((r) => worldDistance(pos, { x: r.x, y: r.y + 100 }) < 170)
       : undefined;
+  const nearBuilding = scene === "world" && !submarine ? nearTownBuilding(pos) : null;
   const festival =
     scene === "world" && !submarine
       ? FESTIVALS.find((f) => worldDistance(f, pos) < 230)
@@ -175,7 +184,18 @@ export function useLivingWorld({
     setMenuOpen(false);
     message("식당 앞 마을로 돌아왔어!");
   }
+  function leaveBuilding() {
+    setBuildingId(null);
+    setPos(returnAnchor.current);
+    message(`${building?.name} 앞 마을로 돌아왔어!`);
+  }
   function interact(): boolean {
+    if (building) {
+      if (worldDistance(inside, BUILDING_ROOM.exit) < 110) leaveBuilding();
+      else if (worldDistance(inside, BUILDING_ROOM.activity) < 230) message(building.response);
+      else message("안쪽으로 걸어가서 둘러보고, 문 앞에서 밖으로 나가 봐!");
+      return true;
+    }
     if (activity) {
       if (!activity.done) setActivity((a) => (a ? actActivity(a, player) : a));
       return true;
@@ -235,6 +255,13 @@ export function useLivingWorld({
       message(`${nearRestaurant.name}에 왔어! 직접 걸어서 카운터로 가 보자.`);
       return true;
     }
+    if (nearBuilding) {
+      returnAnchor.current = { ...nearBuilding.door };
+      setBuildingId(nearBuilding.id);
+      setInside({ ...BUILDING_ROOM.entry });
+      message(`${nearBuilding.name}에 들어왔어! 안쪽으로 걸어가 보자.`);
+      return true;
+    }
     if (festival && season) {
       start("festival", festival);
       return true;
@@ -250,6 +277,11 @@ export function useLivingWorld({
     return false;
   }
   function label() {
+    if (building) {
+      if (worldDistance(inside, BUILDING_ROOM.exit) < 110) return "건물 밖으로";
+      if (worldDistance(inside, BUILDING_ROOM.activity) < 230) return building.action;
+      return `${building.name} 둘러보기`;
+    }
     if (activity) return activity.done ? "놀이 결과" : "가까운 놀이 대상";
     if (scene === "world" && vehicle) return null;
     if (restaurant) {
@@ -263,6 +295,7 @@ export function useLivingWorld({
       return "식당 둘러보기";
     }
     if (nearRestaurant) return `${nearRestaurant.name} 들어가기`;
+    if (nearBuilding) return `${nearBuilding.name} 들어가기`;
     if (festival && season) return "할로윈 축제 참여";
     if (
       nearbyActor &&
@@ -313,6 +346,9 @@ export function useLivingWorld({
   }
   return {
     restaurant,
+    building,
+    interior,
+    leaveBuilding,
     aboard: scene === "world" ? vehicle : null,
     inside,
     meal,

@@ -1,3 +1,4 @@
+import { TOWN_BUILDINGS, BUILDING_ROOM } from "./building-interiors.ts";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -8,6 +9,7 @@ import {
   parsePlayerMessage,
   pruneStale,
   restaurantRegion,
+  buildingRegion,
   shouldSend,
   visibleRemotes,
   type PlayerMessage,
@@ -128,4 +130,20 @@ test("inactive scenes hide avatars, duplicate packets do not rewind, torus inter
   r = applyMessage(r, msg({ active: false, t: 1200 }), "self", 2200);
   assert.equal(visibleRemotes(r, "village").length, 0);
   assert.equal(shouldSend(msg(), msg({ active: false }), 300, 0), true);
+});
+
+test("town interiors bound family positions and hide members in other buildings", () => {
+  for (const b of TOWN_BUILDINGS) {
+    const region = buildingRegion(b.id);
+    const packet = msg({ region, ...BUILDING_ROOM.entry });
+    assert.ok(parsePlayerMessage(packet), b.id);
+    assert.equal(parsePlayerMessage(msg({ region, x: BUILDING_ROOM.width + 1 })), null);
+    const remotes = applyMessage({}, packet, "me", 0);
+    assert.equal(visibleRemotes(remotes, region).length, 1);
+    assert.equal(visibleRemotes(remotes, "village").length, 0);
+    assert.equal(visibleRemotes(remotes, restaurantRegion("pizza")).length, 0);
+    const other = TOWN_BUILDINGS.find((o) => o.id !== b.id)!;
+    assert.equal(visibleRemotes(remotes, buildingRegion(other.id)).length, 0);
+  }
+  assert.equal(parsePlayerMessage(msg({ region: buildingRegion("unknown") })), null);
 });
