@@ -3,7 +3,7 @@ import type { Point } from "@/game/adventure";
 import type { RobotSpecies } from "@/game/robot-catalog";
 import { FusedRobotArt } from "./FusedRobotArt";
 import { SummonBeamArt } from "./MissionArt";
-import { RobotSpeciesArt } from "./RobotSpeciesArt";
+import { RobotPortrait } from "./RobotPortrait";
 import type { ActorPhase } from "./useRobotWorld";
 
 const GATHER_FROM = [
@@ -84,7 +84,7 @@ export function RobotActorView({
                 } as CSSProperties
               }
             >
-              <RobotSpeciesArt robot={r} grade={grades[i] ?? 0} moving size={70} />
+              <RobotPortrait robot={r} grade={grades[i] ?? 0} moving size={70} />
             </div>
           ))}
         </div>
@@ -110,7 +110,7 @@ export function RobotActorView({
         />
       ) : (
         <div className="hj-solo-row">
-          <RobotSpeciesArt
+          <RobotPortrait
             robot={core}
             grade={grades[0] ?? 0}
             moving={moving}
@@ -121,7 +121,7 @@ export function RobotActorView({
           {phase === "returning" &&
             others.map((r) => (
               <div key={r.id} className="hj-beam-out" data-returning={r.id}>
-                <RobotSpeciesArt robot={r} size={64} />
+                <RobotPortrait robot={r} size={64} />
               </div>
             ))}
         </div>

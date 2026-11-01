@@ -2,6 +2,8 @@ import { useState } from "react";
 import {
   CARD_USES_TO_UNLOCK,
   GRADES,
+  ALL_ROBOTS,
+  LEGENDS,
   MAX_FUSION,
   ROBOTS,
   type RobotMissionMode,
@@ -9,8 +11,9 @@ import {
 } from "@/game/robot-catalog";
 import { gradeOf, isWatchCardAvailable, type RobotProgress } from "@/game/robot-engine";
 import { FusedRobotArt } from "./FusedRobotArt";
-import { RobotSpeciesArt } from "./RobotSpeciesArt";
+import { RobotPortrait } from "./RobotPortrait";
 
+export type WatchTabId = "summon" | "fuse" | "mission" | "army" | "legend";
 const ROLES_2 = ["머리·몸", "팔·무기"];
 const ROLES_3 = ["머리·몸", "팔·무기", "다리·날개"];
 /**
@@ -30,10 +33,11 @@ export function RobotWatch({
   onRecall,
   onMission,
   onClose,
+  army,
 }: {
   progress: RobotProgress;
-  tab: "summon" | "fuse" | "mission";
-  setTab: (tab: "summon" | "fuse" | "mission") => void;
+  tab: WatchTabId;
+  setTab: (tab: WatchTabId) => void;
   team: RobotSpeciesId[];
   mode: "follow" | "ride" | null;
   onSummon: (id: RobotSpeciesId) => void;
@@ -43,11 +47,21 @@ export function RobotWatch({
   onRecall: () => void;
   onMission: (mode: RobotMissionMode) => void;
   onClose: () => void;
+  /** The robot army (v3): 100 robots, the rally square and the giant. */
+  army: {
+    total: number;
+    unique: number;
+    legendsFound: number;
+    atRally: boolean;
+    phase: string;
+    onCall: () => void;
+    onSplit: () => void;
+  };
 }) {
-  const available = ROBOTS.filter((r) => isWatchCardAvailable(progress, r.id));
+  const available = ALL_ROBOTS.filter((r) => isWatchCardAvailable(progress, r.id));
   const [selected, setSelected] = useState<RobotSpeciesId>(team[0] ?? "rb-police");
   const [picks, setPicks] = useState<RobotSpeciesId[]>([]);
-  const chosen = ROBOTS.find((r) => r.id === selected)!;
+  const chosen = ALL_ROBOTS.find((r) => r.id === selected)!;
   const uses = progress.cards[selected]?.uses ?? 0;
   const roles = picks.length > 2 ? ROLES_3 : ROLES_2;
   const togglePick = (id: RobotSpeciesId) =>
@@ -71,7 +85,7 @@ export function RobotWatch({
         </header>
         <div className="hj-watch-face" data-watch-preview={selected}>
           <div className="hj-watch-bezel" aria-hidden="true" />
-          <RobotSpeciesArt
+          <RobotPortrait
             robot={chosen}
             grade={gradeOf(progress, selected)}
             size={86}
@@ -94,6 +108,8 @@ export function RobotWatch({
               ["summon", "🃏 소환"],
               ["fuse", "💥 합체"],
               ["mission", "🚨 출동"],
+              ["army", "🤖 군단"],
+              ["legend", "⭐ 전설"],
             ] as const
           ).map(([id, text]) => (
             <button
@@ -123,7 +139,7 @@ export function RobotWatch({
                     aria-label={`${r.name} 카드${open ? "" : " (잠김)"}`}
                     data-card={r.id}
                   >
-                    <RobotSpeciesArt robot={r} grade={gradeOf(progress, r.id)} size={46} />
+                    <RobotPortrait robot={r} grade={gradeOf(progress, r.id)} size={46} />
                     <b>{r.name}</b>
                     <small>
                       {open ? `${progress.cards[r.id]?.uses ?? 0}/7` : "🔒 7번 쓰면 열려"}
@@ -163,7 +179,7 @@ export function RobotWatch({
                     onClick={() => togglePick(r.id)}
                     aria-label={`합체: ${r.name}`}
                   >
-                    <RobotSpeciesArt robot={r} grade={gradeOf(progress, r.id)} size={46} />
+                    <RobotPortrait robot={r} grade={gradeOf(progress, r.id)} size={46} />
                     <b>{r.name}</b>
                     <small>{at >= 0 ? `${at + 1}. ${roles[at]}` : "고르기"}</small>
                   </button>
@@ -173,7 +189,7 @@ export function RobotWatch({
             {picks.length >= 2 && (
               <div className="hj-watch-fuse-preview">
                 <FusedRobotArt
-                  team={picks.map((id) => ROBOTS.find((r) => r.id === id)!)}
+                  team={picks.map((id) => ALL_ROBOTS.find((r) => r.id === id)!)}
                   grades={picks.map((id) => gradeOf(progress, id))}
                   weaponOut={false}
                   size={150}
@@ -217,6 +233,83 @@ export function RobotWatch({
               <span>🔩 부품 {progress.parts}</span>
               <span>💥 최고 {progress.fusionBest}단</span>
             </div>
+          </>
+        )}
+        {tab === "legend" && (
+          <>
+            <p className="hj-watch-help">
+              전설 로봇은 딱 6종! 마을에서 전설 로봇 가까이 가면 카드가 시계에 저장돼. 찾은 전설{" "}
+              {army.legendsFound}/6
+            </p>
+            <div className="hj-watch-cards" role="group" aria-label="전설 로봇 카드">
+              {LEGENDS.map((r) => {
+                const found = isWatchCardAvailable(progress, r.id);
+                return (
+                  <button
+                    type="button"
+                    key={r.id}
+                    disabled={!found}
+                    className={`hj-legend-card${selected === r.id ? " chosen" : ""}`}
+                    aria-pressed={selected === r.id}
+                    onClick={() => setSelected(r.id)}
+                    aria-label={`${r.name} 카드${found ? "" : " (아직 못 찾음)"}`}
+                    data-legend-card={r.id}
+                  >
+                    <RobotPortrait robot={r} grade={gradeOf(progress, r.id)} size={46} />
+                    <b>{r.name}</b>
+                    <small>
+                      {found ? `${progress.cards[r.id]?.uses ?? 0}/7` : "🔍 마을에서 찾기"}
+                    </small>
+                  </button>
+                );
+              })}
+            </div>
+            {chosen.legendary && <p className="hj-watch-help">⭐ {chosen.role}</p>}
+            <button
+              className="hj-watch-go"
+              disabled={!chosen.legendary || !isWatchCardAvailable(progress, chosen.id)}
+              onClick={() => onSummon(selected)}
+            >
+              ✨ {chosen.legendary ? chosen.name : "전설 로봇"} 소환!
+            </button>
+          </>
+        )}
+        {tab === "army" && (
+          <>
+            <div
+              className="hj-watch-army"
+              data-army-total={army.total}
+              data-army-unique={army.unique}
+            >
+              <b>🤖 로봇 군단 {army.unique}대</b>
+              <span>20개 부대가 마을 곳곳을 순찰하고 행진해</span>
+              <span>
+                ⭐ 전설 {army.legendsFound}/6 · 💥 100대 합체 {progress.massFusions}번
+              </span>
+              <span>
+                👹 거대 악당 {progress.bossWins}번 · 🔧 졸개 {progress.minionWaves}번 물리침
+              </span>
+            </div>
+            {army.phase === "giant" ? (
+              <button className="hj-watch-go" onClick={army.onSplit}>
+                초대형 합체 풀기
+              </button>
+            ) : (
+              <>
+                <p className="hj-watch-help">
+                  {army.atRally
+                    ? "여기가 집결 광장이야! 100대를 불러 봐!"
+                    : "100대를 부르려면 남쪽 🤖 군단 집결 광장으로 가야 해. 지도에서 갈 수 있어."}
+                </p>
+                <button
+                  className="hj-watch-go"
+                  disabled={!army.atRally || army.phase !== "idle"}
+                  onClick={army.onCall}
+                >
+                  📣 100대 집결!
+                </button>
+              </>
+            )}
           </>
         )}
       </section>

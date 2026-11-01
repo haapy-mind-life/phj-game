@@ -1,0 +1,411 @@
+/* Legendary robots (LegendaryRobotArt), the giant fusion robot, the villain giant and its
+   minions (GiantArt). */
+
+.hj-legend,
+.hj-giant,
+.hj-boss,
+.hj-minion {
+  overflow: visible;
+}
+/* Only animated pieces get a fill-box origin: elements carrying an SVG transform attribute
+   (mirrors, rotate(a cx cy)) must keep the default origin or they land in the wrong place. */
+.hj-legend .hj-lg-aura,
+.hj-legend .hj-lg-aura-ring,
+.hj-legend .hj-lg-core,
+.hj-legend .hj-lg-prop,
+.hj-legend .hj-lg-halo,
+.hj-legend .hj-lg-glow,
+.hj-legend .hj-lg-weapon,
+.hj-legend .hj-lg-wings,
+.hj-legend .hj-lg-body,
+.hj-legend .hj-lg-leg,
+.hj-legend .hj-lg-tread,
+.hj-giant .hj-gpart,
+.hj-giant .hj-gbody,
+.hj-giant .hj-glegend,
+.hj-giant .hj-gweapon,
+.hj-giant .hj-gcore,
+.hj-giant .hj-ghalo,
+.hj-giant .hj-gthrust,
+.hj-giant .hj-gbeam,
+.hj-giant .hj-gzap,
+.hj-giant .hj-gbubble,
+.hj-boss .hj-boss-gear,
+.hj-boss .hj-boss-lamp,
+.hj-boss .hj-boss-charge,
+.hj-boss .hj-boss-spark,
+.hj-boss .hj-boss-shock,
+.hj-boss .hj-boss-stars,
+.hj-boss .hj-boss-smoke,
+.hj-boss .hj-boss-shield,
+.hj-minion .hj-minion-prop,
+.hj-minion .hj-minion-lamp,
+.hj-minion .hj-minion-hit,
+.hj-minion .hj-minion-smoke {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* ── Legendary robots ── */
+.hj-legend .hj-lg-aura-ring {
+  animation: hj-lg-spin 9s linear infinite;
+}
+.hj-legend .hj-lg-aura {
+  animation: hj-lg-aura-pulse 2.4s ease-in-out infinite alternate;
+}
+.hj-legend .hj-lg-core {
+  animation: hj-lg-pulse 1.4s ease-in-out infinite alternate;
+}
+.hj-legend .hj-lg-prop {
+  animation: hj-lg-spin 0.9s linear infinite;
+}
+.hj-legend .hj-lg-halo {
+  animation: hj-lg-spin 12s linear infinite;
+}
+.hj-legend .hj-lg-glow {
+  animation: hj-lg-pulse 0.5s ease-in-out infinite alternate;
+}
+.hj-legend .hj-lg-weapon.out {
+  animation: hj-lg-weapon-in 0.35s cubic-bezier(0.2, 0.8, 0.3, 1.3) both;
+}
+.hj-legend .hj-lg-wings {
+  animation: hj-lg-flap 1.6s ease-in-out infinite alternate;
+}
+.hj-legend.moving .hj-lg-body {
+  animation: hj-lg-bob 0.45s ease-in-out infinite alternate;
+}
+.hj-legend.moving .hj-lg-leg.l {
+  animation: hj-lg-step 0.45s ease-in-out infinite alternate;
+}
+.hj-legend.moving .hj-lg-leg.r {
+  animation: hj-lg-step 0.45s ease-in-out infinite alternate-reverse;
+}
+.hj-legend.moving .hj-lg-tread {
+  animation: hj-lg-rumble 0.2s linear infinite alternate;
+}
+
+@keyframes hj-lg-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes hj-lg-aura-pulse {
+  from {
+    opacity: 0.7;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes hj-lg-pulse {
+  from {
+    opacity: 0.6;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+@keyframes hj-lg-weapon-in {
+  from {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+}
+@keyframes hj-lg-flap {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0.94) translateY(-2px);
+  }
+}
+@keyframes hj-lg-bob {
+  to {
+    transform: translateY(-4px);
+  }
+}
+@keyframes hj-lg-step {
+  to {
+    transform: translateY(-5px);
+  }
+}
+@keyframes hj-lg-rumble {
+  to {
+    transform: translateX(1.5px);
+  }
+}
+
+/* ── Giant fusion robot ──
+   Each of the 12 part groups flies in from its own direction, one after another (~2.4s), then
+   a bright flash locks the giant together. Splitting throws them back out (~1s). */
+.hj-giant .hj-gpart-head {
+  --gx: 0px;
+  --gy: -260px;
+  --gr: -20deg;
+  --gd: 0s;
+}
+.hj-giant .hj-gpart-chest {
+  --gx: 0px;
+  --gy: 0px;
+  --gr: 0deg;
+  --gs: 0.2;
+  --gd: 0.16s;
+}
+.hj-giant .hj-gpart-shoulderL {
+  --gx: -240px;
+  --gy: -160px;
+  --gr: -40deg;
+  --gd: 0.32s;
+}
+.hj-giant .hj-gpart-shoulderR {
+  --gx: 240px;
+  --gy: -160px;
+  --gr: 40deg;
+  --gd: 0.48s;
+}
+.hj-giant .hj-gpart-armL {
+  --gx: -280px;
+  --gy: 20px;
+  --gr: -60deg;
+  --gd: 0.64s;
+}
+.hj-giant .hj-gpart-armR {
+  --gx: 280px;
+  --gy: 20px;
+  --gr: 60deg;
+  --gd: 0.8s;
+}
+.hj-giant .hj-gpart-handL {
+  --gx: -240px;
+  --gy: 200px;
+  --gr: 90deg;
+  --gd: 0.96s;
+}
+.hj-giant .hj-gpart-handR {
+  --gx: 240px;
+  --gy: 200px;
+  --gr: -90deg;
+  --gd: 1.12s;
+}
+.hj-giant .hj-gpart-waist {
+  --gx: 0px;
+  --gy: 260px;
+  --gr: 12deg;
+  --gd: 1.28s;
+}
+.hj-giant .hj-gpart-legL {
+  --gx: -160px;
+  --gy: 300px;
+  --gr: -24deg;
+  --gd: 1.44s;
+}
+.hj-giant .hj-gpart-legR {
+  --gx: 160px;
+  --gy: 300px;
+  --gr: 24deg;
+  --gd: 1.6s;
+}
+.hj-giant .hj-gpart-back {
+  --gx: 0px;
+  --gy: -320px;
+  --gr: 0deg;
+  --gs: 0.4;
+  --gd: 1.76s;
+}
+
+.hj-giant.phase-assembling .hj-gpart {
+  animation: hj-g-in 0.62s var(--gd, 0s) cubic-bezier(0.2, 0.8, 0.3, 1.15) both;
+}
+.hj-giant.phase-assembling .hj-glegend,
+.hj-giant.phase-assembling .hj-gweapon {
+  animation: hj-g-pop 0.5s 1.95s cubic-bezier(0.2, 0.8, 0.3, 1.3) both;
+}
+.hj-giant.phase-assembling .hj-gflash {
+  animation: hj-g-flash 2.7s ease-out both;
+  pointer-events: none;
+}
+.hj-giant.phase-splitting .hj-gpart {
+  animation: hj-g-out 1s ease-in forwards;
+}
+.hj-giant.phase-splitting .hj-glegend,
+.hj-giant.phase-splitting .hj-gweapon {
+  animation: hj-g-fade 0.6s ease-in forwards;
+}
+.hj-giant.phase-giant .hj-gbody {
+  animation: hj-g-hum 2.6s ease-in-out infinite alternate;
+}
+.hj-giant .hj-gcore {
+  animation: hj-lg-pulse 1.1s ease-in-out infinite alternate;
+}
+.hj-giant .hj-geye,
+.hj-giant .hj-gantenna {
+  animation: hj-g-blink 2.2s ease-in-out infinite;
+}
+.hj-giant .hj-ghalo {
+  animation: hj-lg-spin 14s linear infinite;
+}
+.hj-giant .hj-gthrust,
+.hj-giant .hj-gbeam,
+.hj-giant .hj-gzap {
+  animation: hj-lg-pulse 0.35s ease-in-out infinite alternate;
+}
+.hj-giant .hj-gbubble {
+  animation: hj-g-bubble 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes hj-g-in {
+  from {
+    transform: translate(var(--gx), var(--gy)) rotate(var(--gr, 0deg)) scale(var(--gs, 0.7));
+    opacity: 0;
+  }
+  45% {
+    opacity: 1;
+  }
+}
+@keyframes hj-g-out {
+  to {
+    transform: translate(var(--gx), var(--gy)) rotate(var(--gr, 0deg)) scale(var(--gs, 0.7));
+    opacity: 0;
+  }
+}
+@keyframes hj-g-pop {
+  from {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+}
+@keyframes hj-g-fade {
+  to {
+    transform: scale(1.3);
+    opacity: 0;
+  }
+}
+@keyframes hj-g-flash {
+  0%,
+  82% {
+    opacity: 0;
+  }
+  90% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes hj-g-hum {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-5px);
+  }
+}
+@keyframes hj-g-blink {
+  0%,
+  88%,
+  100% {
+    opacity: 1;
+  }
+  93% {
+    opacity: 0.25;
+  }
+}
+@keyframes hj-g-bubble {
+  to {
+    transform: translateY(-8px);
+    opacity: 0.6;
+  }
+}
+
+/* ── Villain giant ── */
+.hj-boss.phase-idle .hj-boss-body {
+  animation: hj-g-hum 2s ease-in-out infinite alternate;
+}
+.hj-boss .hj-boss-gear {
+  animation: hj-lg-spin 6s linear infinite;
+}
+.hj-boss .hj-boss-lamp {
+  animation: hj-lg-pulse 0.8s ease-in-out infinite alternate;
+}
+.hj-boss.phase-telegraph .hj-boss-lamp,
+.hj-boss .hj-boss-charge,
+.hj-boss .hj-boss-spark {
+  animation: hj-lg-pulse 0.25s ease-in-out infinite alternate;
+}
+.hj-boss .hj-boss-shock {
+  animation: hj-boss-shock 0.6s ease-out infinite;
+}
+.hj-boss .hj-boss-stars {
+  animation: hj-lg-spin 1.6s linear infinite;
+}
+.hj-boss .hj-boss-smoke,
+.hj-minion .hj-minion-smoke {
+  animation: hj-boss-smoke 1.6s ease-out infinite;
+}
+.hj-boss .hj-boss-shield {
+  animation: hj-boss-shield 1.8s ease-in-out infinite alternate;
+}
+@keyframes hj-boss-shock {
+  from {
+    transform: scale(0.6);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1.1);
+    opacity: 0.2;
+  }
+}
+@keyframes hj-boss-smoke {
+  from {
+    transform: translateY(6px) scale(0.85);
+    opacity: 0.9;
+  }
+  to {
+    transform: translateY(-10px) scale(1.15);
+    opacity: 0.25;
+  }
+}
+@keyframes hj-boss-shield {
+  from {
+    opacity: 0.75;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ── Minions ── */
+.hj-minion.phase-active .hj-minion-body {
+  animation: hj-lg-bob 0.5s ease-in-out infinite alternate;
+}
+.hj-minion .hj-minion-lamp {
+  animation: hj-lg-pulse 0.7s ease-in-out infinite alternate;
+}
+.hj-minion .hj-minion-prop {
+  animation: hj-minion-prop 0.3s linear infinite alternate;
+}
+.hj-minion .hj-minion-hit {
+  animation: hj-lg-pulse 0.18s ease-in-out infinite alternate;
+}
+@keyframes hj-minion-prop {
+  to {
+    transform: scaleX(0.3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hj-legend *,
+  .hj-giant *,
+  .hj-boss *,
+  .hj-minion * {
+    animation: none !important;
+  }
+  .hj-giant.phase-splitting .hj-gbody {
+    opacity: 0.3;
+  }
+  .hj-giant .hj-gflash {
+    display: none;
+  }
+}

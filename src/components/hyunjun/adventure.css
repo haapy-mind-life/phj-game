@@ -2617,3 +2617,118 @@
   border-radius: 10px;
   padding: 4px 8px;
 }
+/* Robot army (v3): squads, rally square, giant villain, minions. */
+.hj-army {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+}
+.hj-army-robot,
+.hj-rally,
+.hj-boss,
+.hj-minion {
+  position: absolute;
+  transform: translate(-50%, -92%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+.hj-army-robot {
+  z-index: 3;
+  transition:
+    left 0.1s linear,
+    top 0.1s linear;
+}
+.hj-army-robot i {
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 800;
+  border-radius: 8px;
+  padding: 0 5px;
+  color: #2f3a44;
+  margin-top: -4px;
+}
+.hj-army-robot.legend b {
+  font-size: 11px;
+  background: #fff3c9;
+  border: 1px solid #e9b730;
+  border-radius: 10px;
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+.hj-rally {
+  z-index: 1;
+  transform: translate(-50%, -50%);
+}
+.hj-rally-ring {
+  width: 520px;
+  height: 300px;
+  border-radius: 50%;
+  border: 8px dashed #5c8de0;
+  background: #5c8de022;
+}
+.hj-rally b,
+.hj-boss b {
+  font-size: 14px;
+  background: #e7f0ff;
+  border-radius: 12px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+.hj-boss {
+  z-index: 4;
+  transition:
+    left 0.1s linear,
+    top 0.1s linear;
+}
+.hj-boss b {
+  background: #f6d6cf;
+}
+.hj-boss-bars {
+  display: grid;
+  gap: 3px;
+  width: 200px;
+}
+.hj-boss-bars div {
+  height: 12px;
+  border-radius: 6px;
+  border: 2px solid #5b3d31;
+  background: #ffffffcc;
+  overflow: hidden;
+}
+.hj-boss-bars i {
+  display: block;
+  height: 100%;
+  background: #e05a4f;
+  transition: width 0.25s;
+}
+.hj-boss-bars i.shield {
+  background: #7fd4ff;
+}
+.hj-boss-hit {
+  animation: hj-knockback 0.35s ease-out;
+}
+.hj-blast-warning {
+  fill: #ff4b3e33;
+  stroke: #ff4b3e;
+  stroke-width: 8;
+  stroke-dasharray: 22 14;
+  animation: hj-blast 0.5s ease-in-out infinite alternate;
+}
+@keyframes hj-blast {
+  to {
+    fill: #ff4b3e66;
+  }
+}
+.hj-minion {
+  z-index: 3;
+  transition:
+    left 0.1s linear,
+    top 0.1s linear;
+}
+.hj-giant-rider {
+  transform: translateY(-40px);
+}

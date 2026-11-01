@@ -6,7 +6,16 @@ import type { Point } from "./adventure.ts";
 // display names are checked (02_REVIEW_AND_SUPPLEMENT.md R4).
 export type RobotFamily = "police" | "fire" | "sky";
 export type RobotSpeciesId =
-  "rb-police" | "rb-fire" | "rb-sky" | "rb-thunder-police" | "rb-volcano-fire" | "rb-laser-sky";
+  | "rb-police"
+  | "rb-fire"
+  | "rb-sky"
+  | "rb-thunder-police"
+  | "rb-volcano-fire"
+  | "rb-laser-sky"
+  | LegendId;
+/** The six legendary robots (requirements v3 RA-102): their own robots, not the six above. */
+export type LegendId =
+  "lg-shield" | "lg-wing" | "lg-deep" | "lg-steel" | "lg-thunder" | "lg-guardian";
 export type RobotMissionMode = "villain" | "rescue" | "thief";
 export type WeaponKind = "sword" | "cannon" | "wind";
 /** Each robot carries its own weapon; a fusion fights with the weapon on its arms. */
@@ -32,6 +41,10 @@ export type RobotSpecies = {
   starter: boolean;
   /** Using this robot's card 7 times opens this card (RBQ-06 provisional answer). */
   unlocks?: RobotSpeciesId;
+  /** Legendary robots are found in the world, never bought or drawn by chance. */
+  legendary?: LegendId;
+  /** What this robot brings to the team, shown in the watch (provisional, RAQ-06). */
+  role?: string;
 };
 export const CARD_USES_TO_UNLOCK = 7;
 const SWORD: Weapon = { name: "빛 검", kind: "sword", range: 170, cooldownMs: 1100 };
@@ -114,8 +127,101 @@ export const ROBOTS: readonly RobotSpecies[] = [
     starter: false,
   },
 ];
-export const ROBOT_IDS: readonly string[] = ROBOTS.map((r) => r.id);
-export const robotById = (id: RobotSpeciesId) => ROBOTS.find((r) => r.id === id)!;
+// Legend names are working names until Hyunjun names them (RAQ-06). Each one fights with an
+// existing weapon kind so strikes and effects work unchanged, and lends a family look to 2·3
+// robot fusions.
+export const LEGENDS: readonly RobotSpecies[] = [
+  {
+    id: "lg-shield",
+    name: "방패 전설 로봇",
+    workName: "방패 전설 로봇",
+    family: "police",
+    skill: "거대 방패",
+    color: "#c9d3dd",
+    accent: "#3f6fd1",
+    mark: "none",
+    weapon: { name: "방패 돌진", kind: "sword", range: 200, cooldownMs: 1000 },
+    starter: false,
+    legendary: "lg-shield",
+    role: "막아 주기 · 거대 합체의 방패 어깨",
+  },
+  {
+    id: "lg-wing",
+    name: "날개 전설 로봇",
+    workName: "날개 전설 로봇",
+    family: "sky",
+    skill: "깃털 칼날",
+    color: "#f4f8fb",
+    accent: "#1fb5a8",
+    mark: "none",
+    weapon: { name: "깃털 칼날", kind: "wind", range: 300, cooldownMs: 1000 },
+    starter: false,
+    legendary: "lg-wing",
+    role: "멀리 날기 · 거대 합체의 큰 날개",
+  },
+  {
+    id: "lg-deep",
+    name: "심해 전설 로봇",
+    workName: "심해 전설 로봇",
+    family: "fire",
+    skill: "거품 어뢰",
+    color: "#24407a",
+    accent: "#4fd6e0",
+    mark: "none",
+    weapon: { name: "거품 어뢰", kind: "cannon", range: 320, cooldownMs: 1200 },
+    starter: false,
+    legendary: "lg-deep",
+    role: "물속 힘 · 거대 합체의 다리 지느러미",
+  },
+  {
+    id: "lg-steel",
+    name: "강철 전설 로봇",
+    workName: "강철 전설 로봇",
+    family: "fire",
+    skill: "강철 망치",
+    color: "#5a6470",
+    accent: "#f08a2c",
+    mark: "none",
+    weapon: { name: "강철 망치", kind: "sword", range: 180, cooldownMs: 1100 },
+    starter: false,
+    legendary: "lg-steel",
+    role: "튼튼함 · 거대 합체의 가슴 갑옷",
+  },
+  {
+    id: "lg-thunder",
+    name: "번개 전설 로봇",
+    workName: "번개 전설 로봇",
+    family: "police",
+    skill: "번개 창",
+    color: "#ffd23f",
+    accent: "#7a3fc9",
+    mark: "bolt",
+    weapon: { name: "번개 창", kind: "wind", range: 280, cooldownMs: 900 },
+    starter: false,
+    legendary: "lg-thunder",
+    role: "빠른 공격 · 거대 합체의 번개 대포",
+  },
+  {
+    id: "lg-guardian",
+    name: "수호 전설 로봇",
+    workName: "수호 전설 로봇",
+    family: "sky",
+    skill: "빛의 고리",
+    color: "#e9b730",
+    accent: "#fbf6e6",
+    mark: "none",
+    weapon: { name: "빛의 고리", kind: "cannon", range: 300, cooldownMs: 1000 },
+    starter: false,
+    legendary: "lg-guardian",
+    role: "지켜 주기 · 거대 합체의 톱니 왕관",
+  },
+];
+/** Every robot the watch knows: the six regular robots, then the six legends. */
+export const ALL_ROBOTS: readonly RobotSpecies[] = [...ROBOTS, ...LEGENDS];
+export const ROBOT_IDS: readonly string[] = ALL_ROBOTS.map((r) => r.id);
+export const robotById = (id: RobotSpeciesId) => ALL_ROBOTS.find((r) => r.id === id)!;
+export const isLegendId = (v: unknown): v is LegendId =>
+  typeof v === "string" && LEGENDS.some((l) => l.id === v);
 export const isRobotId = (v: unknown): v is RobotSpeciesId =>
   typeof v === "string" && ROBOT_IDS.includes(v);
 

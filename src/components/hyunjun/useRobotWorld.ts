@@ -71,7 +71,7 @@ export type RobotMission = { id: number } & (
   | { mode: "rescue"; rescue: Rescue; thanked: boolean }
   | { mode: "thief"; thief: Thief; rewarded: boolean }
 );
-export type WatchTab = "summon" | "fuse" | "mission";
+export type WatchTab = "summon" | "fuse" | "mission" | "army" | "legend";
 type Job = { kind: "villain" | "rescue" | "thief"; at: Point };
 const SUMMON_MS = 900;
 const GATHER_MS = 800;
