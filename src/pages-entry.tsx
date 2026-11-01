@@ -17,6 +17,7 @@ import { createRoot } from "react-dom/client";
 import { Village } from "./components/hyunjun/Village";
 import { Runner } from "./components/hyunjun/Runner";
 import { Farm } from "./components/hyunjun/Farm";
+import { RoomEscape } from "./components/hyunjun/RoomEscape";
 import { PeanutGame } from "./components/hyunjun/PeanutGame";
 import { KartHub } from "./components/hyunjun/KartHub";
 import { House } from "./components/hyunjun/House";
@@ -66,6 +67,12 @@ const houseRoute = createRoute({
   component: House,
 });
 
+const roomsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/rooms",
+  component: RoomEscape,
+});
+
 const peanutRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/peanuts",
@@ -86,6 +93,7 @@ const router = createRouter({
     houseRoute,
     kartRoute,
     peanutRoute,
+    roomsRoute,
   ]),
   history: createHashHistory(),
   defaultPreloadStaleTime: 0,

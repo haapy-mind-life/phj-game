@@ -1,3 +1,4 @@
+import { ROOM_RUN_REWARD } from "../game/room-escape.ts";
 import { CARS, canBuyCar, ENGINE_COST, SPECIAL_COST, type CarUpgrade } from "../game/cars.ts";
 import { HOME_LOTS, type HomeLotId } from "../game/kid-world.ts";
 import { isRobotId, type RobotSpeciesId } from "../game/robot-catalog.ts";
@@ -147,6 +148,7 @@ export type GameState = {
   ownedCars: string[];
   settledActivities: string[];
   version: 3;
+  roomEscapeBest: number;
   carUpgrades: Record<string, CarUpgrade>;
   money: number;
   plots: Plot[];
@@ -264,6 +266,7 @@ export function migrateSave(input: unknown): GameState {
           .filter((id): id is string => typeof id === "string" && id.length > 0 && id.length < 160)
           .slice(-200)
       : [],
+    roomEscapeBest: finite(raw["roomEscapeBest"], 0, 3),
     miniBest: {
       peanuts: finite(object(raw["miniBest"])["peanuts"], 0, 8),
       constellation: finite(object(raw["miniBest"])["constellation"], 0, 6),
@@ -367,6 +370,7 @@ export type ActivityKind = "restaurant" | "home" | "sea" | "festival";
 export type PlayKind =
   "delivery" | "police" | "fire" | "ambulance" | "sea" | "truck-sale" | "truck-complete";
 export type WorldAction =
+  | { type: "settle-rooms"; id: string; rooms: number }
   | { type: "upgrade-car"; id: string; upgrade: "engine" | "special" }
   | { type: "settle-play"; id: string; activity: PlayKind; bonus: boolean }
   | { type: "companion"; id: string; mode: "follow" | "invite" | "leave" }
@@ -589,6 +593,21 @@ export function reduceWorld(state: GameState, action: WorldAction): GameState {
       ...state,
       money: Math.min(1e12, state.money + rewards[action.id]!),
       visitedSeaTreasures: [...state.visitedSeaTreasures, action.id].slice(-30),
+    };
+  }
+  if (action.type === "settle-rooms") {
+    if (
+      action.rooms !== 3 ||
+      !action.id.startsWith("rooms-") ||
+      action.id.length >= 160 ||
+      state.settledActivities.includes(action.id)
+    )
+      return state;
+    return {
+      ...state,
+      money: Math.min(1e12, state.money + ROOM_RUN_REWARD),
+      roomEscapeBest: 3,
+      settledActivities: [...state.settledActivities, action.id].slice(-200),
     };
   }
   if (action.type === "settle-mini") {

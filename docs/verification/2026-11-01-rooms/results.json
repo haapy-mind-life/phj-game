@@ -1,0 +1,112 @@
+{
+  "baseSHA": "20e26427041bb69a5bcdccc06150e03d0dd7358e",
+  "branch": "feat/phj-kart-rooms-20261101",
+  "state": "tested working tree before commit",
+  "timestamp": "2026-11-01T08:10:48.776998+00:00",
+  "environment": "Node v24.16.0; existing playwright-core and headless Chromium; Pages preview",
+  "checks": {
+    "unit": "PASS 167/167",
+    "typescript": "PASS",
+    "changedFileLint": "PASS",
+    "build": "PASS",
+    "pagesBuild": "PASS (existing bundle size warning)",
+    "physicalSamsungAndSPen": "NOT_RUN"
+  },
+  "rooms": [
+    {
+      "width": 360,
+      "result": "PASS",
+      "threeDistinctRooms": true,
+      "realMovement": true,
+      "retryCurrentRoom": true,
+      "pauseAndBlur": true,
+      "bridgeTimingAndFailure": true,
+      "rewardOnce": true,
+      "cancelAndReload": true,
+      "oldAssetsPreserved": true
+    },
+    {
+      "width": 390,
+      "result": "PASS",
+      "threeDistinctRooms": true,
+      "realMovement": true,
+      "retryCurrentRoom": true,
+      "pauseAndBlur": true,
+      "bridgeTimingAndFailure": true,
+      "rewardOnce": true,
+      "cancelAndReload": true,
+      "oldAssetsPreserved": true
+    },
+    {
+      "width": 1280,
+      "result": "PASS",
+      "threeDistinctRooms": true,
+      "realMovement": true,
+      "retryCurrentRoom": true,
+      "pauseAndBlur": true,
+      "bridgeTimingAndFailure": true,
+      "rewardOnce": true,
+      "cancelAndReload": true,
+      "oldAssetsPreserved": true
+    }
+  ],
+  "hubRegression": [
+    {
+      "width": 360,
+      "result": "PASS",
+      "worldMovement": true,
+      "returnPosition": true,
+      "savePreserved": true,
+      "historyAndReload": true
+    },
+    {
+      "width": 390,
+      "result": "PASS",
+      "worldMovement": true,
+      "returnPosition": true,
+      "savePreserved": true,
+      "historyAndReload": true
+    },
+    {
+      "width": 1280,
+      "result": "PASS",
+      "worldMovement": true,
+      "returnPosition": true,
+      "savePreserved": true,
+      "historyAndReload": true
+    }
+  ],
+  "peanutRegression": [
+    {
+      "width": 360,
+      "result": "PASS",
+      "winAndRetry": true,
+      "mistakesAndTimeout": true,
+      "pauseAndBlur": true,
+      "rewardsOnce": true,
+      "cancellationAndReload": true,
+      "assetsPreserved": true
+    },
+    {
+      "width": 390,
+      "result": "PASS",
+      "winAndRetry": true,
+      "mistakesAndTimeout": true,
+      "pauseAndBlur": true,
+      "rewardsOnce": true,
+      "cancellationAndReload": true,
+      "assetsPreserved": true
+    },
+    {
+      "width": 1280,
+      "result": "PASS",
+      "winAndRetry": true,
+      "mistakesAndTimeout": true,
+      "pauseAndBlur": true,
+      "rewardsOnce": true,
+      "cancellationAndReload": true,
+      "assetsPreserved": true
+    }
+  ],
+  "scope": "lg-11 only. Three actual movement puzzles (key, crate plate, timed bridge); current-room retry and pause. All three rooms must finish for one 40-coin settlement. Partial exit/reload restarts at room one without new rewards. Save key/version 3 and prior assets preserved; roomEscapeBest defaults to zero."
+}

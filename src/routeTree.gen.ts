@@ -15,6 +15,7 @@ import { Route as HouseRouteImport } from './routes/house'
 import { Route as KartRouteImport } from './routes/kart'
 import { Route as PeanutsRouteImport } from './routes/peanuts'
 import { Route as RaceRouteImport } from './routes/race'
+import { Route as RoomsRouteImport } from './routes/rooms'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -46,6 +47,11 @@ const RaceRoute = RaceRouteImport.update({
   path: '/race',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RoomsRoute = RoomsRouteImport.update({
+  id: '/rooms',
+  path: '/rooms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +60,7 @@ export interface FileRoutesByFullPath {
   '/kart': typeof KartRoute
   '/peanuts': typeof PeanutsRoute
   '/race': typeof RaceRoute
+  '/rooms': typeof RoomsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +69,7 @@ export interface FileRoutesByTo {
   '/kart': typeof KartRoute
   '/peanuts': typeof PeanutsRoute
   '/race': typeof RaceRoute
+  '/rooms': typeof RoomsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,14 +79,23 @@ export interface FileRoutesById {
   '/kart': typeof KartRoute
   '/peanuts': typeof PeanutsRoute
   '/race': typeof RaceRoute
+  '/rooms': typeof RoomsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/greenhouse' | '/house' | '/kart' | '/peanuts' | '/race'
+  fullPaths:
+    '/' | '/greenhouse' | '/house' | '/kart' | '/peanuts' | '/race' | '/rooms'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/greenhouse' | '/house' | '/kart' | '/peanuts' | '/race'
+  to: '/' | '/greenhouse' | '/house' | '/kart' | '/peanuts' | '/race' | '/rooms'
   id:
-    '__root__' | '/' | '/greenhouse' | '/house' | '/kart' | '/peanuts' | '/race'
+    | '__root__'
+    | '/'
+    | '/greenhouse'
+    | '/house'
+    | '/kart'
+    | '/peanuts'
+    | '/race'
+    | '/rooms'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -88,6 +105,7 @@ export interface RootRouteChildren {
   KartRoute: typeof KartRoute
   PeanutsRoute: typeof PeanutsRoute
   RaceRoute: typeof RaceRoute
+  RoomsRoute: typeof RoomsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -134,6 +152,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RaceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rooms': {
+      id: '/rooms'
+      path: '/rooms'
+      fullPath: '/rooms'
+      preLoaderRoute: typeof RoomsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -144,6 +169,7 @@ const rootRouteChildren: RootRouteChildren = {
   KartRoute: KartRoute,
   PeanutsRoute: PeanutsRoute,
   RaceRoute: RaceRoute,
+  RoomsRoute: RoomsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

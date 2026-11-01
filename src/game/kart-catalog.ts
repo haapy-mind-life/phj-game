@@ -9,7 +9,7 @@ export type KartEntry = {
   | { status: "planned"; route?: never }
   | {
       status: "playable" | "existing";
-      route: "/" | "/race" | "/house" | "/greenhouse" | "/peanuts";
+      route: "/" | "/race" | "/house" | "/greenhouse" | "/peanuts" | "/rooms";
     }
 );
 export const KART_GAMES = [
@@ -102,8 +102,9 @@ export const KART_GAMES = [
     kind: "large",
     name: "박현준 방 깨기",
     genre: "퍼즐",
-    description: "방마다 다른 장치·문·스테이지 해결",
-    status: "planned",
+    description: "열쇠 찾기 · 상자 밀기 · 빛의 다리, 세 방을 걸어서 탈출",
+    status: "playable",
+    route: "/rooms",
   },
   {
     id: "lg-12",
