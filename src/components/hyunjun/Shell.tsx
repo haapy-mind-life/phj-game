@@ -1,3 +1,4 @@
+import "./kart.css";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useGame } from "@/lib/game-state";
@@ -8,11 +9,13 @@ export function Shell({
   subtitle,
   active,
   children,
+  onKart,
 }: {
   title: string;
   subtitle: string;
   active: "home" | "run" | "farm" | "room";
   children: ReactNode;
+  onKart?: () => void;
 }) {
   const { state, ready, storageWarning } = useGame();
   return (
@@ -21,6 +24,9 @@ export function Shell({
         <header className="hj-topbar">
           <Link to="/" className="hj-brand">
             박현준 게임<small>걸어서 만나는 모험 마을</small>
+          </Link>
+          <Link to="/kart" className="hj-kart-link" onClick={onKart}>
+            카트 열기
           </Link>
           <div className="hj-wallet">
             <Star />

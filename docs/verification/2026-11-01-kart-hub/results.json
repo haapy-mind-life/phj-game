@@ -1,0 +1,46 @@
+{
+  "baseSHA": "e965bbb040427fec78fd68cec111716444562e82",
+  "branch": "feat/phj-kart-hub-20261101",
+  "state": "uncommitted working tree",
+  "timestamp": "2026-11-01T07:36:40.219693+00:00",
+  "environment": "Node v24.16.0; playwright-core; headless Chromium; Pages preview port 4175",
+  "results": [
+    {
+      "width": 360,
+      "result": "PASS",
+      "worldMovement": true,
+      "returnPosition": true,
+      "savePreserved": true,
+      "historyAndReload": true
+    },
+    {
+      "width": 390,
+      "result": "PASS",
+      "worldMovement": true,
+      "returnPosition": true,
+      "savePreserved": true,
+      "historyAndReload": true
+    },
+    {
+      "width": 1280,
+      "result": "PASS",
+      "worldMovement": true,
+      "returnPosition": true,
+      "savePreserved": true,
+      "historyAndReload": true
+    }
+  ],
+  "physicalDeviceUAT": "NOT_RUN",
+  "checks": {
+    "unit": "PASS 156/156",
+    "typescript": "PASS",
+    "changedFileLint": "PASS",
+    "build": "PASS",
+    "pagesBuild": "PASS (bundle size warning)",
+    "robotBrowserRegression": "PASS verify-robot-world.cjs",
+    "wholeTreeLint": "FAIL baseline: existing untracked capture-concept-audit.cjs formatting errors (14); warnings (8)",
+    "robotArmyBrowser": "NOT_RUN in this slice",
+    "familyRoomBrowser": "NOT_RUN in this slice",
+    "physicalDeviceUAT": "NOT_RUN"
+  }
+}

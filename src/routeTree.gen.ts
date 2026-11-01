@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as GreenhouseRouteImport } from './routes/greenhouse'
 import { Route as HouseRouteImport } from './routes/house'
+import { Route as KartRouteImport } from './routes/kart'
 import { Route as RaceRouteImport } from './routes/race'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +30,11 @@ const HouseRoute = HouseRouteImport.update({
   path: '/house',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KartRoute = KartRouteImport.update({
+  id: '/kart',
+  path: '/kart',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RaceRoute = RaceRouteImport.update({
   id: '/race',
   path: '/race',
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/greenhouse': typeof GreenhouseRoute
   '/house': typeof HouseRoute
+  '/kart': typeof KartRoute
   '/race': typeof RaceRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/greenhouse': typeof GreenhouseRoute
   '/house': typeof HouseRoute
+  '/kart': typeof KartRoute
   '/race': typeof RaceRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/greenhouse': typeof GreenhouseRoute
   '/house': typeof HouseRoute
+  '/kart': typeof KartRoute
   '/race': typeof RaceRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/greenhouse' | '/house' | '/race'
+  fullPaths: '/' | '/greenhouse' | '/house' | '/kart' | '/race'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/greenhouse' | '/house' | '/race'
-  id: '__root__' | '/' | '/greenhouse' | '/house' | '/race'
+  to: '/' | '/greenhouse' | '/house' | '/kart' | '/race'
+  id: '__root__' | '/' | '/greenhouse' | '/house' | '/kart' | '/race'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   GreenhouseRoute: typeof GreenhouseRoute
   HouseRoute: typeof HouseRoute
+  KartRoute: typeof KartRoute
   RaceRoute: typeof RaceRoute
 }
 
@@ -92,6 +102,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HouseRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/kart': {
+      id: '/kart'
+      path: '/kart'
+      fullPath: '/kart'
+      preLoaderRoute: typeof KartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/race': {
       id: '/race'
       path: '/race'
@@ -106,6 +123,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   GreenhouseRoute: GreenhouseRoute,
   HouseRoute: HouseRoute,
+  KartRoute: KartRoute,
   RaceRoute: RaceRoute,
 }
 export const routeTree = rootRouteImport
