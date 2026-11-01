@@ -1,7 +1,7 @@
 # MEMORY.md — 박현준 게임 공용 작업 기억
 
-> 상태: repository handoff / 2026-10-11 / v0.1.0. 개인적인 장기 기억이 아니라 **이 저장소 작업을 이어가기 위한 버전 관리 문서**다.
-> 마지막 코드 조사 기준: `main` `7fd147ad8d46aebe3075368b10271c67cd62b0eb`. 해당 SHA 이후 변경은 반드시 다시 확인한다.
+> 상태: repository handoff / 2026-11-01. 개인적인 장기 기억이 아니라 **이 저장소 작업을 이어가기 위한 버전 관리 문서**다.
+> 마지막 코드 조사 기준: `main` `21bca8e` (PR #40 병합). 해당 SHA 이후 변경은 반드시 다시 확인한다. 아래 2026-10-11 절들은 당시 기록이며, 최신 상태는 "검증된 현재 시스템"과 맨 아래 2026-11-01 절이 우선한다.
 > 요구사항 자료는 현준이와 보호자의 대화에 근거한다. 미확정 해석은 결정하지 않는다.
 
 ## 반드시 기억할 제품 방향
@@ -14,15 +14,16 @@
 6. "비상도 만들어줘", "자동차보다 더", 로봇의 구체적 동작/외형 등은 음성 전사만으로 뜻을 확정하지 않는다. 원문 보존 + OPEN 결정으로 관리.
 7. 긴급 구조는 어린이용 상상 놀이로 표현한다. 실제 응급처치 지침, 선정적인 상해 묘사, 실제 신고 연결, 실금전 결제는 금지한다.
 
-## 검증된 현재 시스템 (코드 기준, 실제 기기 UAT 별개)
+## 검증된 현재 시스템 (코드 기준, 실제 기기 UAT 별개) — 2026-11-01
 
-- 저장소: https://github.com/haapy-mind-life/carrot-racer-farm ; 정적 게임: https://haapy-mind-life.github.io/carrot-racer-farm/
-- 월드: `src/game/adventure.ts`의 5600×1800 맵 / 열 개 마을 / `Village.tsx`의 조이스틱+현재 화면 지도.
-- 탈것: `src/game/cars.ts`, `Garage.tsx`, `CarArt.tsx`; 100종 목록, 선택·탑승.
-- 긴급 호출·호수·캠핑: `src/game/world-events.ts`, `WorldScenes.tsx`, `Village.tsx`, `siren.ts`; 신고/출동, 지정 지점 소화·구조·도둑 추적, 호수 잠수, 텐트.
-- 집은 `src/components/hyunjun/House.tsx`의 **별도 가구 배치 화면/6개 슬롯**이며 오픈월드 대저택·들고 먹기는 아직 없다.
-- `src/lib/world-model.ts`에 `GameState.version = 2`, `money`(별코인), 농장/러너/가구 구매 흐름이 있다. 푸드트럭 매출은 아직 없다.
-- GitHub Pages는 `.github/workflows/pages.yml`에서 PR 빌드 검증, `main` push 후 배포. 최근 기준 커밋의 Actions 배포 성공: https://github.com/haapy-mind-life/carrot-racer-farm/actions/runs/38105386742
+- 저장소: https://github.com/haapy-mind-life/phj-game (옛 이름 `carrot-racer-farm`) ; 게임: https://haapy-mind-life.github.io/phj-game/
+- 월드: 20400×10800 순환(가장자리가 이어짐) 월드(`src/game/world-space.ts`), 30개 마을, 해안·큰 바다·섬, 비행장. 화면은 `Village.tsx`(현재 약 1750줄).
+- 탈것: 자동차(`cars.ts`, `Garage.tsx`), 비행기, 잠수함. 집은 `houseTier` 1~5와 집터 이사, 저택 실내.
+- 실내: 식당 8곳(맥도날드 3곳 포함), 생활 건물 6곳 + 이웃집 35곳(`building-interiors.ts`).
+- 가족방: Supabase Auth/Realtime, PIN 로그인. 위치·지역만 주고받고 게임 진행은 각 기기에 저장한다(`AGENTS.md` 우선).
+- **로봇 소환 시계**(PR #37·#38·#40): 시계 카드로 로봇 소환(따라오기/타기), 한 몸 2·3단 합체, 무기, 악당·친구 구조·도둑 임무, 7번째 유효 사용에 강화, 정비소 강철 강화. 엔진은 `src/game/robot-{catalog,engine,missions}.ts`, 화면은 `src/components/hyunjun/{useRobotWorld,RobotWatch,RobotWorld,RobotActorView,FusedRobotArt,MissionArt}`.
+- 저장: `src/lib/world-model.ts` `GameState.version = 3`, 키 `hyunjun-game-v2`. **버전 숫자만 올리지 말 것**(225·235·307행 근처가 `version === 3`일 때만 구매 차량을 그대로 읽음). 로봇은 `robots` 칸.
+- 배포: `.github/workflows/pages.yml`이 PR에서 빌드 검증, `main` push 후 배포. 최근 배포 성공 run `41263091874`(PR #40).
 - **CI 및 Pages 배포 성공은 실제 삼성 브라우저/S Pen/화면 사용성 검증을 의미하지 않는다.**
 
 ## 문서 SSOT와 읽기 순서
@@ -98,3 +99,26 @@
 - 해안선/모래/파도, 지역명, 스폰 겹침, 로봇 크기 정리. **비행기 추가**(활주로 x5780..6980,y1500; 땅/활주로만 착륙). HWQ-03 '비상도'는 비행기일 수 있으나 미확정.
 - 남은 문제: 수중 119 팝업, 지도 모달 문구/내용, `life-world.ts` 잔재, 항구 아트. 실기기 UAT NOT RUN.
 - 검증 방법: `bun run build:pages` → `bun run preview:pages` → playwright-core + `~/.cache/ms-playwright/chromium_headless_shell-1234`.
+
+## 2026-10-25 ~ 11-01 기록 (PR #32 ~ #40)
+
+- PR #32~#34: 섬 6곳·바닷속 비행기·맥도날드 3곳·아빠 회사·집 5단계·이사, 실내에서 가족 보이기, 집 메뉴 정리.
+- PR #35: 생활 건물·이웃집 41곳 실내. 따라온 아빠가 회사에서 두 명으로 보이던 문제 수정.
+- PR #36: 로봇 합체 월드 v1.0 기획(`docs/robot-fusion/2026-10-31-v1.0/`). 원문 보존, RBQ 질문, RB 요구사항 ID, 합체 진행표.
+- PR #37 → #38 → #40: 로봇 만나기·카드 7회 → 악당 전투·합체·정비소 → **요구사항 v2.0 로봇 소환 시계 통합**. #40이 #38과 #39(GitHub 커넥터로 만든 시안, 닫음)를 대신했다.
+  - 요구사항 v2.0 원문과 수락 기준 AT-01~18: `docs/robot-fusion/2026-11-01-watch-integration/`. 11월 1일 정정(카드는 시계에 이미 저장, 7회 = 지금 로봇이 강해짐, 진짜 한 몸 합체)이 10월 31일 문서보다 우선한다.
+  - AT-01~15는 headless 브라우저(390×844 터치, 1280×900)로 게임 상태(`data-*`)와 저장값까지 PASS. AT-16 일부, AT-17·18은 P1/P2.
+  - **결정:** 소환하면 처음에는 로봇에 탄다(2026-11-01 현준이 선택). 따라오기는 시계에서 고른다.
+  - 아직 임시안(현준이 확인 전): 악당 이름 "녹슨 톱니 로봇", 무기 모양, 화면 이름(경찰 로봇 등, 상표 검색 전 설명형), 로봇이 나와 있을 때 `차 타기` 자리에 `합체`·`무기`가 나오는 배치.
+- 검증 방법: `bun run build:pages` → `bun run preview:pages --port 4173` → `PLAYWRIGHT_CORE_PATH`, `CHROMIUM_EXECUTABLE`을 지정하고 `node --experimental-strip-types scripts/verify-<이름>.cjs`. 로봇은 `verify-robot-world.cjs`, 회귀는 `verify-building-interiors.cjs`(빠른 실행 `PHJ_BUILDING_SMOKE=1`), `verify-child-play.cjs`, `verify-living-world.cjs`.
+- 작업 방식: 기능 브랜치 → 로컬 커밋 → 보호자 승인 후 push·PR → CI 통과 → 보호자 승인 후 병합. Codex 독립 리뷰가 두 번 다 실제 버그를 찾았다. 큰 기능은 병합 전에 리뷰를 받는다.
+
+## 다음 작업 (2026-11-01 기준, 위에서부터)
+
+1. **현준이 실기기 놀이 확인 (보호자)**: 삼성 브라우저·S Pen으로 로봇 시계를 해 보고 도둑 속도, 버튼 크기, `차 타기` 버튼 배치를 정한다. 결과에 따라 바로 조정한다.
+2. **안 돌린 검사 채우기**: 로봇이 나온 채 비행기·잠수함·호수 진입(브라우저), 화면 회전·큰 글씨·더 작은 화면, 가족방 성능 검사(`docs/multiplayer/PLAN_SUPABASE_2026-10-20.md`의 시험 서버 절차).
+3. **로봇 P1**: 황금·다이아·궁극 등급과 그림, 새 계열(자동차·바다·공룡·강철), 황금 강철 지역과 보스, 5·10·20단 합체 연출, 화재·사고 등 추가 임무.
+4. **이름 확정**: 로봇·악당·시계 화면 이름을 상표 검색 후 현준이와 정한다(`02_REVIEW_AND_SUPPLEMENT.md` R4, RBQ-09).
+5. **코드 정리**: `Village.tsx`(1750줄)의 탈것·로봇 모드를 하나의 상태로 합치는 설계 결정, `src/game/life-world.ts`의 안 쓰는 코드 정리, 예전 화면 문제(안내문 중복, 작은 버튼, 지도에 바다·비행장 없음, 119 팝업) 재점검.
+6. **문서 정리**: 흩어진 문서를 하나로 묶는 목록 문서와 깨진 링크 검사 도구, 낡은 `docs/multiplayer/PLAN_2026-10-19.md`(Cloudflare안, 실제는 Supabase) 정리.
+7. **아직 열린 요청**: `17_KID_REQUESTS_ISLANDS_TOWN.md`의 OPEN(맥도날드에서 직접 팔기, 손 떼도 앞으로 가기, 잠수함 승객 놀이, 나라 표현)과 `08_DECISIONS.md` D-01~10. 공개 저장소의 아이 실명 공개 범위도 보호자가 정한다.

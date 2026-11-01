@@ -137,25 +137,31 @@ async function open(browser, viewport, save, errors) {
       await page.locator('[data-robot-actor][data-phase="summoning"]').waitFor();
       await page.locator('[data-robot-actor][data-phase="active"]').waitFor();
       assert.equal(await attr(actor, "data-team"), "rb-fire");
-      assert.equal(await attr(actor, "data-mode"), "follow");
-      const p0 = await position();
-      const a0 = Number(await attr(actor, "data-x"));
-      assert.ok(Math.abs(a0 - p0.x) > 40, "robot stands apart from the player");
-      console.log(`PASS ${name} AT-02/03 watch cards, summon a separate world actor`);
-
-      // AT-04: the robot follows through the world, and can be ridden.
-      await move("x", p0.x + 250);
-      await settle();
-      const a1 = Number(await attr(actor, "data-x"));
-      assert.ok(a1 - a0 > 150, `actor followed ${a0} -> ${a1}`);
-      await btn("⌚ 시계").click();
-      await page.getByRole("button", { name: "🕹 로봇 타기" }).click();
+      // A new robot starts ridden (Hyunjun's choice): it moves with the joystick.
       assert.equal(await attr(actor, "data-mode"), "ride");
-      await move("x", p0.x);
-      assert.ok(Math.abs(Number(await attr(actor, "data-x")) - p0.x) < 20, "ridden robot moves");
+      const p0 = await position();
+      assert.ok(Math.abs(Number(await attr(actor, "data-x")) - p0.x) < 20);
+      console.log(`PASS ${name} AT-02/03 watch cards, summon a robot into the world (ridden)`);
+
+      // AT-04: riding moves the robot; following makes it a separate actor that walks after.
+      await move("x", p0.x + 250);
+      assert.ok(
+        Math.abs(Number(await attr(actor, "data-x")) - (p0.x + 250)) < 20,
+        "ridden robot moves",
+      );
       await btn("⌚ 시계").click();
       await page.getByRole("button", { name: "🚶 따라오게 하기" }).click();
       assert.equal(await attr(actor, "data-mode"), "follow");
+      const a0 = Number(await attr(actor, "data-x"));
+      await move("x", p0.x - 100);
+      await settle();
+      const p1 = await position();
+      const a1 = Number(await attr(actor, "data-x"));
+      assert.ok(a0 - a1 > 200, `actor followed ${a0} -> ${a1}`);
+      assert.ok(Math.abs(a1 - p1.x) > 40, "a following robot walks apart from the player");
+      await btn("⌚ 시계").click();
+      await page.getByRole("button", { name: "🕹 로봇 타기" }).click();
+      assert.equal(await attr(actor, "data-mode"), "ride");
       console.log(`PASS ${name} AT-04 follow and ride move the robot in the world`);
 
       // AT-05/06/07: real one-body fusion, 2 vs 3, and split keeps every card.
