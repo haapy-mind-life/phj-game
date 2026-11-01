@@ -611,7 +611,8 @@ export function Village() {
       !truckOpen &&
       !seaOpen &&
       !station &&
-      !living.blocked,
+      !living.blocked &&
+      !robot.watchOpen,
     interact,
   );
   livingDirection.current = movement.direction;
