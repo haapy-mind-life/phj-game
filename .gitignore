@@ -35,3 +35,12 @@ dist-pages
 # Local Supabase CLI cache
 supabase/.temp/
 supabase/.branches/
+
+# Personal notes and downloaded-file metadata (never publish)
+*.local.md
+*:Zone.Identifier
+*:RVContext
+
+# Agent worktrees and handoff archives kept beside the checkout
+.worktrees/
+*_HANDOFF_*.zip
