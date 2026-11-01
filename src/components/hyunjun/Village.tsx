@@ -951,13 +951,13 @@ export function Village() {
                 <>
                   <RobotWorld player={pos} roaming={robot.roaming} nearTarget={robot.nearTarget} />
                   {robot.summoned && !robot.riding && (
-                    <div className="hj-watch-helper" data-watch-helper style={{ left: size.w / 2 + 85, top: size.h / 2 + 30 }}>
+                    <div className="hj-watch-helper" data-watch-helper style={{ left: pos.x + 85, top: pos.y + 30 }}>
                       <RobotSpeciesArt robot={robot.summoned} size={70} moving={walking} label={`소환된 ${robot.summoned.name}`} />
                       <b>{robot.fusionActive.length > 1 ? `${robot.fusionActive.length}단 합체` : robot.summoned.name}</b>
                     </div>
                   )}
                   {robot.mission && (
-                    <div className="hj-watch-enemy" data-watch-mission style={{ left: size.w / 2 + 160, top: size.h / 2 - 95 }}>
+                    <div className="hj-watch-enemy" data-watch-mission style={{ left: pos.x + 160, top: pos.y - 95 }}>
                       <span>{robot.mission.mode === "rescue" ? "도움이 필요한 친구" : robot.mission.mode === "thief" ? "도둑 로봇" : "악당 로봇"}</span>
                       <strong>{robot.mission.mode === "rescue" ? "도와줘!" : "출현!"}</strong>
                       <small>남은 단계 {robot.mission.hp}</small>
