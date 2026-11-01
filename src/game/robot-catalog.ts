@@ -5,6 +5,7 @@ import { isWalkable } from "./adventure.ts";
 // `workName` keeps the name Hyunjun gave; screens show the descriptive `name` until the
 // display names are checked (02_REVIEW_AND_SUPPLEMENT.md R4).
 export type RobotFamily = "police" | "fire" | "sky";
+export type RobotMissionMode = "villain" | "rescue" | "thief";
 export type RobotSpeciesId =
   "rb-police" | "rb-fire" | "rb-sky" | "rb-thunder-police" | "rb-volcano-fire" | "rb-laser-sky";
 export type RobotSpecies = {
