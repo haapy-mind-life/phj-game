@@ -77,8 +77,8 @@ export const KART_GAMES = [
     kind: "large",
     name: "박현준 온실 농장",
     genre: "농장",
-    description: "기존 밭 놀이로 연결돼요. 걸어 다니는 온실은 준비 중이에요.",
-    status: "existing",
+    description: "온실 안을 걸으며 여섯 밭에 심고, 물 주고, 수확해요.",
+    status: "playable",
     route: "/greenhouse",
   },
   {
