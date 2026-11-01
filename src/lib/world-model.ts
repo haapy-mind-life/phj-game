@@ -4,7 +4,9 @@ import { isRobotId, type RobotSpeciesId } from "../game/robot-catalog.ts";
 import {
   applyCardUse,
   meetRobot,
+  missionReward,
   normalizeRobots,
+  recordFusion,
   upgradeRobot,
   winBattle,
   type RobotProgress,
@@ -395,14 +397,25 @@ export type WorldAction =
   | { type: "remove-decor"; index: number }
   | { type: "robot-meet" | "robot-card" | "robot-upgrade"; id: RobotSpeciesId }
   | { type: "robot-win"; win: number }
+  | { type: "robot-fuse"; ids: RobotSpeciesId[] }
+  | { type: "robot-mission"; mode: "rescue" | "thief"; n: number }
   | { type: "toggle-yard"; id: YardId }
   | { type: "start-party"; now?: string }
   | { type: "collect-candy"; id: string; now?: string }
   | { type: "upgrade-house" }
   | { type: "move-house"; lot: string };
 export function reduceWorld(state: GameState, action: WorldAction): GameState {
-  if (action.type === "robot-win") {
-    const robots = winBattle(state.robots, action.win);
+  if (
+    action.type === "robot-win" ||
+    action.type === "robot-fuse" ||
+    action.type === "robot-mission"
+  ) {
+    const robots =
+      action.type === "robot-win"
+        ? winBattle(state.robots, action.win)
+        : action.type === "robot-fuse"
+          ? recordFusion(state.robots, action.ids)
+          : missionReward(state.robots, action.mode, action.n);
     return robots === state.robots ? state : { ...state, robots };
   }
   if (
