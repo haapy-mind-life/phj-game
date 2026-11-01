@@ -6,7 +6,7 @@ import {
   PEANUT_GOAL,
   tapPeanut,
   tickPeanuts,
-} from "@/game/peanut-engine";
+} from "@/game/play/peanut-engine";
 import { useGame } from "@/lib/game-state";
 import { Shell } from "./Shell";
 import "./peanuts.css";

@@ -8,7 +8,7 @@ import {
   chooseIngredient,
   cookTruck,
   serveTruck,
-} from "@/game/truck-play";
+} from "@/game/play/truck-play";
 import { PlayerAvatar } from "./PlayerAvatar";
 import { FriendArt } from "./FriendArt";
 import { Joystick } from "./Joystick";

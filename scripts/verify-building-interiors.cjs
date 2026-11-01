@@ -2,8 +2,8 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const { chromium } = require(process.env.PLAYWRIGHT_CORE_PATH || "playwright-core");
-const { TOWN_BUILDINGS } = require("../src/game/building-interiors.ts");
-const { RESTAURANTS, NEW_VILLAGES } = require("../src/game/world-content.ts");
+const { TOWN_BUILDINGS } = require("../src/game/world/building-interiors.ts");
+const { RESTAURANTS, NEW_VILLAGES } = require("../src/game/world/world-content.ts");
 const fixture = { buildings: TOWN_BUILDINGS, restaurants: RESTAURANTS, villages: NEW_VILLAGES };
 const out = process.env.PHJ_EVIDENCE_DIR || "/tmp/phj-building-evidence";
 fs.mkdirSync(out, { recursive: true });

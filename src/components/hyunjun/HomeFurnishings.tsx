@@ -1,5 +1,5 @@
 import type { FurnitureId } from "@/lib/world-model";
-import { homeFurniturePlacements } from "@/game/life-world";
+import { homeFurniturePlacements } from "@/game/world/life-world";
 function Furniture({ id }: { id: FurnitureId }) {
   const line = { stroke: "#897064", strokeWidth: 5 };
   if (id === "bed")

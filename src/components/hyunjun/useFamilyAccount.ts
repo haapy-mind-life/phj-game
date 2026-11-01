@@ -1,7 +1,7 @@
-import { familyAuthPassword } from "@/game/family-pin";
+import { familyAuthPassword } from "@/game/family/family-pin";
 import type { ReactNode } from "react";
-import type { Nickname } from "@/game/family-room";
-import { familyIdentity } from "@/game/family-identity";
+import type { Nickname } from "@/game/family/family-room";
+import { familyIdentity } from "@/game/family/family-identity";
 import {
   createContext,
   createElement,
@@ -13,7 +13,7 @@ import {
 } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { familyClient, familyConfig } from "@/lib/family-supabase";
-import { parseMembership, type FamilyMembership } from "@/game/family-config";
+import { parseMembership, type FamilyMembership } from "@/game/family/family-config";
 function useAccountState() {
   const [previewNickname, setPreviewNickname] = useState<Nickname>("현준");
   const [status, setStatus] = useState<"loading" | "signed-out" | "ready" | "not-member" | "error">(

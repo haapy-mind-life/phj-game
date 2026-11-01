@@ -1,7 +1,7 @@
 import { EmptyLot } from "./KidWorldArt";
 import { memo } from "react";
-import { MAP, PORTALS } from "@/game/adventure";
-import { VILLAGES } from "@/game/villages";
+import { MAP, PORTALS } from "@/game/world/adventure";
+import { VILLAGES } from "@/game/world/villages";
 import type { GameState } from "@/lib/world-model";
 import { GrowingHome, YardDecor } from "./UnifiedCoast";
 const trees = Array.from({ length: 75 }, (_, i) => ({

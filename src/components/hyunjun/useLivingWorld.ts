@@ -3,12 +3,12 @@ import {
   TOWN_BUILDINGS,
   BUILDING_ROOM,
   stepBuilding,
-} from "@/game/building-interiors";
-import { homeLot } from "@/game/kid-world";
-import { stepRestaurant } from "@/game/restaurant";
+} from "@/game/world/building-interiors";
+import { homeLot } from "@/game/world/kid-world";
+import { stepRestaurant } from "@/game/play/restaurant";
 import { useEffect, useRef, useState } from "react";
 import { useGame } from "@/lib/game-state";
-import type { Point } from "@/game/adventure";
+import type { Point } from "@/game/world/adventure";
 import {
   ACTORS,
   actorMayBeNear,
@@ -17,7 +17,7 @@ import {
   nearActor,
   portalHasPriority,
   homeActorPosition,
-} from "@/game/actors";
+} from "@/game/world/actors";
 import {
   RESTAURANTS,
   RESTAURANT_ROOM as ROOM,
@@ -25,16 +25,16 @@ import {
   isHalloween,
   FOOD_PRICES,
   restaurantById,
-} from "@/game/world-content";
-import { worldDistance } from "@/game/world-space";
+} from "@/game/world/world-content";
+import { worldDistance } from "@/game/world/world-space";
 import {
   newActivity,
   tickActivity,
   actActivity,
   type Activity,
   type ActivityKind,
-} from "@/game/activities";
-import { canWalkHome } from "@/game/life-world";
+} from "@/game/play/activities";
+import { canWalkHome } from "@/game/world/life-world";
 export function useLivingWorld({
   pos,
   lifePos,

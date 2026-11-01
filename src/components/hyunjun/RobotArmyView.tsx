@@ -1,10 +1,10 @@
 import { memo, useEffect, useState } from "react";
-import type { Point } from "@/game/adventure";
-import type { ArmyRobot } from "@/game/robot-army";
-import { robotById } from "@/game/robot-catalog";
-import { BLAST_RADIUS, BOSS_HP, BOSS_SHIELD } from "@/game/robot-giant-battle";
-import { RALLY_SITE } from "@/game/robot-mass-fusion";
-import { screenPoint, worldDistance } from "@/game/world-space";
+import type { Point } from "@/game/world/adventure";
+import type { ArmyRobot } from "@/game/robot/robot-army";
+import { robotById } from "@/game/robot/robot-catalog";
+import { BLAST_RADIUS, BOSS_HP, BOSS_SHIELD } from "@/game/robot/robot-giant-battle";
+import { RALLY_SITE } from "@/game/robot/robot-mass-fusion";
+import { screenPoint, worldDistance } from "@/game/world/world-space";
 import { GiantBossArt, MinionRobotArt } from "./GiantArt";
 import { RobotPortrait } from "./RobotPortrait";
 import type { useRobotArmy } from "./useRobotArmy";

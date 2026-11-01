@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Point } from "@/game/adventure";
-import { ARMY, armyPosition, squadOf } from "@/game/robot-army";
-import { robotById } from "@/game/robot-catalog";
-import { hasCard, resolveStrike, type RobotProgress } from "@/game/robot-engine";
+import type { Point } from "@/game/world/adventure";
+import { ARMY, armyPosition, squadOf } from "@/game/robot/robot-army";
+import { robotById } from "@/game/robot/robot-catalog";
+import { hasCard, resolveStrike, type RobotProgress } from "@/game/robot/robot-engine";
 import {
   BOSS_ARENA,
   GIANT_DAMAGE,
@@ -16,7 +16,7 @@ import {
   hitMinion,
   minionPosition,
   stepBoss,
-} from "@/game/robot-giant-battle";
+} from "@/game/robot/robot-giant-battle";
 import {
   RALLY_RANGE,
   RALLY_SITE,
@@ -26,8 +26,8 @@ import {
   idleFusion,
   splitFusion,
   stepFusion,
-} from "@/game/robot-mass-fusion";
-import { worldDelta, worldDistance } from "@/game/world-space";
+} from "@/game/robot/robot-mass-fusion";
+import { worldDelta, worldDistance } from "@/game/world/world-space";
 import type { WorldAction } from "@/lib/world-model";
 
 const TICK_MS = 100;

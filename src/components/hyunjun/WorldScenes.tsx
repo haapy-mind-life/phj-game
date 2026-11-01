@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { MAP, type Point } from "@/game/adventure";
+import { MAP, type Point } from "@/game/world/adventure";
 import {
   CAMP,
   STATIONS,
@@ -8,7 +8,7 @@ import {
   thiefPosition,
   type CallStatus,
   type WorldCall,
-} from "@/game/world-events";
+} from "@/game/world/world-events";
 
 type Props = {
   player: Point;

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type PointerEvent } from "react";
-import { DOTS, traceNext } from "@/game/constellation";
+import { DOTS, traceNext } from "@/game/play/constellation";
 import { useGame } from "@/lib/game-state";
 export function Constellation({ onClose }: { onClose: () => void }) {
   const { dispatch, getState, ready } = useGame();

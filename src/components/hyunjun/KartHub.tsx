@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { KART_GAMES } from "@/game/kart-catalog";
+import { KART_GAMES } from "@/game/play/kart-catalog";
 import { useGame } from "@/lib/game-state";
 import "./kart.css";
 

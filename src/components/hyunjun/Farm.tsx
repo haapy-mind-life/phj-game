@@ -9,7 +9,7 @@ import {
   greenhouseAction,
   nearGreenhouseDoor,
   stepGreenhouse,
-} from "@/game/greenhouse";
+} from "@/game/play/greenhouse";
 import { CropArt } from "./Art";
 import { PlayerAvatar } from "./PlayerAvatar";
 import { Joystick } from "./Joystick";

@@ -1,8 +1,8 @@
 import { usePlayerIdentity } from "./useFamilyAccount";
 import { useEffect, useRef, useState } from "react";
 import { useGame } from "@/lib/game-state";
-import { DIVE_SIZE, DIVE_TREASURES, stepDive } from "@/game/place-play";
-import { characterUrl } from "@/game/character-art";
+import { DIVE_SIZE, DIVE_TREASURES, stepDive } from "@/game/play/place-play";
+import { characterUrl } from "@/game/world/character-art";
 import { Joystick } from "./Joystick";
 import { useMovement } from "./useMovement";
 import { useReducedMotion } from "./useReducedMotion";

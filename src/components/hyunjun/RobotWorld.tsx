@@ -1,4 +1,4 @@
-import type { Point } from "@/game/adventure";
+import type { Point } from "@/game/world/adventure";
 import {
   RESCUE_PATCHES,
   RESCUE_SPOT,
@@ -6,8 +6,8 @@ import {
   VILLAIN_SPOT,
   WORKSHOP,
   robotById,
-} from "@/game/robot-catalog";
-import { screenPoint, worldDistance } from "@/game/world-space";
+} from "@/game/robot/robot-catalog";
+import { screenPoint, worldDistance } from "@/game/world/world-space";
 import { FriendArt } from "./FriendArt";
 import { FirePatchArt, ThiefRobotArt } from "./MissionArt";
 import { RobotActorView } from "./RobotActorView";

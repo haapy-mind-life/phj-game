@@ -5,7 +5,7 @@ import {
   movePlayer,
   nearbyEntity,
   interactionForEntity,
-} from "../world/world-exploration.ts";
+} from "../game/world/world-exploration.ts";
 import { migrateSave, reduceWorld } from "./world-model.ts";
 
 test("A/D movement changes world position and never leaves the walkable bounds", () => {

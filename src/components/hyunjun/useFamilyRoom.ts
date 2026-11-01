@@ -9,16 +9,16 @@ import {
   type FamilyRegion,
   type PlayerMessage,
   type RemoteMap,
-} from "@/game/family-room";
+} from "@/game/family/family-room";
 import {
   createBroadcastTransport,
   type FamilyTransport,
   type FamilyConnectionStatus,
-} from "@/game/family-transport";
-import { createSupabaseTransport } from "@/game/supabase-transport";
-import { FAMILY_SPACE_CODE } from "@/game/family-config";
+} from "@/game/family/family-transport";
+import { createSupabaseTransport } from "@/game/family/supabase-transport";
+import { FAMILY_SPACE_CODE } from "@/game/family/family-config";
 import { familyClient } from "@/lib/family-supabase";
-import { wrapPoint } from "@/game/world-space";
+import { wrapPoint } from "@/game/world/world-space";
 import { useFamilyAccount } from "./useFamilyAccount";
 import type { Outfit } from "@/lib/world-model";
 type Self = {

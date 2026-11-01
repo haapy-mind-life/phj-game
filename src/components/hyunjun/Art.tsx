@@ -1,4 +1,4 @@
-import type { FamilyAppearanceId } from "@/game/family-identity";
+import type { FamilyAppearanceId } from "@/game/family/family-identity";
 import { PlayerAvatar } from "./PlayerAvatar";
 import type { Outfit, FurnitureId, CropId } from "@/lib/world-model";
 export function Star() {

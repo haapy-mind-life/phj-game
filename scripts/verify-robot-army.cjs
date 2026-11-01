@@ -6,10 +6,10 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const { chromium } = require(process.env.PLAYWRIGHT_CORE_PATH || "playwright-core");
-const { ARMY, armyPosition } = require("../src/game/robot-army.ts");
-const { RALLY_SITE } = require("../src/game/robot-mass-fusion.ts");
-const { BOSS_ARENA, MINION_CAMP } = require("../src/game/robot-giant-battle.ts");
-const { VILLAGES } = require("../src/game/villages.ts");
+const { ARMY, armyPosition } = require("../src/game/robot/robot-army.ts");
+const { RALLY_SITE } = require("../src/game/robot/robot-mass-fusion.ts");
+const { BOSS_ARENA, MINION_CAMP } = require("../src/game/robot/robot-giant-battle.ts");
+const { VILLAGES } = require("../src/game/world/villages.ts");
 const out = process.env.PHJ_EVIDENCE_DIR || "/tmp/phj-army-evidence";
 const url = process.env.PHJ_PREVIEW_URL || "http://127.0.0.1:4173/phj-game/";
 fs.mkdirSync(out, { recursive: true });

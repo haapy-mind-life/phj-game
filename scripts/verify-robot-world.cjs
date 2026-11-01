@@ -6,7 +6,7 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const { chromium } = require(process.env.PLAYWRIGHT_CORE_PATH || "playwright-core");
-const { VILLAIN_SPOT, RESCUE_SPOT, THIEF_HOME } = require("../src/game/robot-catalog.ts");
+const { VILLAIN_SPOT, RESCUE_SPOT, THIEF_HOME } = require("../src/game/robot/robot-catalog.ts");
 const out = process.env.PHJ_EVIDENCE_DIR || "/tmp/phj-robot-evidence";
 const url = process.env.PHJ_PREVIEW_URL || "http://127.0.0.1:4173/phj-game/";
 fs.mkdirSync(out, { recursive: true });

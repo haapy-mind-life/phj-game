@@ -1,7 +1,13 @@
-import { ROOM_RUN_REWARD } from "../game/room-escape.ts";
-import { CARS, canBuyCar, ENGINE_COST, SPECIAL_COST, type CarUpgrade } from "../game/cars.ts";
-import { HOME_LOTS, type HomeLotId } from "../game/kid-world.ts";
-import { isRobotId, type RobotSpeciesId } from "../game/robot-catalog.ts";
+import { ROOM_RUN_REWARD } from "../game/play/room-escape.ts";
+import {
+  CARS,
+  canBuyCar,
+  ENGINE_COST,
+  SPECIAL_COST,
+  type CarUpgrade,
+} from "../game/economy/cars.ts";
+import { HOME_LOTS, type HomeLotId } from "../game/world/kid-world.ts";
+import { isRobotId, type RobotSpeciesId } from "../game/robot/robot-catalog.ts";
 import {
   applyCardUse,
   armyResult,
@@ -13,7 +19,7 @@ import {
   upgradeRobot,
   winBattle,
   type RobotProgress,
-} from "../game/robot-engine.ts";
+} from "../game/robot/robot-engine.ts";
 import {
   ACTOR_IDS,
   OUTFITS,
@@ -22,7 +28,7 @@ import {
   PARTY_LIMIT,
   isHalloween,
   FOOD_PRICES,
-} from "../game/world-content.ts";
+} from "../game/world/world-content.ts";
 export type CropId = "radish" | "beet" | "lettuce" | "carrot" | "sunflower";
 export type Outfit = "mint" | "peach" | "lavender" | (typeof OUTFITS)[number]["id"];
 export type Wallpaper = "cream" | "sky" | "rose";

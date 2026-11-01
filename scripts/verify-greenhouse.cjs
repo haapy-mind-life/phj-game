@@ -2,7 +2,7 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const { chromium } = require(process.env.PLAYWRIGHT_CORE_PATH || "playwright-core");
-const { REWARDS } = require("../src/game/world-content.ts");
+const { REWARDS } = require("../src/game/world/world-content.ts");
 const { migrateSave, CROPS } = require("../src/lib/world-model.ts");
 const url = process.env.PHJ_PREVIEW_URL || "http://127.0.0.1:4175/phj-game/";
 const out = process.env.PHJ_EVIDENCE_DIR || "/tmp/phj-greenhouse-evidence";

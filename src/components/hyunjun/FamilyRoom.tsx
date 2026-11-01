@@ -1,4 +1,4 @@
-import { familyIdentity } from "@/game/family-identity";
+import { familyIdentity } from "@/game/family/family-identity";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   EMOTES,
@@ -7,9 +7,9 @@ import {
   visibleRemotes,
   type FamilyRegion,
   type Nickname,
-} from "@/game/family-room";
-import { screenPoint } from "@/game/world-space";
-import type { Point } from "@/game/adventure";
+} from "@/game/family/family-room";
+import { screenPoint } from "@/game/world/world-space";
+import type { Point } from "@/game/world/adventure";
 import type { useFamilyRoom } from "./useFamilyRoom";
 import { PlayerAvatar } from "./PlayerAvatar";
 type Room = ReturnType<typeof useFamilyRoom>;

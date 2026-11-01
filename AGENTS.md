@@ -15,5 +15,5 @@
 - One agent per working tree. Before starting, run `git status --short` and `git branch --show-current`; if another agent's uncommitted changes are present, do not edit, stash, format or switch branches there. Create your own tree instead: `git worktree add ../phj-game-<topic> -b <branch> origin/main`. Why: two agents sharing one checkout overwrite each other's in-flight edits.
 - Run `npm run check` (unit tests + `tsc --noEmit` + lint) before every commit that touches `src/`. CI runs the same steps plus both builds.
 - Do not run repo-wide `npm run format` or `eslint --fix` while other work is uncommitted; format only the files you changed.
-- Put new game rules in `src/game/` as pure functions with a `*.test.ts` next to them before wiring UI. Keep `src/components/hyunjun/Village.tsx` a connector: new worlds or games get their own component and hook instead of growing it.
+- Put new game rules in the matching `src/game/` domain folder (`world`, `robot`, `play`, `economy`, `family`) as pure functions with a `*.test.ts` next to them before wiring UI. Keep `src/components/hyunjun/Village.tsx` a connector: new worlds or games get their own component and hook instead of growing it.
 - Screenshot evidence: commit only the shots a document links to, at phone/tablet size, and prefer one shot per acceptance item. Bulk capture folders stay local.

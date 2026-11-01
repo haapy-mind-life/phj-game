@@ -1,5 +1,5 @@
 import { useId, type JSX } from "react";
-import { LEGENDS, type LegendId } from "@/game/robot-catalog";
+import { LEGENDS, type LegendId } from "@/game/robot/robot-catalog";
 import "./robot-giant.css";
 
 // Six legendary robots. Each has its own silhouette so a child can tell them apart even when

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { migrateSave, reduceWorld } from "./world-model.ts";
-import { ROOM_RUN_REWARD } from "../game/room-escape.ts";
+import { ROOM_RUN_REWARD } from "../game/play/room-escape.ts";
 test("room clear uses one settlement, preserves assets and survives reload", () => {
   const before = migrateSave({
     version: 3,

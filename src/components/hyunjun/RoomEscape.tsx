@@ -16,7 +16,7 @@ import {
   sameCell,
   tickRoom,
   type RoomDirection,
-} from "@/game/room-escape";
+} from "@/game/play/room-escape";
 import { useGame } from "@/lib/game-state";
 import { Shell } from "./Shell";
 import "./rooms.css";

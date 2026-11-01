@@ -1,5 +1,5 @@
 import { useGame } from "@/lib/game-state";
-import { CARS, carById, canBuyCar, ENGINE_COST, SPECIAL_COST } from "@/game/cars";
+import { CARS, carById, canBuyCar, ENGINE_COST, SPECIAL_COST } from "@/game/economy/cars";
 import { CarArt } from "./CarArt";
 const KEY = "hyunjun-selected-car-v1";
 export function loadCarId() {

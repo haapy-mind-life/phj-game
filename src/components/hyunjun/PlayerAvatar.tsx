@@ -1,7 +1,7 @@
 import { memo } from "react";
-import type { FamilyAppearanceId } from "@/game/family-identity";
+import type { FamilyAppearanceId } from "@/game/family/family-identity";
 import type { Outfit } from "@/lib/world-model";
-import { characterUrl } from "@/game/character-art";
+import { characterUrl } from "@/game/world/character-art";
 import { useReducedMotion } from "./useReducedMotion";
 export const PlayerAvatar = memo(function PlayerAvatar({
   identity = "hyunjun",
