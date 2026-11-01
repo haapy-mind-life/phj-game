@@ -45,6 +45,8 @@ export type RobotSpecies = {
   legendary?: LegendId;
   /** What this robot brings to the team, shown in the watch (provisional, RAQ-06). */
   role?: string;
+  /** Where to look for a legend, shown in the watch until it is found. */
+  hint?: string;
 };
 export const CARD_USES_TO_UNLOCK = 7;
 const SWORD: Weapon = { name: "빛 검", kind: "sword", range: 170, cooldownMs: 1100 };
@@ -144,6 +146,7 @@ export const LEGENDS: readonly RobotSpecies[] = [
     starter: false,
     legendary: "lg-shield",
     role: "막아 주기 · 거대 합체의 방패 어깨",
+    hint: "캐릭터 마을 왼쪽 위 길을 왔다 갔다 해.",
   },
   {
     id: "lg-wing",
@@ -158,6 +161,7 @@ export const LEGENDS: readonly RobotSpecies[] = [
     starter: false,
     legendary: "lg-wing",
     role: "멀리 날기 · 거대 합체의 큰 날개",
+    hint: "농장 마을 왼쪽 아래에서 하얀 날개를 찾아봐.",
   },
   {
     id: "lg-deep",
@@ -172,6 +176,7 @@ export const LEGENDS: readonly RobotSpecies[] = [
     starter: false,
     legendary: "lg-deep",
     role: "물속 힘 · 거대 합체의 다리 지느러미",
+    hint: "바다에 없어! 장난감 마을 아래쪽을 위아래로 걸어 다녀.",
   },
   {
     id: "lg-steel",
@@ -186,6 +191,7 @@ export const LEGENDS: readonly RobotSpecies[] = [
     starter: false,
     legendary: "lg-steel",
     role: "튼튼함 · 거대 합체의 가슴 갑옷",
+    hint: "벚꽃 마을에서 위쪽으로 쭉 올라가 봐. 회색 몸에 주황 무늬야.",
   },
   {
     id: "lg-thunder",
@@ -200,6 +206,7 @@ export const LEGENDS: readonly RobotSpecies[] = [
     starter: false,
     legendary: "lg-thunder",
     role: "빠른 공격 · 거대 합체의 번개 대포",
+    hint: "부장 마을 오른쪽 위에서 노란 로봇이 네모로 돌고 있어.",
   },
   {
     id: "lg-guardian",
@@ -214,6 +221,7 @@ export const LEGENDS: readonly RobotSpecies[] = [
     starter: false,
     legendary: "lg-guardian",
     role: "지켜 주기 · 거대 합체의 톱니 왕관",
+    hint: "호박 마을 아래쪽에서 금빛 로봇을 찾아봐.",
   },
 ];
 /** Every robot the watch knows: the six regular robots, then the six legends. */

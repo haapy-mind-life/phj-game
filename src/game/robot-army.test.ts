@@ -13,6 +13,7 @@ import {
 } from "./robot-army.ts";
 import { isWalkable, PORTALS, SPAWN } from "./adventure.ts";
 import { worldDistance } from "./world-space.ts";
+import { LEGENDS } from "./robot-catalog.ts";
 import { RESCUE_SPOT, THIEF_HOME, THIEF_LEASH, VILLAIN_SPOT, WORKSHOP } from "./robot-catalog.ts";
 import { DELIVERY_GARAGE } from "./place-play.ts";
 import { STATIONS } from "./world-events.ts";
@@ -102,4 +103,18 @@ test("only nearby robots are handed to the screen, capped", () => {
   assert.ok(near.length > 0 && near.length <= 12);
   assert.ok(near.every((n) => n.d <= 900));
   assert.ok(near.every((n, i) => i === 0 || near[i - 1]!.d <= n.d));
+});
+
+test("each legend's hint names its squad's village and points the right way", () => {
+  for (const legend of LEGENDS) {
+    const robot = ARMY.find((r) => r.species === legend.id)!;
+    const { region, anchor } = squadOf(robot);
+    const village = VILLAGES.find((v) => v.id === region)!;
+    const hint = legend.hint ?? "";
+    assert.ok(hint.includes(village.name), `${legend.id} hint should name ${village.name}`);
+    if (hint.includes("왼쪽")) assert.ok(anchor.x < village.x, legend.id);
+    if (hint.includes("오른쪽")) assert.ok(anchor.x > village.x, legend.id);
+    if (/쪽 위|위쪽/.test(hint)) assert.ok(anchor.y < village.y, legend.id);
+    if (/쪽 아래|아래쪽/.test(hint)) assert.ok(anchor.y > village.y, legend.id);
+  }
 });

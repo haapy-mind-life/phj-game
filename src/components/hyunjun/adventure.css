@@ -2601,6 +2601,21 @@
   font-size: 14px;
   margin: 6px 0;
 }
+.hj-legend-hints {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.hj-legend-hints li {
+  overflow-wrap: anywhere;
+}
+.hj-legend-hints b {
+  display: block;
+}
 .hj-watch-fuse-preview {
   display: flex;
   justify-content: center;
