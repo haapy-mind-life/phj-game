@@ -79,7 +79,7 @@ export function useRobotWorld({
     setWatchOpen(false);
     message(`${robotById(id).name} 소환! 시계에서 카드 그림을 고르니 로봇이 나타났어!`);
   };
-  const useCard = (): boolean => {
+  const activateCard = (): boolean => {
     if (!allowed || !activeId) return false;
     if (uses >= CARD_USES_TO_UNLOCK) {
       message(`${activeRobot?.name} 카드 7/7 완료! 더 강한 카드가 열렸어.`);
@@ -140,12 +140,12 @@ export function useRobotWorld({
     const nextHp = mission.hp - (fusionActive.length >= 2 ? 2 : 1);
     if (nextHp > 0) {
       setMission({ ...mission, hp: nextHp });
-      useCard();
+      activateCard();
       message(`${activeRobot?.skill} 발사! ${mission.mode === "rescue" ? "구조 지점" : "악당"}까지 ${nextHp}번 남았어!`);
       return;
     }
     dispatch({ type: "robot-mission", id: mission.id, mode: mission.mode });
-    useCard();
+    activateCard();
     setMission(null);
     message(mission.mode === "villain" ? "악당을 물리쳤어! 강화 재료를 받았어!"
       : mission.mode === "rescue" ? "친구 구출 성공! 정말 고마워!"
@@ -172,7 +172,7 @@ export function useRobotWorld({
   };
   const act = (): boolean => {
     if (!allowed) return false;
-    if (activeRobot && nearTarget && !mission) return useCard();
+    if (activeRobot && nearTarget && !mission) return activateCard();
     if (!riding && near && !summoned) {
       if (!hasCard(robots, near.id)) {
         dispatch({ type: "robot-meet", id: near.id });
@@ -195,6 +195,6 @@ export function useRobotWorld({
     fusionActive, fusionIds, toggleFusionMember, fuse,
     mission, startMission, attack, upgrade,
     watchOpen, setWatchOpen, selected, setSelected, summon,
-    roaming, nearTarget, uses, label, act, dismount, useCard,
+    roaming, nearTarget, uses, label, act, dismount, activateCard,
   };
 }
