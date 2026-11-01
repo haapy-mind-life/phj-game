@@ -326,6 +326,21 @@ async function open(browser, viewport, save, errors) {
         await btn("소환 시계 닫기").tap();
         await page.screenshot({ path: `${out}/at14-hud-${name}.png` });
         console.log("PASS phone AT-14 HUD and watch reachable by touch, no keyboard field");
+
+        // AT-15: map travel takes the robot along; going into a building sends it home.
+        await btn("지도").tap();
+        await btn("🛒 별빛 마트").tap();
+        await page.waitForTimeout(800);
+        const p = await position();
+        assert.ok(Math.abs(Number(await attr(actor, "data-x")) - p.x) < 200, "robot came along");
+        await g.action.tap();
+        await page.getByLabel("별빛 마트 실내", { exact: true }).waitFor();
+        assert.equal(await actor.count(), 0);
+        assert.ok((await hint.innerText()).length > 0);
+        await btn("건물 밖으로").first().tap();
+        await page.getByLabel("별빛 마트 실내", { exact: true }).waitFor({ state: "detached" });
+        assert.equal(await btn("⌚ 시계").count(), 1);
+        console.log("PASS phone AT-15 robot travels by map, returns to the watch in a building");
       }
       await page.close();
     }
