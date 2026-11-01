@@ -1,0 +1,397 @@
+/* Fused robot (FusedRobotArt) and robot mission props (MissionArt). */
+
+.hj-fused {
+  overflow: visible;
+}
+.hj-fused .hj-fpart,
+.hj-fused .hj-farm,
+.hj-fused .hj-fleg,
+.hj-fused .hj-fbody,
+.hj-fused .hj-fweapon,
+.hj-fused .hj-fboom {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Assembling: torso appears, head drops from above, arms fly in from the sides, legs rise from
+   below, wings/backpack open behind; everything locks at ~1.4s with a bright flash. */
+.hj-fused.phase-assembling .hj-fpart-torso {
+  animation: hj-fz-torso-in 0.8s cubic-bezier(0.2, 0.8, 0.3, 1.2) both;
+}
+.hj-fused.phase-assembling .hj-fpart-head {
+  animation: hj-fz-head-in 0.8s 0.15s cubic-bezier(0.2, 0.8, 0.3, 1.2) both;
+}
+.hj-fused.phase-assembling .hj-farm-l {
+  animation: hj-fz-arm-l-in 0.8s 0.3s cubic-bezier(0.2, 0.8, 0.3, 1.2) both;
+}
+.hj-fused.phase-assembling .hj-farm-r {
+  animation: hj-fz-arm-r-in 0.8s 0.3s cubic-bezier(0.2, 0.8, 0.3, 1.2) both;
+}
+.hj-fused.phase-assembling .hj-fpart-legs {
+  animation: hj-fz-legs-in 0.8s 0.45s cubic-bezier(0.2, 0.8, 0.3, 1.2) both;
+}
+.hj-fused.phase-assembling .hj-fpart-wings,
+.hj-fused.phase-assembling .hj-fpart-backpack {
+  animation: hj-fz-back-in 0.8s 0.6s cubic-bezier(0.2, 0.8, 0.3, 1.2) both;
+}
+.hj-fused.phase-assembling .hj-fflash {
+  animation: hj-fz-flash 1.7s ease-out both;
+  pointer-events: none;
+}
+
+@keyframes hj-fz-torso-in {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+}
+@keyframes hj-fz-head-in {
+  from {
+    transform: translateY(-110px) rotate(-14deg);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes hj-fz-arm-l-in {
+  from {
+    transform: translateX(-110px) rotate(-24deg);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes hj-fz-arm-r-in {
+  from {
+    transform: translateX(110px) rotate(24deg);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes hj-fz-legs-in {
+  from {
+    transform: translateY(100px) rotate(8deg);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes hj-fz-back-in {
+  from {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+}
+@keyframes hj-fz-flash {
+  0%,
+  78% {
+    opacity: 0;
+  }
+  86% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Splitting: parts fly outward and fade. */
+.hj-fused.phase-splitting .hj-fpart-head {
+  animation: hj-fz-head-out 0.8s ease-in forwards;
+}
+.hj-fused.phase-splitting .hj-farm-l {
+  animation: hj-fz-arm-l-out 0.8s ease-in forwards;
+}
+.hj-fused.phase-splitting .hj-farm-r {
+  animation: hj-fz-arm-r-out 0.8s ease-in forwards;
+}
+.hj-fused.phase-splitting .hj-fpart-legs {
+  animation: hj-fz-legs-out 0.8s ease-in forwards;
+}
+.hj-fused.phase-splitting .hj-fpart-torso,
+.hj-fused.phase-splitting .hj-fpart-wings,
+.hj-fused.phase-splitting .hj-fpart-backpack {
+  animation: hj-fz-fade-out 0.8s ease-in forwards;
+}
+.hj-fused.phase-splitting .hj-faura {
+  animation: hj-fz-fade-out 0.6s ease-in forwards;
+}
+@keyframes hj-fz-head-out {
+  to {
+    transform: translateY(-110px) rotate(14deg);
+    opacity: 0;
+  }
+}
+@keyframes hj-fz-arm-l-out {
+  to {
+    transform: translateX(-110px) rotate(-24deg);
+    opacity: 0;
+  }
+}
+@keyframes hj-fz-arm-r-out {
+  to {
+    transform: translateX(110px) rotate(24deg);
+    opacity: 0;
+  }
+}
+@keyframes hj-fz-legs-out {
+  to {
+    transform: translateY(90px);
+    opacity: 0;
+  }
+}
+@keyframes hj-fz-fade-out {
+  to {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+
+/* Fused idle details. */
+.hj-fused .hj-faura {
+  animation: hj-fz-aura 1.6s ease-in-out infinite alternate;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes hj-fz-aura {
+  from {
+    opacity: 0.55;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+}
+.hj-fused .hj-fcore {
+  animation: hj-fz-blink 1.2s ease-in-out infinite alternate;
+}
+.hj-fused .hj-fsiren.red {
+  animation: hj-fz-blink 0.5s steps(2) infinite;
+}
+.hj-fused .hj-fsiren.blue {
+  animation: hj-fz-blink 0.5s steps(2) 0.25s infinite;
+}
+.hj-fused .hj-fjet {
+  animation: hj-fz-jet 0.25s ease-in-out infinite alternate;
+  transform-box: fill-box;
+  transform-origin: top center;
+}
+@keyframes hj-fz-blink {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.45;
+  }
+}
+@keyframes hj-fz-jet {
+  from {
+    transform: scaleY(0.75);
+  }
+  to {
+    transform: scaleY(1.15);
+  }
+}
+
+/* Moving: whole body bobs, legs step. */
+.hj-fused.phase-fused.moving .hj-fbody {
+  animation: hj-fz-bob 0.5s ease-in-out infinite alternate;
+}
+.hj-fused.phase-fused.moving .hj-fleg {
+  transform-origin: top center;
+}
+.hj-fused.phase-fused.moving .hj-fleg-l {
+  animation: hj-fz-step 0.5s ease-in-out infinite alternate;
+}
+.hj-fused.phase-fused.moving .hj-fleg-r {
+  animation: hj-fz-step 0.5s ease-in-out infinite alternate-reverse;
+}
+@keyframes hj-fz-bob {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-3px);
+  }
+}
+@keyframes hj-fz-step {
+  from {
+    transform: rotate(-6deg);
+  }
+  to {
+    transform: rotate(6deg);
+  }
+}
+
+/* Weapon draw. */
+.hj-fused .hj-fweapon.drawn {
+  animation: hj-fz-draw 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+}
+.hj-fused .hj-fweapon.stowed {
+  animation: hj-fz-stow 0.3s ease-out both;
+}
+.hj-fused .hj-fboom {
+  animation: hj-fz-spin 0.6s linear infinite;
+}
+.hj-fused .hj-fspray {
+  animation: hj-fz-blink 0.3s ease-in-out infinite alternate;
+}
+@keyframes hj-fz-draw {
+  from {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+}
+@keyframes hj-fz-stow {
+  from {
+    transform: scale(1.4);
+    opacity: 0.4;
+  }
+}
+@keyframes hj-fz-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Thief robot. */
+.hj-thief {
+  overflow: visible;
+}
+.hj-thief .hj-thief-leg,
+.hj-thief .hj-thief-dizzy,
+.hj-thief .hj-thief-ring,
+.hj-thief .hj-thief-smoke {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.hj-thief.moving .hj-thief-leg {
+  transform-origin: top center;
+}
+.hj-thief.moving .hj-thief-leg.left {
+  animation: hj-fz-step 0.3s ease-in-out infinite alternate;
+}
+.hj-thief.moving .hj-thief-leg.right {
+  animation: hj-fz-step 0.3s ease-in-out infinite alternate-reverse;
+}
+.hj-thief .hj-thief-dizzy {
+  animation: hj-fz-spin 1.2s linear infinite;
+}
+.hj-thief .hj-thief-ring {
+  animation: hj-thief-ring 0.9s ease-in-out infinite alternate;
+}
+.hj-thief .hj-thief-smoke {
+  animation: hj-smoke-rise 1.6s ease-out infinite;
+}
+@keyframes hj-thief-ring {
+  from {
+    transform: scale(0.9);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+@keyframes hj-smoke-rise {
+  from {
+    transform: translateY(4px) scale(0.85);
+    opacity: 0.9;
+  }
+  to {
+    transform: translateY(-8px) scale(1.15);
+    opacity: 0.2;
+  }
+}
+
+/* Fire patch. */
+.hj-firepatch {
+  overflow: visible;
+}
+.hj-firepatch .hj-flame {
+  transform-box: fill-box;
+  transform-origin: bottom center;
+  animation: hj-flicker 0.45s ease-in-out infinite alternate;
+}
+.hj-firepatch .hj-flame.f2 {
+  animation-delay: 0.15s;
+}
+.hj-firepatch .hj-flame.f3 {
+  animation-delay: 0.3s;
+}
+.hj-firepatch .hj-firepatch-smoke {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hj-smoke-rise 1.8s ease-out infinite;
+}
+@keyframes hj-flicker {
+  from {
+    transform: scaleY(0.88) skewX(-3deg);
+  }
+  to {
+    transform: scaleY(1.08) skewX(3deg);
+  }
+}
+
+/* Summon beam. */
+.hj-summon {
+  overflow: visible;
+  pointer-events: none;
+}
+.hj-summon .hj-summon-beam,
+.hj-summon .hj-summon-ring,
+.hj-summon .hj-summon-sparks {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.hj-summon .hj-summon-beam {
+  animation: hj-summon-beam 0.9s ease-out both;
+}
+.hj-summon .hj-summon-ring {
+  animation: hj-summon-ring 1s ease-out infinite;
+}
+.hj-summon .hj-summon-ring.r2 {
+  animation-delay: 0.5s;
+}
+.hj-summon .hj-summon-sparks {
+  animation: hj-fz-blink 0.35s ease-in-out infinite alternate;
+}
+@keyframes hj-summon-beam {
+  from {
+    transform: scaleX(0.1);
+    opacity: 0;
+  }
+  40% {
+    transform: scaleX(1.2);
+    opacity: 1;
+  }
+}
+@keyframes hj-summon-ring {
+  from {
+    transform: scale(0.3);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1.3);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hj-fused *,
+  .hj-thief *,
+  .hj-firepatch *,
+  .hj-summon * {
+    animation: none !important;
+  }
+  .hj-fused.phase-splitting {
+    opacity: 0.3;
+  }
+  .hj-fused .hj-fflash {
+    display: none;
+  }
+}

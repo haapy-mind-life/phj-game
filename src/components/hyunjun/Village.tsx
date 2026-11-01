@@ -10,8 +10,10 @@ import { DELIVERY_GARAGE, MISSION_LABELS, type MissionKind } from "@/game/place-
 import { WorldExpansion, WorldCopies, LegacySection, WorldOverlay } from "./WorldExpansion";
 import { People } from "./People";
 import { RobotWorld } from "./RobotWorld";
-import { RobotSpeciesArt } from "./RobotSpeciesArt";
-import { useRobotWorld } from "./useRobotWorld";
+import { RobotActorView } from "./RobotActorView";
+import { robotById } from "@/game/robot-catalog";
+import { RobotWatch } from "./RobotWatch";
+import { useRobotWorld, type WatchTab } from "./useRobotWorld";
 import { RestaurantScene } from "./RestaurantScene";
 import { useLivingWorld } from "./useLivingWorld";
 import { LivingPanels, ActivityTargets } from "./LivingPanels";
@@ -139,6 +141,7 @@ export function Village() {
   const [altitude, setAltitude] = useState(0);
   const [submerged, setSubmerged] = useState(false);
   const [truckOpen, setTruckOpen] = useState(false);
+  const [watchTab, setWatchTab] = useState<WatchTab | false>(false);
   const nearLife = (point: Point, range = 180) => nearWorld(pos, point, range);
   const home = homeLot(state.homeLot);
   const atHome = nearWorld(pos, home, 185);
@@ -433,7 +436,7 @@ export function Village() {
   const [diving, setDiving] = useState(false);
   const [camping, setCamping] = useState(false);
   const [facing, setFacing] = useState(1);
-  const consoleShown = !mini && !drawing && !mapOpen && !garageOpen && !truckOpen;
+  const consoleShown = !mini && !drawing && !mapOpen && !garageOpen && !truckOpen && !watchTab;
   const viewport = useRef<HTMLDivElement>(null);
   const portal = nearestPortal(pos);
   // After moving house, the old lot is an empty lot rather than the decorating entrance.
@@ -444,27 +447,32 @@ export function Village() {
     lifePos,
     region,
     submarine: seaOpen,
-    suspended: seaOpen || truckOpen || !!station || garageOpen || mapOpen || !!mini || drawing,
+    suspended:
+      seaOpen || truckOpen || !!station || garageOpen || mapOpen || !!mini || drawing || !!watchTab,
     message: setMessage,
     setPos,
     direction: livingDirection,
     vehicle: submarine ? "잠수함" : plane !== "off" ? "비행기" : driving ? "자동차" : null,
   });
+  // Robots only come out on foot in the open village.
+  const robotAllowed =
+    region === "village" &&
+    !living.interior &&
+    plane === "off" &&
+    !submarine &&
+    !driving &&
+    !diving;
   const robot = useRobotWorld({
     pos,
-    seconds: living.seconds,
-    allowed:
-      region === "village" &&
-      !living.interior &&
-      plane === "off" &&
-      !submarine &&
-      !driving &&
-      !diving,
+    facing,
+    allowed: robotAllowed,
     state,
     dispatch,
     message: setMessage,
+    watchOpen: watchTab,
+    setWatchOpen: setWatchTab,
   });
-  const robotSpeed = robot.riding ? 1.25 : 1;
+  const robotSpeed = robot.actor?.mode === "ride" ? 1.25 : 1;
   const nearDrawing = Math.hypot(pos.x - 5010, pos.y - 520) < 110;
   // Each interior has its own family region; outdoor anchors stay fixed while inside.
   const familyRegion: FamilyRegion = living.building
@@ -610,6 +618,7 @@ export function Village() {
       !truckOpen &&
       !seaOpen &&
       !station &&
+      !watchTab &&
       !living.blocked,
     interact,
   );
@@ -739,7 +748,8 @@ export function Village() {
           ),
         };
   const travelTo = (arrival: Point, words: string) => {
-    robot.dismount();
+    // A summoned robot travels along.
+    robot.arrive(arrival);
     if (living.building) living.leaveBuilding();
     if (living.restaurant) living.leaveRestaurant();
     setRegion("village");
@@ -945,7 +955,12 @@ export function Village() {
                 />
               }
               {region === "village" && !living.interior && (
-                <RobotWorld player={pos} roaming={robot.roaming} nearTarget={robot.nearTarget} />
+                <RobotWorld
+                  player={pos}
+                  robot={robot}
+                  level={state.robots.wins + 1}
+                  moving={walking}
+                />
               )}
               <LegacySection center={pos} w={size.w} h={size.h}>
                 {" "}
@@ -1086,12 +1101,18 @@ export function Village() {
                       moving={walking}
                       diving
                     />
-                  ) : robot.riding ? (
-                    <RobotSpeciesArt
-                      robot={robot.riding}
+                  ) : robot.actor?.mode === "ride" ? (
+                    <RobotActorView
+                      team={robot.team}
+                      others={robot.actor.others.map(robotById)}
+                      grades={robot.grades}
+                      phase={robot.actor.phase}
+                      mode="ride"
+                      weaponOut={robot.weaponOut}
                       moving={walking}
-                      size={92}
-                      label={`${identity.name}가 탄 ${robot.riding.name}`}
+                      poweringUp={Date.now() - robot.powerUpAt < 1500}
+                      label={`${identity.name}가 탄 ${robot.team.map((r) => r.name).join("+")}`}
+                      world={pos}
                     />
                   ) : driving ? (
                     <CarArt car={carById(carId)} size={98} />
@@ -1106,7 +1127,7 @@ export function Village() {
                       ? `${identity.name} 잠수함`
                       : driving
                         ? `${identity.name} 🚗`
-                        : robot.riding
+                        : robot.actor?.mode === "ride"
                           ? `${identity.name} 🤖`
                           : identity.name}
                 </b>
@@ -1497,93 +1518,129 @@ export function Village() {
             </button>
           </div>
         )}
-        {!mini && !drawing && !mapOpen && !garageOpen && !truckOpen && !seaOpen && !station && (
-          <div className="adv-bottom adv-console">
-            <p className="adv-touch-hint">{message}</p>
-            {robot.riding && (
-              <p className="hj-robot-card" data-robot-card>
-                🃏 {robot.riding.name} 카드 {robot.uses}/7
+        {!mini &&
+          !drawing &&
+          !mapOpen &&
+          !garageOpen &&
+          !truckOpen &&
+          !seaOpen &&
+          !station &&
+          !watchTab && (
+            <div className="adv-bottom adv-console">
+              <p className="adv-touch-hint">
+                {message}
+                {robot.actor && (
+                  <span className="hj-robot-card" data-robot-card>
+                    🃏 {robot.team[0]!.name} {robot.uses}/7 · ⚡ {robot.energy}/{robot.energyMax} ·
+                    🔩 {robot.parts}
+                  </span>
+                )}
+                {robot.compass && (
+                  <span className="hj-robot-card hj-compass" data-compass>
+                    {robot.compass}
+                  </span>
+                )}
               </p>
-            )}
-            <Joystick onMove={movement.setStick} />
-            <div className="adv-action-buttons">
-              {plane === "ground" && (
-                <button className="hj-car-mode" onClick={leavePlane}>
-                  내리기
-                </button>
-              )}
-              {robot.riding ? (
-                <button className="hj-car-mode" onClick={robot.dismount}>
-                  내리기
-                </button>
-              ) : (
-                region === "village" &&
-                !living.interior &&
-                plane === "off" &&
-                !submarine && (
-                  <button
-                    className="hj-car-mode"
-                    onClick={() => {
-                      if (driving) {
-                        setDriving(false);
-                      } else setGarageOpen(true);
-                    }}
-                  >
-                    {driving ? "내리기" : "차 타기"}
+              <Joystick onMove={movement.setStick} />
+              <div className="adv-action-buttons">
+                {plane === "ground" && (
+                  <button className="hj-car-mode" onClick={leavePlane}>
+                    내리기
                   </button>
-                )
-              )}
+                )}
+                {robotAllowed && (
+                  <button
+                    className="hj-car-mode hj-watch-button"
+                    onClick={() => setWatchTab("summon")}
+                  >
+                    ⌚ 시계
+                  </button>
+                )}
+                {robot.actor ? (
+                  <>
+                    <button
+                      className="hj-car-mode hj-fuse-button"
+                      disabled={robot.busy}
+                      onClick={() => (robot.team.length > 1 ? robot.split() : setWatchTab("fuse"))}
+                    >
+                      {robot.team.length > 1 ? "합체 풀기" : "💥 합체"}
+                    </button>
+                    <button
+                      className="hj-car-mode hj-weapon-button"
+                      disabled={robot.busy}
+                      onClick={robot.strike}
+                    >
+                      ⚔ {robot.weapon?.name}
+                    </button>
+                  </>
+                ) : (
+                  region === "village" &&
+                  !living.interior &&
+                  plane === "off" &&
+                  !submarine && (
+                    <button
+                      className="hj-car-mode"
+                      onClick={() => {
+                        if (driving) {
+                          setDriving(false);
+                        } else setGarageOpen(true);
+                      }}
+                    >
+                      {driving ? "내리기" : "차 타기"}
+                    </button>
+                  )
+                )}
 
-              <button
-                className="adv-map-button"
-                onClick={() =>
-                  living.building
-                    ? living.leaveBuilding()
+                <button
+                  className="adv-map-button"
+                  onClick={() =>
+                    living.building
+                      ? living.leaveBuilding()
+                      : living.restaurant
+                        ? living.leaveRestaurant()
+                        : region === "village"
+                          ? setMapOpen(true)
+                          : region === "coast"
+                            ? goHomeInside()
+                            : backToWorld()
+                  }
+                >
+                  {living.building
+                    ? "건물 밖으로"
                     : living.restaurant
-                      ? living.leaveRestaurant()
+                      ? "식당 밖으로"
                       : region === "village"
-                        ? setMapOpen(true)
+                        ? "지도"
                         : region === "coast"
-                          ? goHomeInside()
-                          : backToWorld()
-                }
-              >
-                {living.building
-                  ? "건물 밖으로"
-                  : living.restaurant
-                    ? "식당 밖으로"
-                    : region === "village"
-                      ? "지도"
-                      : region === "coast"
-                        ? "큰 집"
-                        : "집 밖으로"}
-              </button>
-              <button className="adv-interact" onClick={interact} disabled={!ready}>
-                {livingActionLabel ??
-                  (region === "mansion" ||
-                  plane !== "off" ||
-                  submarine ||
-                  atHome ||
-                  pos.x > 5700 ||
-                  nearWorld(pos, AIRPORT, 260)
-                    ? actionLifeLabel()
-                    : diving
-                      ? "물 밖으로 나오기"
-                      : isNearCamp(pos) && !driving
-                        ? "캠핑하기"
-                        : isNearLake(pos) && !driving
-                          ? "잠수하기"
-                          : nearDrawing
-                            ? "별자리 그리기"
-                            : nearby
-                              ? `${nearby.name} · 시작`
-                              : Math.hypot(pos.x - 1420, pos.y - 1030) < 100
-                                ? "보리 돌보기"
-                                : "놀이 · 대화")}
-              </button>
+                          ? "큰 집"
+                          : "집 밖으로"}
+                </button>
+                <button className="adv-interact" onClick={interact} disabled={!ready}>
+                  {livingActionLabel ??
+                    (region === "mansion" ||
+                    plane !== "off" ||
+                    submarine ||
+                    atHome ||
+                    pos.x > 5700 ||
+                    nearWorld(pos, AIRPORT, 260)
+                      ? actionLifeLabel()
+                      : diving
+                        ? "물 밖으로 나오기"
+                        : isNearCamp(pos) && !driving
+                          ? "캠핑하기"
+                          : isNearLake(pos) && !driving
+                            ? "잠수하기"
+                            : nearDrawing
+                              ? "별자리 그리기"
+                              : nearby
+                                ? `${nearby.name} · 시작`
+                                : Math.hypot(pos.x - 1420, pos.y - 1030) < 100
+                                  ? "보리 돌보기"
+                                  : "놀이 · 대화")}
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
       </div>
       <div className="adv-footer">
         <p role="status" className={consoleShown ? "adv-sr" : undefined}>
@@ -1591,6 +1648,31 @@ export function Village() {
         </p>
         <span>왼쪽 조이스틱으로 이동 · 오른쪽 버튼으로 놀이와 대화</span>
       </div>
+      {watchTab && robotAllowed && (
+        <RobotWatch
+          progress={state.robots}
+          tab={watchTab}
+          setTab={setWatchTab}
+          team={robot.actor?.team ?? []}
+          mode={robot.actor?.mode ?? null}
+          onSummon={robot.summon}
+          onFuse={robot.fuse}
+          onSplit={() => {
+            setWatchTab(false);
+            robot.split();
+          }}
+          onMode={(mode) => {
+            setWatchTab(false);
+            robot.setMode(mode);
+          }}
+          onRecall={() => {
+            setWatchTab(false);
+            robot.recall("로봇이 시계 속으로 돌아갔어.");
+          }}
+          onMission={robot.startMission}
+          onClose={() => setWatchTab(false)}
+        />
+      )}
       {station && (
         <div className="hj-garage-backdrop">
           <section
