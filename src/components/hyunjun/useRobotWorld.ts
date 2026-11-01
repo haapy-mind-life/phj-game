@@ -1,13 +1,12 @@
-import { useEffect, useRef, useState } from "react";
-import type { Point } from "@/game/adventure";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { isWalkable, type Point } from "@/game/adventure";
 import {
   BATTLE_RANGE,
-  CARD_COOLDOWN_MS,
-  CARD_USES_TO_UNLOCK,
+  FOLLOW_GAP,
   GRADES,
   MAX_GRADE,
-  MEET_RANGE,
-  ROBOTS,
+  MISSION_PARTS,
+  RESCUE_SPOT,
   ROBOT_ENERGY,
   UPGRADE_COST,
   VILLAIN_HIT_MS,
@@ -17,75 +16,141 @@ import {
   WORKSHOP,
   WORKSHOP_RANGE,
   robotById,
-  robotPosition,
+  type RobotMissionMode,
   type RobotSpecies,
   type RobotSpeciesId,
 } from "@/game/robot-catalog";
 import {
   applyCardUse,
   freshVillain,
-  fusionTeam,
   gradeOf,
-  hasCard,
   hitVillain,
-  maxFusion,
-  villainMaxHp,
+  isWatchCardAvailable,
+  resolveStrike,
   teamPower,
+  teamWeapon,
+  validFusion,
+  villainMaxHp,
   type RobotProgress,
 } from "@/game/robot-engine";
-import { worldDistance } from "@/game/world-space";
+import {
+  douseRescue,
+  hitThief,
+  startRescue,
+  startThief,
+  stepThief,
+  type Rescue,
+  type Thief,
+} from "@/game/robot-missions";
+import { worldDelta, worldDistance, wrapPoint } from "@/game/world-space";
 import type { GameState, WorldAction } from "@/lib/world-model";
 
 export const robotName = (robot: RobotSpecies, robots: RobotProgress) => {
   const grade = gradeOf(robots, robot.id);
   return grade > 0 ? `${GRADES[grade]} ${robot.name}` : robot.name;
 };
+/**
+ * summoning → active. A fusion goes gathering (members walk together) → assembling (parts lock
+ * into one body) → active; splitting goes splitting → returning (members beam back) → active.
+ */
+export type ActorPhase =
+  "summoning" | "active" | "gathering" | "assembling" | "splitting" | "returning";
+export type RobotActor = {
+  team: RobotSpeciesId[];
+  mode: "follow" | "ride";
+  phase: ActorPhase;
+  /** World position while following; riding uses the player's position. */
+  pos: Point;
+  /** Members gathering for a fusion, or leaving after a split. */
+  others: RobotSpeciesId[];
+};
+export type StrikeEffect = { kind: string; from: Point; to: Point; hit: boolean; at: number };
+export type RobotMission =
+  | { mode: "villain" }
+  | { mode: "rescue"; rescue: Rescue; thanked: boolean }
+  | { mode: "thief"; thief: Thief; rewarded: boolean };
+export type WatchTab = "summon" | "fuse" | "mission";
+type Job = { kind: "villain" | "rescue" | "thief"; at: Point };
+const SUMMON_MS = 900;
+const GATHER_MS = 800;
+const ASSEMBLE_MS = 1400;
+const SPLIT_MS = 800;
+const RETURN_MS = 900;
+const WEAPON_SHOW_MS = 1300;
+const ARROWS = ["→", "↘", "↓", "↙", "←", "↖", "↑", "↗"];
 
-/** Robots roaming the village, riding and fusing them, fighting the villain and upgrading. */
+/** The robot watch: summon a robot, fuse 2–3 robots, fight, rescue and catch the thief. */
 export function useRobotWorld({
   pos,
-  seconds,
+  facing,
   allowed,
   state,
   dispatch,
   message,
+  watchOpen,
+  setWatchOpen,
 }: {
   pos: Point;
-  seconds: number;
+  facing: number;
   /** On foot in the open village: not inside, not in a car, plane, submarine or lake. */
   allowed: boolean;
   state: GameState;
   dispatch: (action: WorldAction) => unknown;
   message: (text: string) => void;
+  /** Owned by the screen so movement and the living world pause while the watch is open. */
+  watchOpen: WatchTab | false;
+  setWatchOpen: (tab: WatchTab | false) => void;
 }) {
   const robots = state.robots;
-  const [riding, setRiding] = useState<RobotSpeciesId | null>(null);
-  const [size, setSize] = useState(1);
+  const [actor, setActor] = useState<RobotActor | null>(null);
   const [villain, setVillain] = useState(() => freshVillain(robots.wins));
-  // Hits taken this ride. Energy is derived from it, so splitting and re-joining a fusion
-  // can't refill the bar: joining robots raise the maximum, leaving robots lower it again.
+  const [mission, setMission] = useState<RobotMission | null>(null);
+  // Hits taken this summon. Energy is derived from it, so splitting and re-joining a fusion
+  // can't refill the bar.
   const [damage, setDamage] = useState(0);
-  const lastCard = useRef(0);
-  const team = riding ? fusionTeam(robots, riding, size) : [];
+  const [effect, setEffect] = useState<StrikeEffect | null>(null);
+  const [weaponOut, setWeaponOut] = useState(false);
+  const [powerUpAt, setPowerUpAt] = useState(0);
+  const lastStrike = useRef(-1e9);
+  const timers = useRef<number[]>([]);
+  const weaponTimer = useRef(0);
+  const live = useRef({ pos, facing, actor, mission });
+  live.current = { pos, facing, actor, mission };
+  const later = (ms: number, fn: () => void) => {
+    timers.current.push(window.setTimeout(fn, ms));
+  };
+  const clearTimers = useCallback(() => {
+    timers.current.forEach((t) => clearTimeout(t));
+    timers.current = [];
+  }, []);
+  useEffect(
+    () => () => {
+      timers.current.forEach((t) => clearTimeout(t));
+      clearTimeout(weaponTimer.current);
+    },
+    [],
+  );
+
+  const team = actor?.team ?? [];
+  const busy = !!actor && actor.phase !== "active";
+  const actorPos = actor ? (actor.mode === "ride" ? pos : actor.pos) : pos;
   const energyMax = ROBOT_ENERGY + (team.length - 1) * 2;
   const energy = Math.max(0, energyMax - damage);
-  const getOff = () => {
-    setRiding(null);
-    setSize(1);
-    setDamage(0);
-  };
+  const recall = useCallback(
+    (words?: string) => {
+      clearTimers();
+      setActor(null);
+      setDamage(0);
+      setWeaponOut(false);
+      if (words) message(words);
+    },
+    [clearTimers, message],
+  );
+  // Cars, planes, submarines, the lake and buildings send the robot back into the watch.
   useEffect(() => {
-    if (!allowed && riding) getOff();
-  }, [allowed, riding]);
-  // A switched-off villain comes back from repairs a little tougher: endless adventure.
-  useEffect(() => {
-    if (!villain.retreating) return;
-    const t = setTimeout(
-      () => setVillain(freshVillain(robots.wins)),
-      Math.max(0, villain.back - Date.now()),
-    );
-    return () => clearTimeout(t);
-  }, [villain, robots.wins]);
+    if (!allowed && actor) recall("로봇이 시계 속으로 돌아갔어. 다시 부르려면 시계를 열어 봐!");
+    if (!allowed) setWatchOpen(false);
+  }, [allowed, actor, recall, setWatchOpen]);
   // The first villain is made before the save loads; an untouched one follows the saved wins.
   useEffect(() => {
     if (
@@ -95,137 +160,339 @@ export function useRobotWorld({
     )
       setVillain(freshVillain(robots.wins));
   }, [villain, robots.wins]);
-  const ridingRobot = riding ? robotById(riding) : null;
-  const nearVillain = !!riding && worldDistance(pos, VILLAIN_SPOT) < BATTLE_RANGE;
-  const fighting = nearVillain && !villain.retreating;
-  // The villain fights back; an empty energy bar breaks the robot down, but nothing is lost.
+  // A switched-off villain comes back from repairs a little tougher: endless adventure.
+  useEffect(() => {
+    if (!villain.retreating) return;
+    const t = setTimeout(
+      () => setVillain(freshVillain(robots.wins)),
+      Math.max(0, villain.back - Date.now()),
+    );
+    return () => clearTimeout(t);
+  }, [villain, robots.wins]);
+
+  // World tick: a following robot walks after the player, and the thief runs.
+  const thiefRunning = mission?.mode === "thief" && !mission.rewarded;
+  const following = actor?.mode === "follow";
+  useEffect(() => {
+    if (!following && !thiefRunning) return;
+    let last = performance.now();
+    const t = window.setInterval(() => {
+      const now = performance.now();
+      const dt = Math.min(0.1, (now - last) / 1000);
+      last = now;
+      const { pos: p, facing: f, actor: a, mission: m } = live.current;
+      if (a?.mode === "follow") {
+        const behind = wrapPoint({ x: p.x - f * FOLLOW_GAP, y: p.y + 10 });
+        const goal = isWalkable(behind) ? behind : p;
+        const d = worldDelta(a.pos, goal);
+        const len = Math.hypot(d.x, d.y);
+        if (len > 4) {
+          // Far behind (after map travel) the robot jumps; otherwise it walks a little faster
+          // than the player so it never gets left behind.
+          const move = len > 900 ? len : Math.min(len, 320 * dt);
+          setActor((cur) =>
+            cur && cur.mode === "follow"
+              ? {
+                  ...cur,
+                  pos: wrapPoint({
+                    x: cur.pos.x + (d.x / len) * move,
+                    y: cur.pos.y + (d.y / len) * move,
+                  }),
+                }
+              : cur,
+          );
+        }
+      }
+      if (m?.mode === "thief" && !m.rewarded) {
+        const chaser = a ? (a.mode === "ride" ? p : a.pos) : p;
+        setMission((cur) =>
+          cur?.mode === "thief"
+            ? { ...cur, thief: stepThief(cur.thief, chaser, dt, Date.now()) }
+            : cur,
+        );
+      }
+    }, 50);
+    return () => clearInterval(t);
+  }, [following, thiefRunning]);
+
+  // The villain fights back while the robot is close; an empty energy bar sends the robot back
+  // into the watch, but nothing is lost.
+  const nearVillain = !!actor && worldDistance(actorPos, VILLAIN_SPOT) < BATTLE_RANGE;
+  const fighting = nearVillain && !villain.retreating && !busy;
   useEffect(() => {
     if (!fighting) return;
     const t = setInterval(() => setDamage((d) => d + 1), VILLAIN_HIT_MS);
     return () => clearInterval(t);
   }, [fighting]);
   useEffect(() => {
-    if (energy > 0 || !riding) return;
-    getOff();
-    message("로봇이 고장 났어! 정비소에서 금방 고쳤어. 합체해서 더 세게 다시 도전해 봐!");
-  }, [energy, riding, message]);
-  const nearWorkshop = allowed && worldDistance(pos, WORKSHOP) < WORKSHOP_RANGE;
-  const roaming = ROBOTS.filter(
-    (r) => (r.starter || hasCard(robots, r.id)) && !team.includes(r.id),
-  ).map((robot) => ({ robot, p: robotPosition(robot, seconds) }));
-  const near = allowed
-    ? roaming
-        .map((r) => ({ ...r, d: worldDistance(pos, r.p) }))
-        .filter((r) => r.d < MEET_RANGE)
-        .sort((a, b) => a.d - b.d)[0]?.robot
-    : undefined;
-  const uses = riding ? (robots.cards[riding]?.uses ?? 0) : 0;
-  const grade = riding ? gradeOf(robots, riding) : 0;
-  const ridingName = ridingRobot
-    ? (team.length > 1 ? `${team.length}단 합체 ` : "") + robotName(ridingRobot, robots)
-    : "";
-  const label = (): string | null => {
-    if (!allowed) return null;
-    if (fighting) return `카드 쓰기 (${uses}/${CARD_USES_TO_UNLOCK})`;
-    if (nearWorkshop)
-      return !ridingRobot
-        ? "정비소 · 로봇을 타고 와"
-        : grade >= MAX_GRADE
-          ? "정비소 · 최고로 강화됨"
-          : `강화하기 (부품 ${Math.min(robots.parts, UPGRADE_COST)}/${UPGRADE_COST})`;
-    if (!riding && near) return `${near.name} ${hasCard(robots, near.id) ? "타기" : "만나기"}`;
-    return null;
+    if (energy > 0 || !actor) return;
+    recall("로봇이 고장 났어! 시계가 금방 고쳐 줄 거야. 합체해서 더 세게 다시 도전해 봐!");
+  }, [energy, actor, recall]);
+
+  const summon = (id: RobotSpeciesId) => {
+    if (!allowed || !isWatchCardAvailable(robots, id)) return;
+    dispatch({ type: "robot-meet", id });
+    clearTimers();
+    const at = wrapPoint({ x: pos.x + facing * 110, y: pos.y + 10 });
+    setActor({
+      team: [id],
+      mode: actor?.mode ?? "follow",
+      phase: "summoning",
+      pos: isWalkable(at) ? at : { ...pos },
+      others: [],
+    });
+    setDamage(0);
+    setWatchOpen(false);
+    later(SUMMON_MS, () => setActor((a) => (a ? { ...a, phase: "active" } : a)));
+    message(`${robotName(robotById(id), robots)} 소환! 시계 카드에서 로봇이 나왔어!`);
   };
-  const cardOnVillain = () => {
-    if (!ridingRobot) return;
-    const now = Date.now();
-    if (now - lastCard.current < CARD_COOLDOWN_MS) {
-      message("카드 충전 중이야! 조금만 기다려.");
+  const fuse = (ids: RobotSpeciesId[]) => {
+    if (!allowed) return;
+    if (!validFusion(robots, ids)) {
+      message("시계에서 서로 다른 로봇을 2개 또는 3개 골라 줘!");
       return;
     }
-    lastCard.current = now;
-    const opened = applyCardUse(robots, ridingRobot.id).unlocked;
-    dispatch({ type: "robot-card", id: ridingRobot.id });
-    const hit = hitVillain(villain, teamPower(robots, team), now);
-    setVillain(hit.villain);
-    const words = [
-      hit.defeated
-        ? `물리쳤어! ${VILLAIN_NAME}이 고장 나서 수리하러 도망갔어! 🔩 부품 +${WIN_PARTS}`
-        : `${ridingRobot.skill}! ${VILLAIN_NAME}에 맞았어! 남은 힘 ${hit.villain.hp}/${hit.villain.max}`,
-    ];
-    if (hit.defeated) dispatch({ type: "robot-win", win: robots.wins + 1 });
-    if (opened) words.unshift(`축하해! 새로운 로봇 카드가 열렸어! 🃏 ${robotById(opened).name}`);
-    else if (uses < CARD_USES_TO_UNLOCK)
-      words.push(`카드 ${uses + 1}/${CARD_USES_TO_UNLOCK} · 7번 사용하면 더 강한 로봇이 열려!`);
-    message(words.join(" · "));
+    for (const id of ids) dispatch({ type: "robot-meet", id });
+    clearTimers();
+    const fresh = wrapPoint({ x: pos.x + facing * 110, y: pos.y + 10 });
+    const center = actor?.mode === "ride" ? pos : (actor?.pos ?? fresh);
+    setActor({
+      team: ids,
+      mode: actor?.mode ?? "follow",
+      phase: "gathering",
+      pos: center,
+      others: ids,
+    });
+    setWatchOpen(false);
+    message(`${ids.length}단 합체 시작! ${ids.map((id) => robotById(id).name).join(" + ")}`);
+    later(GATHER_MS, () => setActor((a) => (a ? { ...a, phase: "assembling", others: [] } : a)));
+    later(GATHER_MS + ASSEMBLE_MS, () => {
+      dispatch({ type: "robot-fuse", ids });
+      setActor((a) => (a ? { ...a, phase: "active" } : a));
+      message(
+        `${ids.length}단 합체 완성! 한 몸이 된 합체 로봇이야 💥 힘 ${teamPower(robots, ids)} · ${teamWeapon(ids).name}`,
+      );
+    });
   };
-  const act = (): boolean => {
-    if (!allowed) return false;
-    if (fighting) {
-      cardOnVillain();
-      return true;
-    }
-    if (nearWorkshop) {
-      if (!ridingRobot) message("고칠 로봇을 타고 정비소로 와 봐!");
-      else if (grade >= MAX_GRADE)
-        message(`${robotName(ridingRobot, robots)}은 지금 최고로 강화됐어!`);
-      else if (robots.parts < UPGRADE_COST)
-        message(
-          `부품이 ${UPGRADE_COST - robots.parts}개 더 필요해. ${VILLAIN_NAME}을 물리치면 부품을 받아!`,
-        );
-      else {
-        dispatch({ type: "robot-upgrade", id: ridingRobot.id });
-        message(`뚝딱뚝딱! ${ridingRobot.name}이 강화 ${ridingRobot.name}이 됐어! 힘이 더 세졌어!`);
-      }
-      return true;
-    }
-    if (!riding && near) {
-      if (!hasCard(robots, near.id)) {
-        dispatch({ type: "robot-meet", id: near.id });
-        message(`${near.name}을 만났어! 🃏 ${near.name} 카드를 받았어. 한 번 타 볼까?`);
-      } else {
-        setRiding(near.id);
-        setDamage(0);
-        message(`${robotName(near, robots)}에 탔어! 남쪽의 ${VILLAIN_NAME}에게 카드를 써 봐.`);
-      }
-      return true;
-    }
-    return false;
+  const split = () => {
+    if (!actor || team.length < 2 || busy) return;
+    const others = team.slice(1);
+    const core = team[0]!;
+    setActor({ ...actor, phase: "splitting", others });
+    later(SPLIT_MS, () =>
+      setActor((a) => (a ? { ...a, team: [core], phase: "returning", others } : a)),
+    );
+    later(SPLIT_MS + RETURN_MS, () =>
+      setActor((a) => (a ? { ...a, phase: "active", others: [] } : a)),
+    );
+    // A single robot can't hold more damage than its own energy bar.
+    setDamage((d) => Math.min(d, ROBOT_ENERGY - 1));
+    message("합체 해제! 로봇 친구들은 시계 속으로 돌아갔어. 카드는 그대로야.");
   };
-  const canFuse = !!riding && maxFusion(robots) >= 2;
-  const nextSize = size >= maxFusion(robots) ? 1 : size + 1;
-  const fuseLabel = !canFuse ? null : nextSize === 1 ? "합체 풀기" : `${nextSize}단 합체`;
-  const fuse = () => {
-    if (!riding || !canFuse) return;
-    const next = fusionTeam(robots, riding, nextSize);
-    setSize(nextSize);
+  const setMode = (mode: "follow" | "ride") => {
+    if (!actor) return;
+    setActor({ ...actor, mode, pos: { ...pos } });
     message(
-      nextSize === 1
-        ? "합체를 풀었어! 로봇 친구들이 다시 마을로 돌아갔어."
-        : `${nextSize}단 합체! ${next.map((id) => robotById(id).name).join(" + ")} 💥 힘 ${teamPower(robots, next)}!`,
+      mode === "ride" ? "로봇에 탔어! 조이스틱으로 직접 움직여 봐." : "로봇이 내 뒤를 따라와!",
     );
   };
-  const dismount = () => {
-    if (!riding) return;
-    getOff();
-    message(`${robotById(riding).name}에서 내렸어.`);
+
+  const startMission = (mode: RobotMissionMode) => {
+    if (!actor) {
+      message("먼저 시계에서 로봇을 소환해 줘!");
+      return;
+    }
+    setWatchOpen(false);
+    if (mode === "villain") {
+      setMission({ mode });
+      message(`${VILLAIN_NAME}이 나타났어! 남쪽으로 가서 무기로 막아 줘!`);
+    } else if (mode === "rescue") {
+      setMission({ mode, rescue: startRescue(), thanked: false });
+      message("친구가 불꽃 덤불에 갇혔어! 북동쪽으로 가서 구해 주자!");
+    } else {
+      setMission({ mode, thief: startThief(), rewarded: false });
+      message("도둑 로봇이 별코인 자루를 들고 서쪽 들판으로 도망갔어! 경찰 로봇과 잡아 보자!");
+    }
   };
+  // The weapon aims at the nearest job, so a far swing is honestly "too far".
+  const jobs: Job[] = [];
+  if (!villain.retreating) jobs.push({ kind: "villain", at: VILLAIN_SPOT });
+  if (mission?.mode === "rescue" && mission.rescue.phase === "danger")
+    jobs.push({ kind: "rescue", at: RESCUE_SPOT });
+  if (
+    mission?.mode === "thief" &&
+    (mission.thief.phase === "fleeing" || mission.thief.phase === "stunned")
+  )
+    jobs.push({ kind: "thief", at: mission.thief.pos });
+  const aim =
+    jobs.sort((a, b) => worldDistance(actorPos, a.at) - worldDistance(actorPos, b.at))[0] ?? null;
+  const weapon = team.length ? teamWeapon(team) : null;
+
+  /** Counts one valid skill use on every robot in the team (same judgement as the hit). */
+  const countUse = () => {
+    let progress = robots;
+    const words: string[] = [];
+    for (const id of team) {
+      const r = applyCardUse(progress, id);
+      if (r.progress === progress) continue;
+      progress = r.progress;
+      dispatch({ type: "robot-card", id });
+      const name = robotById(id).name;
+      if (r.poweredUp) words.push(`파워 업! ${name}이 강화 ${name}이 됐어!`);
+      if (r.unlocked) words.push(`새로운 로봇 카드가 열렸어! 🃏 ${robotById(r.unlocked).name}`);
+    }
+    if (words.length) setPowerUpAt(Date.now());
+    return words;
+  };
+  const strike = () => {
+    if (!actor || !weapon || busy) {
+      message(actor ? "합체하는 중이야! 잠깐만." : "먼저 시계에서 로봇을 소환해 줘!");
+      return;
+    }
+    const now = Date.now();
+    setWeaponOut(true);
+    clearTimeout(weaponTimer.current);
+    weaponTimer.current = window.setTimeout(() => setWeaponOut(false), WEAPON_SHOW_MS);
+    if (!aim) {
+      message(`${weapon.name}을 꺼냈어! 지금은 맞힐 상대가 없어.`);
+      return;
+    }
+    const result = resolveStrike(weapon, actorPos, aim.at, now, lastStrike.current);
+    if (result === "cooldown") {
+      message(`${weapon.name} 충전 중이야! 조금만 기다려.`);
+      return;
+    }
+    lastStrike.current = now;
+    setEffect({ kind: weapon.kind, from: actorPos, to: aim.at, hit: result === "hit", at: now });
+    if (result === "far") {
+      const steps = Math.round(worldDistance(actorPos, aim.at) / 50);
+      message(`${weapon.name}! 앗, 너무 멀어. ${steps}걸음 더 가까이 가자!`);
+      return;
+    }
+    const power = teamPower(robots, team);
+    const words: string[] = [];
+    if (aim.kind === "villain") {
+      const hit = hitVillain(villain, power, now);
+      setVillain(hit.villain);
+      if (hit.defeated) {
+        dispatch({ type: "robot-win", win: robots.wins + 1 });
+        words.push(
+          `물리쳤어! ${VILLAIN_NAME}이 고장 나서 수리하러 도망갔어! 🔩 부품 +${WIN_PARTS}`,
+        );
+        if (mission?.mode === "villain") setMission(null);
+      } else
+        words.push(`${weapon.name} 명중! ${VILLAIN_NAME} 힘 ${hit.villain.hp}/${hit.villain.max}`);
+    } else if (aim.kind === "rescue" && mission?.mode === "rescue") {
+      const amount = robotById(team[1] ?? team[0]!).family === "fire" ? 2 : 1;
+      const rescue = douseRescue(mission.rescue, amount);
+      setMission({ ...mission, rescue });
+      if (rescue.phase === "safe") {
+        words.push("불꽃 덤불이 다 꺼졌어! 친구가 안전해졌어!");
+        const n = robots.rescues + 1;
+        later(1200, () => {
+          dispatch({ type: "robot-mission", mode: "rescue", n });
+          setMission((m) => (m?.mode === "rescue" ? { ...m, thanked: true } : m));
+          message(`친구: "고마워, 로봇아! 덕분에 살았어!" 🔩 부품 +${MISSION_PARTS}`);
+        });
+        later(6000, () => setMission((m) => (m?.mode === "rescue" ? null : m)));
+      } else words.push(`${weapon.name}로 덤불을 껐어! 남은 불꽃 ${rescue.burning}개`);
+    } else if (aim.kind === "thief" && mission?.mode === "thief") {
+      const police = team.some((id) => robotById(id).family === "police");
+      const hit = hitThief(mission.thief, police, now);
+      if (hit.caught) {
+        dispatch({ type: "robot-mission", mode: "thief", n: robots.catches + 1 });
+        setMission({ ...mission, thief: hit.thief, rewarded: true });
+        words.push(`도둑 로봇을 잡았어! 별코인 자루를 되찾았어! 🔩 부품 +${MISSION_PARTS}`);
+        later(2000, () =>
+          setMission((m) =>
+            m?.mode === "thief" ? { ...m, thief: { ...m.thief, phase: "retreating" } } : m,
+          ),
+        );
+        later(6000, () => setMission((m) => (m?.mode === "thief" ? null : m)));
+      } else {
+        setMission({ ...mission, thief: hit.thief });
+        words.push(
+          !police && hit.thief.stamina <= 1
+            ? "도둑이 멈췄어! 그런데 잡으려면 경찰 로봇이 있어야 해!"
+            : `${weapon.name} 명중! 도둑이 비틀거려. 남은 힘 ${hit.thief.stamina}`,
+        );
+      }
+    }
+    words.push(...countUse());
+    message(words.join(" · "));
+  };
+
+  const nearWorkshop = allowed && worldDistance(pos, WORKSHOP) < WORKSHOP_RANGE;
+  const core = actor ? robotById(team[0]!) : null;
+  const coreGrade = core ? gradeOf(robots, core.id) : 0;
+  const label = (): string | null => {
+    if (!nearWorkshop) return null;
+    return !core
+      ? "정비소 · 로봇을 불러 와"
+      : coreGrade >= MAX_GRADE
+        ? "정비소 · 최고로 강화됨"
+        : `강화하기 (부품 ${Math.min(robots.parts, UPGRADE_COST)}/${UPGRADE_COST})`;
+  };
+  const act = (): boolean => {
+    if (!nearWorkshop) return false;
+    if (!core) message("고칠 로봇을 시계에서 불러서 정비소로 와 봐!");
+    else if (coreGrade >= MAX_GRADE) message(`${robotName(core, robots)}은 지금 최고로 강화됐어!`);
+    else if (robots.parts < UPGRADE_COST)
+      message(`부품이 ${UPGRADE_COST - robots.parts}개 더 필요해. 임무를 해서 부품을 모아 봐!`);
+    else {
+      dispatch({ type: "robot-upgrade", id: core.id });
+      setPowerUpAt(Date.now());
+      message(`뚝딱뚝딱! ${core.name}이 ${GRADES[coreGrade + 1]} ${core.name}이 됐어!`);
+    }
+    return true;
+  };
+  /** Map travel takes the robot along. */
+  const arrive = (at: Point) => setActor((a) => (a ? { ...a, pos: { ...at } } : a));
+
+  const goal =
+    mission?.mode === "rescue" && !mission.thanked
+      ? { name: "친구 구하기", at: RESCUE_SPOT }
+      : mission?.mode === "thief" && !mission.rewarded
+        ? { name: "도둑 잡기", at: mission.thief.pos }
+        : mission?.mode === "villain"
+          ? { name: "악당 막기", at: VILLAIN_SPOT }
+          : null;
+  const compass = goal
+    ? (() => {
+        const d = worldDelta(pos, goal.at);
+        const arrow = ARROWS[(Math.round(Math.atan2(d.y, d.x) / (Math.PI / 4)) + 8) % 8];
+        return `🧭 ${goal.name} ${arrow} ${Math.round(Math.hypot(d.x, d.y) / 50)}걸음`;
+      })()
+    : null;
   return {
-    riding: ridingRobot,
-    ridingName,
+    actor,
+    actorPos,
+    busy,
     team: team.map(robotById),
     grades: team.map((id) => gradeOf(robots, id)),
-    roaming,
+    weapon,
+    weaponOut,
+    effect,
+    powerUpAt,
     villain,
     nearVillain,
+    mission,
     energy,
     energyMax,
-    uses,
+    uses: core ? (robots.cards[core.id]?.uses ?? 0) : 0,
     parts: robots.parts,
+    watchOpen,
+    setWatchOpen,
+    summon,
+    fuse,
+    split,
+    setMode,
+    recall,
+    startMission,
+    strike,
     label,
     act,
-    dismount,
-    fuse,
-    fuseLabel,
+    arrive,
+    compass,
   };
 }
