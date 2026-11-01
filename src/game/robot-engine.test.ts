@@ -8,7 +8,7 @@ import {
   ROBOTS,
   robotPosition,
 } from "./robot-catalog.ts";
-import { applyCardUse, emptyRobots, meetRobot, normalizeRobots } from "./robot-engine.ts";
+import { applyCardUse, applyRobotFusion, awardRobotMission, emptyRobots, isWatchCardAvailable, meetRobot, normalizeRobots, upgradeRobotGrade } from "./robot-engine.ts";
 import { isWalkable, PORTALS, SPAWN } from "./adventure.ts";
 import { migrateSave, reduceWorld } from "../lib/world-model.ts";
 import { PREMIUM_CARS } from "./world-content.ts";
@@ -94,4 +94,58 @@ test("robots and the practice robot stand on open ground near the start", () => 
       Math.hypot(gate.x - PRACTICE_TARGET.x, gate.y - PRACTICE_TARGET.y) > PRACTICE_RANGE,
       gate.id,
     );
+});
+
+test("summon watch shows three starter cards without inserting them", () => {
+  const p = emptyRobots();
+  assert.equal(isWatchCardAvailable(p, "rb-police"), true);
+  assert.equal(isWatchCardAvailable(p, "rb-fire"), true);
+  assert.equal(isWatchCardAvailable(p, "rb-sky"), true);
+  assert.equal(isWatchCardAvailable(p, "rb-thunder-police"), false);
+});
+
+test("watch fusion requires two unique unlocked robots and preserves cards", () => {
+  const p = meetRobot(emptyRobots(), "rb-police");
+  assert.equal(applyRobotFusion(p, ["rb-police"]), p);
+  assert.equal(applyRobotFusion(p, ["rb-police", "rb-police"]), p);
+  assert.equal(applyRobotFusion(p, ["rb-police", "rb-thunder-police"]), p);
+  const two = applyRobotFusion(p, ["rb-police", "rb-fire"]);
+  assert.equal(two.fusionBest, 2);
+  assert.equal(two.fusionCount, 1);
+  assert.ok(two.cards["rb-fire"]);
+  const three = applyRobotFusion(two, ["rb-police", "rb-fire", "rb-sky"]);
+  assert.equal(three.fusionBest, 3);
+  assert.equal(three.fusionCount, 2);
+  assert.ok(three.cards["rb-police"]);
+});
+
+test("rescue mission rewards once and upgrades without losing saved cards", () => {
+  const p = meetRobot(emptyRobots(), "rb-police");
+  const once = awardRobotMission(p, "mission-1", "villain");
+  assert.equal(once.materials, 3);
+  assert.equal(once.wins, 1);
+  assert.equal(awardRobotMission(once, "mission-1", "villain"), once);
+  const upgraded = upgradeRobotGrade(once);
+  assert.equal(upgraded.grade, 1);
+  assert.equal(upgraded.materials, 0);
+  assert.deepEqual(upgraded.cards, p.cards);
+  assert.equal(upgradeRobotGrade(upgraded), upgraded);
+  assert.deepEqual(normalizeRobots(upgraded), upgraded);
+});
+
+test("new robot watch reducer actions persist through legacy save without affecting cars", () => {
+  const original = migrateSave({ version: 3, money: 234, ownedCars: ["car-001", "car-021"] });
+  let state = reduceWorld(original, { type: "robot-fuse", ids: ["rb-police", "rb-fire"] });
+  assert.equal(state, original);
+  state = reduceWorld(state, { type: "robot-meet", id: "rb-police" });
+  state = reduceWorld(state, { type: "robot-meet", id: "rb-fire" });
+  state = reduceWorld(state, { type: "robot-fuse", ids: ["rb-police", "rb-fire"] });
+  state = reduceWorld(state, { type: "robot-mission", id: "rescue-42", mode: "rescue" });
+  state = reduceWorld(state, { type: "robot-mission", id: "rescue-42", mode: "rescue" });
+  assert.equal(state.robots.wins, 1);
+  const loaded = migrateSave(JSON.parse(JSON.stringify(state)));
+  assert.deepEqual(loaded.robots, state.robots);
+  assert.equal(loaded.robots.fusionBest, 2);
+  assert.deepEqual(loaded.ownedCars, original.ownedCars);
+  assert.equal(loaded.money, original.money);
 });
