@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Point } from "@/game/adventure";
 import { ARMY, armyPosition, squadOf } from "@/game/robot-army";
 import { robotById } from "@/game/robot-catalog";
@@ -21,6 +21,7 @@ import {
   RALLY_RANGE,
   RALLY_SITE,
   callArmy,
+  cancelFusion,
   fusionPosition,
   idleFusion,
   splitFusion,
@@ -33,7 +34,7 @@ const TICK_MS = 100;
 /** How close you have to walk to a legend for its card to land in the watch. */
 const DISCOVER_RANGE = 260;
 const VISIBLE_RADIUS = 1100;
-const VISIBLE_LIMIT = 14;
+const VISIBLE_LIMIT = 10;
 const ARROWS = ["→", "↘", "↓", "↙", "←", "↖", "↑", "↗"];
 
 /**
@@ -57,7 +58,6 @@ export function useRobotArmy({
   /** Called when the giant forms, so the small summoned robot goes back into the watch. */
   onGiant: () => void;
 }) {
-  const [now, setNow] = useState(() => Date.now());
   const [fusion, setFusion] = useState(idleFusion);
   const [giantHp, setGiantHp] = useState(GIANT_HP);
   const [boss, setBoss] = useState(freshBoss);
@@ -67,30 +67,50 @@ export function useRobotArmy({
     null,
   );
   const lastStrike = useRef(-1e9);
+  const weaponTimer = useRef(0);
+  useEffect(() => () => clearTimeout(weaponTimer.current), []);
   const paidEvent = useRef(0);
   const serial = useRef(0);
-  const live = useRef({ pos, fusion, boss });
-  live.current = { pos, fusion, boss };
+  const live = useRef({ pos, fusion, boss, allowed, robots, dispatch, message });
+  live.current = { pos, fusion, boss, allowed, robots, dispatch, message };
   const giant = fusion.phase === "giant";
-  const seconds = now / 1000;
 
-  // One clock for the whole army, the rally, the boss and the minions.
+  // One clock for the rally, the boss and legend discovery. It only changes state when
+  // something really happens, so the village doesn't redraw ten times a second; the moving
+  // robots are drawn by RobotArmyView on its own clock.
   useEffect(() => {
     let last = Date.now();
     const t = window.setInterval(() => {
       const at = Date.now();
       const dt = Math.min(0.25, (at - last) / 1000);
       last = at;
-      setNow(at);
-      setFusion((f) => stepFusion(f, at));
-      const { pos: p, fusion: f } = live.current;
-      if (f.phase === "giant") {
-        setBoss((b) => {
-          const r = stepBoss(b, p, at, dt);
-          if (r.giantDamage) setGiantHp((hp) => hp - r.giantDamage);
-          return r.boss;
-        });
-      } else setBoss((b) => (b.phase === "retreat" ? stepBoss(b, null, at, dt).boss : b));
+      const {
+        pos: p,
+        fusion: f,
+        allowed: ok,
+        robots: r,
+        dispatch: send,
+        message: say,
+      } = live.current;
+      // Walking up to a legend stores its card in the watch.
+      if (ok && f.phase === "idle")
+        for (const robot of ARMY) {
+          if (!robot.legendary || hasCard(r, robot.species)) continue;
+          if (worldDistance(armyPosition(robot, at / 1000), p) > DISCOVER_RANGE) continue;
+          send({ type: "robot-discover", id: robot.species });
+          say(
+            `⭐ 전설 로봇 발견! ${robotById(robot.species).name} 카드가 시계에 저장됐어! 시계의 ⭐ 전설에서 불러 봐.`,
+          );
+          break;
+        }
+      setFusion((cur) => stepFusion(cur, at, worldDistance(p, RALLY_SITE) <= RALLY_RANGE));
+      // Without a giant the boss still finishes its moves (a pending slam lands on nobody).
+      const giantAt = f.phase === "giant" ? p : null;
+      setBoss((b) => {
+        const r = stepBoss(b, giantAt, at, dt);
+        if (r.giantDamage && giantAt) setGiantHp((hp) => hp - r.giantDamage);
+        return r.boss;
+      });
     }, TICK_MS);
     return () => clearInterval(t);
   }, []);
@@ -104,14 +124,41 @@ export function useRobotArmy({
     onGiant();
     message("100대 합체 완성! 초대형 로봇에 탔어! 👹 남서쪽 거대 악당이나 졸개 로봇과 싸워 보자!");
   }, [fusion.phase, fusion.eventId, dispatch, robots.massFusions, onGiant, message]);
-  // The giant breaks apart safely when its health runs out, or when you leave the open village.
+  /** Splits a giant where it stands, or calls off a rally that hasn't finished. */
+  const leave = useCallback(() => {
+    const at = Date.now();
+    const seconds = at / 1000;
+    const { pos: p } = live.current;
+    setFusion((f) =>
+      f.phase === "giant"
+        ? splitFusion(f, at, p)
+        : cancelFusion(f, at, (id) =>
+            fusionPosition(
+              f,
+              id,
+              armyPosition(
+                ARMY.find((r) => r.instanceId === id)!,
+                seconds,
+              ),
+              at,
+            ),
+          ),
+    );
+  }, []);
+  // The giant breaks apart safely when its health runs out; leaving the open village (car,
+  // building, lake, map) splits the giant or calls off the rally.
   useEffect(() => {
-    if (!giant) return;
-    if (giantHp <= 0) {
-      setFusion((f) => splitFusion(f, Date.now()));
+    if (giant && giantHp <= 0) {
+      leave();
       message("거대 로봇이 너무 많이 맞아서 다시 100대로 흩어졌어. 잃은 건 없어! 다시 모여 보자.");
-    } else if (!allowed) setFusion((f) => splitFusion(f, Date.now()));
-  }, [giant, giantHp, allowed, message]);
+    } else if (!allowed && (giant || fusion.phase === "gathering" || fusion.phase === "assembling"))
+      leave();
+  }, [giant, giantHp, allowed, fusion.phase, leave, message]);
+  // Everyone has arrived but the player walked off: ask them back to the square.
+  const allHere = fusion.phase === "gathering" && new Set(fusion.arrived).size === ARMY.length;
+  useEffect(() => {
+    if (allHere) message("100대가 다 모였어! 🤖 군단 집결 광장으로 돌아와야 합체할 수 있어!");
+  }, [allHere, message]);
   // A cleared minion wave comes back after a while.
   useEffect(() => {
     if (!wave.clearedAt) return;
@@ -121,20 +168,6 @@ export function useRobotArmy({
     );
     return () => clearTimeout(t);
   }, [wave]);
-  // Walking up to a legend stores its card in the watch.
-  useEffect(() => {
-    if (!allowed || fusion.phase !== "idle") return;
-    for (const robot of ARMY) {
-      if (!robot.legendary || hasCard(robots, robot.species)) continue;
-      if (worldDistance(armyPosition(robot, seconds), pos) > DISCOVER_RANGE) continue;
-      dispatch({ type: "robot-discover", id: robot.species });
-      message(
-        `⭐ 전설 로봇 발견! ${robotById(robot.species).name} 카드가 시계에 저장됐어! 시계의 ⭐ 전설에서 불러 봐.`,
-      );
-      break;
-    }
-  }, [allowed, fusion.phase, pos, seconds, robots, dispatch, message]);
-
   const atRally = allowed && worldDistance(pos, RALLY_SITE) <= RALLY_RANGE;
   const call = () => {
     if (fusion.phase !== "idle") {
@@ -145,11 +178,12 @@ export function useRobotArmy({
       message("100대를 부르려면 남쪽 🤖 군단 집결 광장으로 가야 해! 지도에서 갈 수 있어.");
       return;
     }
+    const at = Date.now();
     const next = callArmy(
       ++serial.current,
       ARMY.map((r) => r.instanceId),
-      seconds,
-      Date.now(),
+      at / 1000,
+      at,
     );
     if (!next) return;
     setFusion(next);
@@ -157,16 +191,19 @@ export function useRobotArmy({
   };
   const split = () => {
     if (!giant) return;
-    setFusion((f) => splitFusion(f, Date.now()));
+    leave();
     message("초대형 로봇이 다시 100대로 나뉘어 각자 마을로 돌아가!");
   };
 
-  const minions = wave.minions.map((m, i) => ({ ...m, at: minionPosition(i, seconds) }));
+  const minionsAt = (t: number) =>
+    wave.minions.map((m, i) => ({ ...m, at: minionPosition(i, t / 1000) }));
   const strike = () => {
     if (!giant) return;
     const at = Date.now();
+    const minions = minionsAt(at);
     setWeaponOut(true);
-    window.setTimeout(() => setWeaponOut(false), 1200);
+    clearTimeout(weaponTimer.current);
+    weaponTimer.current = window.setTimeout(() => setWeaponOut(false), 1200);
     const jobs = [
       ...(boss.phase !== "retreat" ? [{ kind: "boss" as const, id: "boss", at: boss.pos }] : []),
       ...minions
@@ -213,28 +250,29 @@ export function useRobotArmy({
     }
   };
 
-  // What gets drawn: nearby robots only (the other robots keep going, unseen).
-  // Positions come from the route or the rally, so robots walking in from far away show up.
-  const visible = ARMY.map((robot) => ({
-    robot,
-    at: fusionPosition(fusion, robot.instanceId, armyPosition(robot, seconds), now),
-  }))
-    .filter((r): r is { robot: (typeof ARMY)[number]; at: Point } => r.at !== null)
-    .map((r) => ({ ...r, d: worldDistance(r.at, pos) }))
-    .filter((r) => r.d <= VISIBLE_RADIUS)
-    .sort((a, b) => a.d - b.d)
-    .slice(0, VISIBLE_LIMIT)
-    .map((r) => ({
-      ...r,
-      behavior:
-        fusion.phase === "gathering"
-          ? fusion.arrived.includes(r.robot.instanceId)
-            ? "arrived"
-            : "rally"
-          : fusion.phase === "returning"
-            ? "returning"
-            : squadOf(r.robot).behavior,
-    }));
+  /** What gets drawn at time `t`: nearby robots only (the others keep going, unseen). */
+  const visibleAt = (t: number, center: Point) =>
+    // Positions come from the route or the rally, so robots walking in from far away show up.
+    ARMY.map((robot) => ({
+      robot,
+      at: fusionPosition(fusion, robot.instanceId, armyPosition(robot, t / 1000), t),
+    }))
+      .filter((r): r is { robot: (typeof ARMY)[number]; at: Point } => r.at !== null)
+      .map((r) => ({ ...r, d: worldDistance(r.at, center) }))
+      .filter((r) => r.d <= VISIBLE_RADIUS)
+      .sort((a, b) => a.d - b.d)
+      .slice(0, VISIBLE_LIMIT)
+      .map((r) => ({
+        ...r,
+        behavior:
+          fusion.phase === "gathering"
+            ? fusion.arrived.includes(r.robot.instanceId)
+              ? "arrived"
+              : "rally"
+            : fusion.phase === "returning"
+              ? "returning"
+              : squadOf(r.robot).behavior,
+      }));
   const goal = giant
     ? boss.phase !== "retreat"
       ? { name: "거대 악당", at: BOSS_ARENA }
@@ -248,9 +286,8 @@ export function useRobotArmy({
       })()
     : null;
   return {
-    now,
-    seconds,
-    visible,
+    visibleAt,
+    minionsAt,
     total: ARMY.length,
     unique: new Set(ARMY.map((r) => r.instanceId)).size,
     legendsFound: ARMY.filter((r) => r.legendary && hasCard(robots, r.species)).length,
@@ -259,12 +296,12 @@ export function useRobotArmy({
     giantHp,
     giantMax: GIANT_HP,
     boss,
-    minions,
     weaponOut,
     effect,
     atRally,
     call,
     split,
+    leave,
     strike,
     compass,
   };

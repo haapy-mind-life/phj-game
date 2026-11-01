@@ -8,6 +8,7 @@ import {
   SPLIT_MS,
   callArmy,
   canAssemble,
+  cancelFusion,
   fusionPosition,
   idleFusion,
   rallySlot,
@@ -71,6 +72,35 @@ test("99 arrived is not enough; the giant is built once, at 100/100", () => {
   assert.equal(stepFusion(m, lastArrival + ASSEMBLE_MS + 9999).phase, "giant");
 });
 
+test("100/100 waits for the player at the square; a called-off rally walks everyone home", () => {
+  let m = callArmy(9, ids, 0, 0)!;
+  m = stepFusion(m, GATHER_MAX_MS, false);
+  assert.equal(m.phase, "gathering");
+  assert.equal(new Set(m.arrived).size, 100);
+  m = stepFusion(m, GATHER_MAX_MS + 10, true);
+  assert.equal(m.phase, "assembling");
+  // Calling off part-way: each robot starts home from where it actually is.
+  let c = callArmy(10, ids, 0, 0)!;
+  const robot = ARMY[7]!;
+  const mid = fusionPosition(c, robot.instanceId, armyPosition(robot, 0), 1000)!;
+  c = cancelFusion(c, 1000, (id) =>
+    fusionPosition(
+      c,
+      id,
+      armyPosition(
+        ARMY.find((r) => r.instanceId === id)!,
+        0,
+      ),
+      1000,
+    ),
+  );
+  assert.equal(c.phase, "returning");
+  assert.ok(
+    worldDistance(fusionPosition(c, robot.instanceId, armyPosition(robot, 0), 1000)!, mid) < 1,
+  );
+  assert.equal(cancelFusion(idleFusion(), 0, () => null).phase, "idle");
+});
+
 test("gathering robots really walk from where they were to their own rally spot", () => {
   const m = callArmy(2, ids, 7, 0)!;
   const robot = ARMY[42]!;
@@ -95,10 +125,14 @@ test("splitting sends all 100 robots home; they are inside the giant until then"
   m = stepFusion(m, GATHER_MAX_MS + ASSEMBLE_MS);
   assert.equal(m.phase, "giant");
   assert.equal(fusionPosition(m, ids[0]!, { x: 0, y: 0 }, 0), null);
-  assert.equal(splitFusion(idleFusion(), 0).phase, "idle", "only a giant can split");
-  m = splitFusion(m, 50000);
+  assert.equal(splitFusion(idleFusion(), 0, RALLY_SITE).phase, "idle", "only a giant can split");
+  const splitAt = { x: 1000, y: 3300 };
+  m = splitFusion(m, 50000, splitAt);
   m = stepFusion(m, 50000 + SPLIT_MS);
   assert.equal(m.phase, "returning");
+  // They walk home from where the giant split, not from the rally square.
+  const first = fusionPosition(m, ids[0]!, armyPosition(ARMY[0]!, 0), m.since)!;
+  assert.ok(worldDistance(first, splitAt) < 1);
   m = stepFusion(m, 50000 + SPLIT_MS + GATHER_MAX_MS);
   assert.equal(m.phase, "idle");
   for (const robot of ARMY)

@@ -391,6 +391,16 @@ const frameTimes = (page, ms) =>
       await page.waitForFunction(() =>
         ["splitting", "returning"].includes(document.querySelector(".hj-army")?.dataset.massPhase),
       );
+      // The robots burst out where the giant stood and walk home from there.
+      await page.waitForFunction(
+        () => document.querySelector(".hj-army")?.dataset.massPhase === "returning",
+      );
+      await page.waitForTimeout(300);
+      const home = await visibleRobots();
+      assert.ok(
+        home.filter((x) => x.behavior === "returning").length >= 5,
+        "robots walk home from here",
+      );
       await page.reload({ waitUntil: "networkidle" });
       const after = await saved();
       assert.deepEqual(after.robots, before);
@@ -402,6 +412,22 @@ const frameTimes = (page, ms) =>
       assert.equal(await attr(page.locator(".hj-army"), "data-mass-phase"), "idle");
       assert.equal(await attr(page.locator(".hj-army"), "data-army-unique"), "100");
       console.log(`PASS ${name} RA-AT-14/18 split and reload: progress kept, nothing paid twice`);
+
+      if (full) {
+        // Leaving by map in the middle of a rally calls it off: everyone walks home, nothing paid.
+        await travel("🤖 군단 집결 광장");
+        await btn("⌚ 시계").click();
+        await page.getByRole("tab", { name: "🤖 군단" }).click();
+        await btn("📣 100대 집결!").click();
+        await page.waitForTimeout(1500);
+        await travel(
+          `${VILLAGES.findIndex((v) => v.id === "farm") + 1}. ${VILLAGES.find((v) => v.id === "farm").name}`,
+        );
+        await page.waitForTimeout(300);
+        assert.equal(await attr(page.locator(".hj-army"), "data-mass-phase"), "returning");
+        assert.equal((await saved()).robots.massFusions, before.massFusions);
+        console.log("PASS tablet RA-AT-12 a rally left by map travel is called off, nothing paid");
+      }
 
       // RA-AT-19/20: buttons on screen and finger-sized; watch tabs reachable; no text fields.
       await btn("⌚ 시계").click();

@@ -774,8 +774,8 @@ export function Village() {
   const travelTo = (arrival: Point, words: string) => {
     // A summoned robot travels along.
     robot.arrive(arrival);
-    // The giant is too big to travel by map; it splits back into the army first.
-    army.split();
+    // The giant is too big to travel by map: it splits (or the rally is called off) first.
+    army.leave();
     if (living.building) living.leaveBuilding();
     if (living.restaurant) living.leaveRestaurant();
     setRegion("village");

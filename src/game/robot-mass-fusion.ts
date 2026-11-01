@@ -97,10 +97,11 @@ export function callArmy(
   };
 }
 /** Advances the event: robots arrive on their own time; 100/100 starts assembling. */
-export function stepFusion(m: MassFusion, now: number): MassFusion {
+export function stepFusion(m: MassFusion, now: number, playerAtRally = true): MassFusion {
   if (m.phase === "gathering") {
     const arrived = m.participants.filter((id) => now - m.since >= m.travelMs[id]!);
-    if (canAssemble(m.participants, arrived))
+    // All 100 wait at the square until the player is back there to ride the giant.
+    if (canAssemble(m.participants, arrived) && playerAtRally)
       return { ...m, arrived, phase: "assembling", since: now };
     return arrived.length === m.arrived.length ? m : { ...m, arrived };
   }
@@ -111,9 +112,34 @@ export function stepFusion(m: MassFusion, now: number): MassFusion {
   if (m.phase === "returning" && now - m.since >= GATHER_MAX_MS) return idleFusion();
   return m;
 }
-/** Splitting is only possible from the finished giant; every robot then walks home. */
-export const splitFusion = (m: MassFusion, now: number): MassFusion =>
-  m.phase === "giant" ? { ...m, phase: "splitting", since: now } : m;
+/**
+ * Splitting is only possible from the finished giant. The robots burst out where the giant
+ * stands (`at`) and walk home from there.
+ */
+export function splitFusion(m: MassFusion, now: number, at: Point): MassFusion {
+  if (m.phase !== "giant") return m;
+  return {
+    ...m,
+    phase: "splitting",
+    since: now,
+    origins: Object.fromEntries(m.participants.map((id) => [id, { ...at }])),
+  };
+}
+/**
+ * Calling off a rally that hasn't become a giant yet: every robot walks home from wherever it
+ * is right now (`positionOf`), and nothing is paid.
+ */
+export function cancelFusion(
+  m: MassFusion,
+  now: number,
+  positionOf: (instanceId: string) => Point | null,
+): MassFusion {
+  if (m.phase !== "gathering" && m.phase !== "assembling") return m;
+  const origins = Object.fromEntries(
+    m.participants.map((id, i) => [id, positionOf(id) ?? rallySlot(i)]),
+  );
+  return { ...m, phase: "returning", since: now, origins };
+}
 /**
  * Where an army robot is drawn: on its own route normally, walking in while gathering, inside
  * the giant (null) while assembled, and walking back after a split.
@@ -134,9 +160,11 @@ export function fusionPosition(
     return { x: from.x + (slot.x - from.x) * k, y: from.y + (slot.y - from.y) * k };
   }
   if (m.phase === "returning") {
+    // Home from where the robot really was when the giant split or the rally was called off.
     const k = Math.min(1, (now - m.since) / travel);
     if (k >= 1) return normal;
-    return { x: slot.x + (normal.x - slot.x) * k, y: slot.y + (normal.y - slot.y) * k };
+    const from = m.origins[instanceId] ?? slot;
+    return { x: from.x + (normal.x - from.x) * k, y: from.y + (normal.y - from.y) * k };
   }
   return null;
 }

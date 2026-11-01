@@ -1,4 +1,6 @@
+import { memo, useEffect, useState } from "react";
 import type { Point } from "@/game/adventure";
+import type { ArmyRobot } from "@/game/robot-army";
 import { robotById } from "@/game/robot-catalog";
 import { BLAST_RADIUS, BOSS_HP, BOSS_SHIELD } from "@/game/robot-giant-battle";
 import { RALLY_SITE } from "@/game/robot-mass-fusion";
@@ -22,6 +24,14 @@ export function RobotArmyView({
   army: ReturnType<typeof useRobotArmy>;
 }) {
   const { fusion, boss } = army;
+  // The army's own clock: only this layer redraws as the robots walk.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = window.setInterval(() => setNow(Date.now()), 100);
+    return () => clearInterval(t);
+  }, []);
+  const visible = army.visibleAt(now, player);
+  const minions = army.minionsAt(now);
   const at = (p: Point) => {
     const s = screenPoint(p, player);
     return { left: s.x, top: s.y };
@@ -31,34 +41,26 @@ export function RobotArmyView({
       className="hj-army"
       data-army-total={army.total}
       data-army-unique={army.unique}
-      data-army-visible={army.visible.length}
+      data-army-visible={visible.length}
       data-mass-phase={fusion.phase}
       data-mass-participants={new Set(fusion.participants).size}
       data-mass-arrived={new Set(fusion.arrived).size}
       data-giant-hp={army.giant ? army.giantHp : undefined}
     >
-      {army.visible.map(({ robot, at: p, behavior }) => {
-        const species = robotById(robot.species);
-        return (
-          <div
-            key={robot.instanceId}
-            className={`hj-army-robot${robot.legendary ? " legend" : ""}`}
-            data-army-id={robot.instanceId}
-            data-behavior={behavior}
-            data-legend={robot.legendary ? robot.species : undefined}
-            data-x={Math.round(p.x)}
-            data-y={Math.round(p.y)}
-            style={at(p)}
-          >
-            <RobotPortrait robot={species} moving size={robot.legendary ? 58 : 46} />
-            {robot.legendary ? (
-              <b>⭐ {species.name}</b>
-            ) : (
-              <i style={{ background: INSIGNIA[robot.variant] }}>{robot.instanceId.slice(-3)}</i>
-            )}
-          </div>
-        );
-      })}
+      {visible.map(({ robot, at: p, behavior }) => (
+        <div
+          key={robot.instanceId}
+          className={`hj-army-robot${robot.legendary ? " legend" : ""}`}
+          data-army-id={robot.instanceId}
+          data-behavior={behavior}
+          data-legend={robot.legendary ? robot.species : undefined}
+          data-x={Math.round(p.x)}
+          data-y={Math.round(p.y)}
+          style={at(p)}
+        >
+          <ArmySprite robot={robot} />
+        </div>
+      ))}
       {worldDistance(RALLY_SITE, player) < 1500 && (
         <div className="hj-rally" style={at(RALLY_SITE)} data-rally>
           <div className="hj-rally-ring" />
@@ -94,7 +96,7 @@ export function RobotArmyView({
           <b>{boss.phase === "retreat" ? "수리하러 후퇴 중…" : "👹 거대 톱니 황제"}</b>
         </div>
       )}
-      {army.minions.map(
+      {minions.map(
         (m, i) =>
           worldDistance(m.at, player) < 1300 && (
             <div
@@ -126,6 +128,20 @@ export function RobotArmyView({
     </div>
   );
 }
+/** A robot's picture never changes while it walks, so it is drawn once and reused. */
+const ArmySprite = memo(function ArmySprite({ robot }: { robot: ArmyRobot }) {
+  const species = robotById(robot.species);
+  return (
+    <>
+      <RobotPortrait robot={species} moving size={robot.legendary ? 58 : 46} />
+      {robot.legendary ? (
+        <b>⭐ {species.name}</b>
+      ) : (
+        <i style={{ background: INSIGNIA[robot.variant] }}>{robot.instanceId.slice(-3)}</i>
+      )}
+    </>
+  );
+});
 function Beam({
   effect,
   player,

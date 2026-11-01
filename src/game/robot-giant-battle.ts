@@ -74,7 +74,9 @@ export function stepBoss(b: Boss, giant: Point | null, now: number, dt: number) 
     const caught = !!giant && !!b.target && worldDistance(giant, b.target) <= BLAST_RADIUS;
     return hit({ ...b, phase: "attack", until: now + ATTACK_MS }, caught ? BOSS_DAMAGE : 0);
   }
-  if (!giant || worldDistance(giant, b.pos) > BOSS_SIGHT) return hit({ ...b, phase: "idle" });
+  // Unchanged state is returned as is, so an idle boss costs nothing to redraw.
+  if (!giant || worldDistance(giant, b.pos) > BOSS_SIGHT)
+    return hit(b.phase === "idle" ? b : { ...b, phase: "idle" });
   if (b.phase === "idle") return hit({ ...b, phase: "approach", until: now + APPROACH_MS });
   // approach: close in, then wind up a slam where the giant is standing now.
   const d = worldDelta(b.pos, giant);
