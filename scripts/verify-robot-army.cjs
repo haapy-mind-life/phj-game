@@ -215,8 +215,16 @@ const frameTimes = (page, ms) =>
         await page.getByRole("button", { name: "방패 전설 로봇 카드 (아직 못 찾음)" }).isDisabled(),
       );
       // Every legend still to find has a hint; the panel still fits the screen width.
-      assert.equal(await page.locator("[data-legend-hint]").count(), 6);
-      assert.match(await page.locator('[data-legend-hint="lg-steel"]').innerText(), /벚꽃 마을/);
+      // The tour above can pass a walking legend, so compare with the saved cards.
+      const assertHintsMatchSave = async () => {
+        const { cards } = (await saved()).robots;
+        const unfound = ARMY.filter((x) => x.legendary && !cards[x.species]).map((x) => x.species);
+        const shown = await page
+          .locator("[data-legend-hint]")
+          .evaluateAll((els) => els.map((e) => e.dataset.legendHint));
+        assert.deepEqual([...shown].sort(), [...unfound].sort());
+      };
+      await assertHintsMatchSave();
       await page.locator("[data-legend-hint]").last().scrollIntoViewIfNeeded();
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
       if (full) await page.screenshot({ path: `${out}/ra-at06-legendary-six-${name}.png` });
@@ -231,9 +239,9 @@ const frameTimes = (page, ms) =>
         assert.ok((await saved()).robots.cards["lg-shield"]);
         await btn("⌚ 시계").click();
         await page.getByRole("tab", { name: "⭐ 전설" }).click();
-        // A found legend's hint is gone; the other five remain.
+        // A found legend's hint is gone; the others remain.
         assert.equal(await page.locator('[data-legend-hint="lg-shield"]').count(), 0);
-        assert.equal(await page.locator("[data-legend-hint]").count(), 5);
+        await assertHintsMatchSave();
         await page.getByRole("button", { name: "방패 전설 로봇 카드", exact: true }).click();
         await page.getByRole("button", { name: "✨ 방패 전설 로봇 소환!" }).click();
         await page.locator('[data-robot-actor][data-phase="active"]').first().waitFor();
