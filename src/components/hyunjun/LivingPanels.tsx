@@ -1,12 +1,12 @@
 import { usePlayerIdentity } from "./useFamilyAccount";
 import type { ReturnTypeOfLiving } from "./living-types";
-import { ACTORS } from "@/game/actors";
-import { OUTFITS, FOOD_PRICES, REWARDS } from "@/game/world-content";
+import { ACTORS } from "@/game/world/actors";
+import { OUTFITS, FOOD_PRICES, REWARDS } from "@/game/world/world-content";
 import { useGame } from "@/lib/game-state";
-import { characterUrl } from "@/game/character-art";
-import type { Activity } from "@/game/activities";
-import { screenPoint } from "@/game/world-space";
-import type { Point } from "@/game/adventure";
+import { characterUrl } from "@/game/world/character-art";
+import type { Activity } from "@/game/play/activities";
+import { screenPoint } from "@/game/world/world-space";
+import type { Point } from "@/game/world/adventure";
 import { useEffect, useRef } from "react";
 export function ActivityTargets({
   activity,

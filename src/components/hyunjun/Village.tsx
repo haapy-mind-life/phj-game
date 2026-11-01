@@ -1,31 +1,31 @@
 import { BuildingScene } from "./BuildingScene";
-import { buildingRegion } from "@/game/family-room";
-import { worldRectVisible } from "@/game/world-space";
+import { buildingRegion } from "@/game/family/family-room";
+import { worldRectVisible } from "@/game/world/world-space";
 import { VillageTerrain } from "./VillageTerrain";
 import { usePlayerIdentity } from "./useFamilyAccount";
 import { DiveScene } from "./DiveScene";
 import { TruckScene } from "./TruckScene";
 import { usePlaceMission } from "./usePlaceMission";
-import { DELIVERY_GARAGE, MISSION_LABELS, type MissionKind } from "@/game/place-play";
+import { DELIVERY_GARAGE, MISSION_LABELS, type MissionKind } from "@/game/play/place-play";
 import { WorldExpansion, WorldCopies, LegacySection, WorldOverlay } from "./WorldExpansion";
 import { People } from "./People";
 import { RobotWorld } from "./RobotWorld";
 import { RobotActorView } from "./RobotActorView";
-import { robotById } from "@/game/robot-catalog";
+import { robotById } from "@/game/robot/robot-catalog";
 import { RobotWatch } from "./RobotWatch";
 import { RobotArmyView } from "./RobotArmyView";
 import { GiantFusionArt } from "./GiantArt";
 import { useRobotArmy } from "./useRobotArmy";
-import { GIANT_SPEED } from "@/game/robot-giant-battle";
-import { RALLY_SITE } from "@/game/robot-mass-fusion";
-import { LEGENDS } from "@/game/robot-catalog";
-import { SQUADS, ARMY } from "@/game/robot-army";
+import { GIANT_SPEED } from "@/game/robot/robot-giant-battle";
+import { RALLY_SITE } from "@/game/robot/robot-mass-fusion";
+import { LEGENDS } from "@/game/robot/robot-catalog";
+import { SQUADS, ARMY } from "@/game/robot/robot-army";
 import { useRobotWorld, type WatchTab } from "./useRobotWorld";
 import { RestaurantScene } from "./RestaurantScene";
 import { useLivingWorld } from "./useLivingWorld";
 import { LivingPanels, ActivityTargets } from "./LivingPanels";
-import { worldDistance, isOcean } from "@/game/world-space";
-import { RESTAURANT_ROOM } from "@/game/world-content";
+import { worldDistance, isOcean } from "@/game/world/world-space";
+import { RESTAURANT_ROOM } from "@/game/world/world-content";
 import { RobotArt } from "./RobotArt";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -36,7 +36,7 @@ import {
   nearKidSpot,
   LANDMARKS,
   type KidSpot,
-} from "@/game/kid-world";
+} from "@/game/world/kid-world";
 import {
   CANDY_SPOTS,
   candySpotsForHouse,
@@ -56,16 +56,16 @@ import {
   stepPlayer,
   type MiniKind,
   type Point,
-} from "@/game/adventure";
+} from "@/game/world/adventure";
 import { Mascot } from "./Art";
 import { FriendArt } from "./FriendArt";
 import { Garage, loadCarId, saveCarId } from "./Garage";
 import { CarArt } from "./CarArt";
-import { carById, CARS } from "@/game/cars";
+import { carById, CARS } from "@/game/economy/cars";
 import { WorldScenes } from "./WorldScenes";
 import { LifeWorldScene } from "./LifeWorldScene";
 import { FamilyRoomPanel, RemoteInteriorPlayers, RemotePlayers } from "./FamilyRoom";
-import { restaurantRegion, type FamilyRegion } from "@/game/family-room";
+import { restaurantRegion, type FamilyRegion } from "@/game/family/family-room";
 import { useFamilyRoom } from "./useFamilyRoom";
 import { UnifiedCoast, PlaneArt } from "./UnifiedCoast";
 import {
@@ -82,7 +82,7 @@ import {
   onRunway,
   stepPlane,
   stepSubmarine,
-} from "@/game/unified-world";
+} from "@/game/world/unified-world";
 import {
   FOOD_MENU,
   LIFE_MAPS,
@@ -92,8 +92,8 @@ import {
   stepLifePlayer,
   type LifeRegion,
   type FoodId,
-} from "@/game/life-world";
-import { playGameSiren } from "@/game/siren";
+} from "@/game/world/life-world";
+import { playGameSiren } from "@/game/play/siren";
 import {
   WORLD_CALLS,
   STATIONS,
@@ -109,12 +109,12 @@ import {
   leaveLake,
   isNearCamp,
   thiefPosition,
-} from "@/game/world-events";
+} from "@/game/world/world-events";
 import { Shell } from "./Shell";
 import { MiniGame } from "./MiniGame";
 import { useMovement } from "./useMovement";
 import { Joystick } from "./Joystick";
-import { VILLAGES } from "@/game/villages";
+import { VILLAGES } from "@/game/world/villages";
 import { Constellation } from "./Constellation";
 import "./adventure.css";
 let returnPosition: Point = { ...SPAWN };

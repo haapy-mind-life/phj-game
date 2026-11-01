@@ -1,5 +1,5 @@
 import { useId } from "react";
-import type { RobotSpecies } from "@/game/robot-catalog";
+import type { RobotSpecies } from "@/game/robot/robot-catalog";
 import "./robot-fusion.css";
 
 // One combined fusion robot: a single skeleton where each body part comes from a team member and

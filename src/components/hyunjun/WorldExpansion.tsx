@@ -1,9 +1,9 @@
 import { createContext, useContext, memo, useMemo, type ReactNode } from "react";
-import type { Point } from "@/game/adventure";
-import { MAP } from "@/game/adventure";
-import { visibleOffsets, worldDistance } from "@/game/world-space";
-import { NEW_VILLAGES, RESTAURANTS, FESTIVALS } from "@/game/world-content";
-import { BIG_RESTAURANT_SCALE } from "@/game/kid-world";
+import type { Point } from "@/game/world/adventure";
+import { MAP } from "@/game/world/adventure";
+import { visibleOffsets, worldDistance } from "@/game/world/world-space";
+import { NEW_VILLAGES, RESTAURANTS, FESTIVALS } from "@/game/world/world-content";
+import { BIG_RESTAURANT_SCALE } from "@/game/world/kid-world";
 import { BurgerCrowd, KidIslands, KidLandmarks } from "./KidWorldArt";
 
 /** Home/construction state the expanded world draws; unchanged values keep the tile memoized. */

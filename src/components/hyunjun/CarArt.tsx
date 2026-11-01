@@ -1,4 +1,4 @@
-import type { Car } from "@/game/cars";
+import type { Car } from "@/game/economy/cars";
 export function CarArt({ car, size = 110 }: { car: Car; size?: number }) {
   const large = car.kind === "monster";
   const long = ["bus", "fire", "ambulance", "camper", "foodtruck", "limo"].includes(car.kind);

@@ -1,6 +1,6 @@
-import type { Point } from "@/game/adventure";
-import { worldDistance } from "@/game/world-space";
-import { CONSTRUCTION, HOME_LOTS, ISLANDS, LANDMARKS } from "@/game/kid-world";
+import type { Point } from "@/game/world/adventure";
+import { worldDistance } from "@/game/world/world-space";
+import { CONSTRUCTION, HOME_LOTS, ISLANDS, LANDMARKS } from "@/game/world/kid-world";
 import { GrowingHome, YardDecor } from "./UnifiedCoast";
 import { FriendArt } from "./FriendArt";
 

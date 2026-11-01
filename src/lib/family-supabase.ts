@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { familyConfiguration } from "@/game/family-config";
+import { familyConfiguration } from "@/game/family/family-config";
 export const familyConfig = familyConfiguration(
   import.meta.env["VITE_SUPABASE_URL"] ?? "",
   import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ?? "",

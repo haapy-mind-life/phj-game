@@ -8,8 +8,8 @@ import {
   ROBOTS,
   type RobotMissionMode,
   type RobotSpeciesId,
-} from "@/game/robot-catalog";
-import { gradeOf, isWatchCardAvailable, type RobotProgress } from "@/game/robot-engine";
+} from "@/game/robot/robot-catalog";
+import { gradeOf, isWatchCardAvailable, type RobotProgress } from "@/game/robot/robot-engine";
 import { FusedRobotArt } from "./FusedRobotArt";
 import { RobotPortrait } from "./RobotPortrait";
 

@@ -1,7 +1,7 @@
 import { usePlayerIdentity } from "./useFamilyAccount";
 import { PlayerAvatar } from "./PlayerAvatar";
-import { RESTAURANT_ROOM as ROOM, type RESTAURANTS } from "@/game/world-content";
-import type { Point } from "@/game/adventure";
+import { RESTAURANT_ROOM as ROOM, type RESTAURANTS } from "@/game/world/world-content";
+import type { Point } from "@/game/world/adventure";
 import type { GameState } from "@/lib/world-model";
 import { FriendArt } from "./FriendArt";
 import { People } from "./People";

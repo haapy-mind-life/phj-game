@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import type { RobotSpecies } from "@/game/robot-catalog";
+import type { RobotSpecies } from "@/game/robot/robot-catalog";
 
 // Machine robots for the robot fusion world: visor and lamp eyes, never a human face.
 // Drawn in a 120×150 box so a fusion can place several bodies in one picture.

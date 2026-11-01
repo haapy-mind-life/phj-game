@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useGame } from "@/lib/game-state";
-import { CARS } from "@/game/cars";
+import { CARS } from "@/game/economy/cars";
 import {
   createMission,
   actMission,
@@ -8,9 +8,9 @@ import {
   MISSION_LABELS,
   type MissionKind,
   type PlaceMission,
-} from "@/game/place-play";
-import type { Point } from "@/game/adventure";
-import { worldDistance } from "@/game/world-space";
+} from "@/game/play/place-play";
+import type { Point } from "@/game/world/adventure";
+import { worldDistance } from "@/game/world/world-space";
 export function usePlaceMission(pos: Point, enabled: boolean, message: (s: string) => void) {
   const { state, dispatch } = useGame();
   const [mission, setMission] = useState<PlaceMission | null>(null);

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { isWalkable, type Point } from "@/game/adventure";
+import { isWalkable, type Point } from "@/game/world/adventure";
 import {
   BATTLE_RANGE,
   FOLLOW_GAP,
@@ -19,7 +19,7 @@ import {
   type RobotMissionMode,
   type RobotSpecies,
   type RobotSpeciesId,
-} from "@/game/robot-catalog";
+} from "@/game/robot/robot-catalog";
 import {
   applyCardUse,
   freshVillain,
@@ -32,7 +32,7 @@ import {
   validFusion,
   villainMaxHp,
   type RobotProgress,
-} from "@/game/robot-engine";
+} from "@/game/robot/robot-engine";
 import {
   douseRescue,
   hitThief,
@@ -41,8 +41,8 @@ import {
   stepThief,
   type Rescue,
   type Thief,
-} from "@/game/robot-missions";
-import { worldDelta, worldDistance, wrapPoint } from "@/game/world-space";
+} from "@/game/robot/robot-missions";
+import { worldDelta, worldDistance, wrapPoint } from "@/game/world/world-space";
 import type { GameState, WorldAction } from "@/lib/world-model";
 
 export const robotName = (robot: RobotSpecies, robots: RobotProgress) => {

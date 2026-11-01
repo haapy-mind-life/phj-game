@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, type PointerEvent } from "react";
-import { createInput, movementKey } from "@/game/input";
+import { createInput, movementKey } from "@/game/world/input";
 export function useMovement(enabled: boolean, action: () => void) {
   const input = useRef(createInput());
   const actionRef = useRef(action);

@@ -1,4 +1,4 @@
-import type { RobotSpecies } from "@/game/robot-catalog";
+import type { RobotSpecies } from "@/game/robot/robot-catalog";
 import { LegendaryRobotArt } from "./LegendaryRobotArt";
 import { RobotSpeciesArt } from "./RobotSpeciesArt";
 

@@ -9,8 +9,8 @@ import {
   WIDTH,
   type Run,
   type RunMode,
-} from "@/game/runner-engine";
-import { drawRunner } from "@/game/runner-render";
+} from "@/game/play/runner-engine";
+import { drawRunner } from "@/game/play/runner-render";
 import { useGame } from "@/lib/game-state";
 import { Shell } from "./Shell";
 

@@ -10,7 +10,7 @@ import {
   OCEAN,
   OCEAN_DISCOVERIES,
   RUNWAY,
-} from "@/game/unified-world";
+} from "@/game/world/unified-world";
 export const UnifiedCoast = memo(function UnifiedCoast({
   seconds = 0,
   parkedPlane,

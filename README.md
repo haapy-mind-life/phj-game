@@ -20,7 +20,7 @@ npm run build:pages             # GitHub Pages용 정적 빌드 → dist-pages/
 | 경로 | 역할 |
 |---|---|
 | `src/routes/` | 화면 경로: `/`(마을 월드), `/kart`(게임 목록), `/race`(러너), `/peanuts`(땅콩 톡톡), `/rooms`(방 깨기), `/house`, `/greenhouse`(온실). Pages 정적 빌드는 `src/pages-entry.tsx`의 해시 라우터에도 같은 경로를 등록한다 |
-| `src/game/` | 화면과 분리된 순수 규칙(로봇·월드·러너 엔진)과 `*.test.ts` 단위 테스트 |
+| `src/game/` | 화면과 분리된 순수 규칙과 `*.test.ts` 단위 테스트. `world/`(월드·실내·입력), `robot/`(로봇), `play/`(미니게임·장사·러너·온실·카트 목록), `economy/`(차량·성장), `family/`(가족방) |
 | `src/lib/` | 공통 저장 상태 `world-model.ts`(reducer·저장 마이그레이션), 가족방 연결 |
 | `src/components/hyunjun/` | 게임 화면 UI와 그림(SVG) 컴포넌트 |
 | `src/components/ui/` | Lovable 기본 UI 키트 |
@@ -31,7 +31,7 @@ npm run build:pages             # GitHub Pages용 정적 빌드 → dist-pages/
 
 ## 작업 규칙 요약
 
-1. 새 규칙은 먼저 `src/game/`에 순수 함수와 테스트로 만들고, 그다음 화면에 연결합니다.
+1. 새 규칙은 먼저 `src/game/`의 알맞은 하위 폴더에 순수 함수와 테스트로 만들고, 그다음 화면에 연결합니다.
 2. 브랜치에서 작업하고 `npm run check`가 통과해야 PR을 엽니다. `main`에 직접 푸시하지 않습니다.
 3. 화면이 바뀌면 `scripts/verify-*.cjs`나 스크린샷으로 확인하고, 실행하지 못한 검증은 NOT_RUN으로 기록합니다.
 4. 저장 형식을 바꿀 때는 `migrateSave`에 기본값을 넣어 기존 저장을 보존합니다.

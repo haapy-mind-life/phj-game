@@ -1,4 +1,4 @@
-import { HOUSE_TIERS } from "@/game/unified-world";
+import { HOUSE_TIERS } from "@/game/world/unified-world";
 import type { ReactNode } from "react";
 import { BeachTruck } from "./CoastProps";
 import { usePlayerIdentity } from "./useFamilyAccount";
@@ -8,7 +8,7 @@ import type { FurnitureId } from "@/lib/world-model";
 import { FriendArt } from "./FriendArt";
 import { RobotArt } from "./RobotArt";
 import type { Outfit } from "@/lib/world-model";
-import type { Point } from "@/game/adventure";
+import type { Point } from "@/game/world/adventure";
 import {
   FOOD_MENU,
   LIFE_MAPS,
@@ -17,7 +17,7 @@ import {
   SEA_TREASURES,
   type LifeRegion,
   type FoodId,
-} from "@/game/life-world";
+} from "@/game/world/life-world";
 import { CANDY_SPOTS, candySpotsForHouse, DECOR, type PlacedDecor } from "@/lib/world-model";
 
 export function LifeWorldScene({

@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
-import type { Point } from "@/game/adventure";
-import type { RobotSpecies } from "@/game/robot-catalog";
+import type { Point } from "@/game/world/adventure";
+import type { RobotSpecies } from "@/game/robot/robot-catalog";
 import { FusedRobotArt } from "./FusedRobotArt";
 import { SummonBeamArt } from "./MissionArt";
 import { RobotPortrait } from "./RobotPortrait";

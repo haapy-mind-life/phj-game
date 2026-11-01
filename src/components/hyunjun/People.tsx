@@ -1,4 +1,4 @@
-import { canWalkRestaurant } from "@/game/restaurant";
+import { canWalkRestaurant } from "@/game/play/restaurant";
 import {
   ACTORS,
   actorMayBeNear,
@@ -8,10 +8,10 @@ import {
   homeActorPosition,
   type ActorScene,
   type Actor,
-} from "@/game/actors";
-import { screenPoint, worldDistance, wrapPoint } from "@/game/world-space";
-import { canWalkHome } from "@/game/life-world";
-import { isWalkable, type Point } from "@/game/adventure";
+} from "@/game/world/actors";
+import { screenPoint, worldDistance, wrapPoint } from "@/game/world/world-space";
+import { canWalkHome } from "@/game/world/life-world";
+import { isWalkable, type Point } from "@/game/world/adventure";
 import type { GameState } from "@/lib/world-model";
 import { useEffect, useRef } from "react";
 import { DadArt } from "./DadArt";

@@ -2,8 +2,8 @@ import {
   BUILDING_ROOM as ROOM,
   canWalkBuilding,
   type TownBuilding,
-} from "@/game/building-interiors";
-import type { Point } from "@/game/adventure";
+} from "@/game/world/building-interiors";
+import type { Point } from "@/game/world/adventure";
 import type { GameState } from "@/lib/world-model";
 import { PlayerAvatar } from "./PlayerAvatar";
 import { usePlayerIdentity } from "./useFamilyAccount";

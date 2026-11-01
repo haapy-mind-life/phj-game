@@ -1,9 +1,9 @@
 import { usePlayerIdentity } from "./useFamilyAccount";
-import { ACTORS } from "@/game/actors";
+import { ACTORS } from "@/game/world/actors";
 import { PersonArt } from "./People";
 import { useEffect, useRef, useState } from "react";
-import { actMini, newMini, stepMini, type MiniKind } from "@/game/adventure";
-import { characterUrl } from "@/game/character-art";
+import { actMini, newMini, stepMini, type MiniKind } from "@/game/world/adventure";
+import { characterUrl } from "@/game/world/character-art";
 import { useGame } from "@/lib/game-state";
 import { useMovement } from "./useMovement";
 import { Joystick } from "./Joystick";
