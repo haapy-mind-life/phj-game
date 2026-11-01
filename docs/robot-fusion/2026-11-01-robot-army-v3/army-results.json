@@ -1,0 +1,61 @@
+{
+  "tablet": {
+    "gatherDom": 0,
+    "gatherFrames": {
+      "frames": 121,
+      "p95": 16.7,
+      "heapMb": 10
+    },
+    "gatherFramesCpu4x": {
+      "frames": 94,
+      "p95": 33.4,
+      "heapMb": 10
+    },
+    "arrivals": [
+      1,
+      19,
+      85,
+      93,
+      100,
+      100
+    ],
+    "giantFrames": {
+      "frames": 151,
+      "p95": 16.7,
+      "heapMb": 10
+    },
+    "armyDom": 0,
+    "walkFrames": {
+      "frames": 143,
+      "p95": 33.3,
+      "heapMb": 10
+    }
+  },
+  "phone": {
+    "gatherDom": 10,
+    "gatherFrames": {
+      "frames": 121,
+      "p95": 16.7,
+      "heapMb": 10
+    },
+    "arrivals": [
+      0,
+      19,
+      47,
+      60,
+      79,
+      85
+    ],
+    "giantFrames": {
+      "frames": 151,
+      "p95": 16.7,
+      "heapMb": 10
+    },
+    "armyDom": 0,
+    "walkFrames": {
+      "frames": 151,
+      "p95": 16.8,
+      "heapMb": 10
+    }
+  }
+}
