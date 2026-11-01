@@ -496,7 +496,7 @@ export function RobotRosterArt({
   const viewBox = art?.viewBox ?? body.viewBox;
   const [, , vw, vh] = viewBox.split(" ").map(Number) as [number, number, number, number];
   const height = size * 1.25;
-  const turns = !changeArt && (body.side || form === "ambulance") && facing > 0;
+  const turns = (body.side || form === "ambulance") && facing > 0;
   return (
     <svg
       className={`hj-mech hj-roster${moving ? " moving" : ""}${weaponOut ? " weapon-out" : ""}${changing ? " changing" : ""}`}

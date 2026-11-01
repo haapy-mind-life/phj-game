@@ -33,7 +33,8 @@
   pointer-events: none;
 }
 .hj-army-robot.infected svg {
-  filter: hue-rotate(250deg) saturate(1.4) brightness(0.92);
+  /* Sepia first, so any body colour lands on the same purple (green means healed). */
+  filter: sepia(1) saturate(2.6) hue-rotate(225deg) brightness(0.95);
 }
 .hj-army-robot.infected > i {
   background: #d7a6ff !important;

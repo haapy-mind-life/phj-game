@@ -309,6 +309,11 @@ async function cureAll(g, reach) {
       assert.equal((await infected()).length, 0, "the mist lifts when the army is called");
       pass(name, "AC-21 rally with mist: 100 called, mist lifted, cures unchanged");
       assert.equal((await saved()).robots.cures, 2);
+      await openWatch("🚨 출동");
+      await page.getByRole("button", { name: "🟢 미스트 해독" }).click();
+      await page.waitForTimeout(250);
+      assert.equal((await infected()).length, 0, "no new mist while the army is on the move");
+      pass(name, "AC-21 a cure can't start while the army is gathering");
 
       // AC-06: everything from the old save is still there after all of it.
       s = await saved();

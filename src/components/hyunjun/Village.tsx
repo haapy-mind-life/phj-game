@@ -494,9 +494,10 @@ export function Village() {
   // The army can't be infected while it is rallying, a giant or walking home.
   const armyBusy = army.fusion.phase !== "idle";
   const clearMist = robot.clearMist;
+  const mistActive = !!robot.mist;
   useEffect(() => {
-    if (armyBusy) clearMist();
-  }, [armyBusy, clearMist]);
+    if (armyBusy && mistActive) clearMist();
+  }, [armyBusy, mistActive, clearMist]);
   const robotSpeed = army.giant ? GIANT_SPEED : robot.actor?.mode === "ride" ? 1.25 : 1;
   // The giant forms when assembling starts at the rally square and stays until it splits.
   const giantShown =
@@ -1770,7 +1771,12 @@ export function Village() {
             setWatchTab(false);
             robot.recall("로봇이 시계 속으로 돌아갔어.");
           }}
-          onMission={robot.startMission}
+          onMission={(mode) => {
+            if (mode === "cure" && armyBusy) {
+              setWatchTab(false);
+              setMessage("군단이 움직이는 중이야! 군단이 마을로 돌아가면 미스트 해독을 시작해 줘.");
+            } else robot.startMission(mode);
+          }}
           onClose={() => setWatchTab(false)}
           army={{
             total: army.total,
