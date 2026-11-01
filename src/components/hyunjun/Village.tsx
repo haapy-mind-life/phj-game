@@ -756,7 +756,8 @@ export function Village() {
     setMapOpen(false);
     setMessage(words);
   };
-  const robotWatchAllowed = region === "village" && !living.interior && !seaOpen && !truckOpen && !mini && !drawing && !station && !garageOpen && !mapOpen && plane === "off" && !submarine && !driving && !diving;\n  const livingActionLabel =
+  const robotWatchAllowed = region === "village" && !living.interior && !seaOpen && !truckOpen && !mini && !drawing && !station && !garageOpen && !mapOpen && plane === "off" && !submarine && !driving && !diving;
+  const livingActionLabel =
     mission && !mission.done && region === "village" && !living.interior
       ? missionPlay.label
       : nearbyStation
@@ -946,7 +947,22 @@ export function Village() {
                 />
               }
               {region === "village" && !living.interior && (
-                <RobotWorld player={pos} roaming={robot.roaming} nearTarget={robot.nearTarget} />
+                <>
+                  <RobotWorld player={pos} roaming={robot.roaming} nearTarget={robot.nearTarget} />
+                  {robot.summoned && !robot.riding && (
+                    <div className="hj-watch-helper" data-watch-helper style={{ left: size.w / 2 + 85, top: size.h / 2 + 30 }}>
+                      <RobotSpeciesArt robot={robot.summoned} size={70} moving={walking} label={`소환된 ${robot.summoned.name}`} />
+                      <b>{robot.fusionActive.length > 1 ? `${robot.fusionActive.length}단 합체` : robot.summoned.name}</b>
+                    </div>
+                  )}
+                  {robot.mission && (
+                    <div className="hj-watch-enemy" data-watch-mission style={{ left: size.w / 2 + 160, top: size.h / 2 - 95 }}>
+                      <span>{robot.mission.mode === "rescue" ? "도움이 필요한 친구" : robot.mission.mode === "thief" ? "도둑 로봇" : "악당 로봇"}</span>
+                      <strong>{robot.mission.mode === "rescue" ? "도와줘!" : "출현!"}</strong>
+                      <small>남은 단계 {robot.mission.hp}</small>
+                    </div>
+                  )}
+                </>
               )}
               <LegacySection center={pos} w={size.w} h={size.h}>
                 {" "}
@@ -1508,7 +1524,16 @@ export function Village() {
             )}
             <Joystick onMove={movement.setStick} />
             <div className="adv-action-buttons">
-              {robotWatchAllowed && (\n                <button className="hj-watch-open" data-watch-open onClick={() => robot.setWatchOpen(true)}>⌚ 로봇 시계</button>\n              )}\n              {robotWatchAllowed && robot.activeRobot && (\n                <>\n                  <button className="hj-watch-skill" onClick={() => robot.useCard()}>카드 기술 {robot.uses}/7</button>\n                  <button className="hj-watch-skill" onClick={() => robot.attack()} disabled={!robot.mission}>무기 · 돕기</button>\n                </>\n              )}\n              {plane === "ground" && (
+              {robotWatchAllowed && (
+                <button className="hj-watch-open" data-watch-open onClick={() => robot.setWatchOpen(true)}>⌚ 로봇 시계</button>
+              )}
+              {robotWatchAllowed && robot.activeRobot && (
+                <>
+                  <button className="hj-watch-skill" onClick={() => robot.useCard()}>카드 기술 {robot.uses}/7</button>
+                  <button className="hj-watch-skill" onClick={() => robot.attack()} disabled={!robot.mission}>무기 · 돕기</button>
+                </>
+              )}
+              {plane === "ground" && (
                 <button className="hj-car-mode" onClick={leavePlane}>
                   내리기
                 </button>
@@ -1592,6 +1617,21 @@ export function Village() {
         </p>
         <span>왼쪽 조이스틱으로 이동 · 오른쪽 버튼으로 놀이와 대화</span>
       </div>
+      {robot.watchOpen && robotWatchAllowed && (
+        <RobotWatch
+          progress={state.robots}
+          selected={robot.selected}
+          onSelect={robot.setSelected}
+          fusionIds={robot.fusionIds}
+          onToggleFusion={robot.toggleFusionMember}
+          onFuse={robot.fuse}
+          activeId={robot.activeRobot?.id ?? null}
+          onSummon={robot.summon}
+          onUpgrade={robot.upgrade}
+          onMission={robot.startMission}
+          onClose={() => robot.setWatchOpen(false)}
+        />
+      )}
       {station && (
         <div className="hj-garage-backdrop">
           <section
