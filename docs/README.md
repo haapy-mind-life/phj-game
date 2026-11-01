@@ -40,5 +40,6 @@
 - [초기 통합 제품 설계](superpowers/specs/2026-09-15-hyunjun-integrated-game-design.md): 러너/농장/집 저장·이동·조작 기준. 계획 문서는 [superpowers/plans](superpowers/plans/)
 - [통합 요구사항 정의서 v1.0 (2026-10-18)](requirements/2026-10-18-integrated-requirements-v1.0.md): 옛 루트 `note.md`. 15·16 문서의 기준 요구사항
 - [2026-10-11 당시 상태](archive/PROJECT_STATUS_2026-10-11.md): 과거 스냅샷. 현재 상태로 오해하지 않는다
+- [가족방 초기 계획 (Cloudflare안, 2026-10-19)](archive/multiplayer-PLAN_2026-10-19-cloudflare.md): 채택하지 않음. 실제 구현은 Supabase
 - 링크 검사: `node scripts/check-doc-links.mjs` (문서를 옮기거나 이름을 바꾼 뒤 실행)
 - 시험 기록: [터치 월드](verification/2026-10-04-touch-world.md) · [조이스틱](verification/2026-10-11-joystick.md)

@@ -44,3 +44,7 @@ supabase/.branches/
 # Agent worktrees and handoff archives kept beside the checkout
 .worktrees/
 *_HANDOFF_*.zip
+*_HANDOFF_*/
+
+# Bulk screenshot captures stay local; commit only shots a document links to
+docs/verification/*concept-audit/
