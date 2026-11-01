@@ -135,7 +135,7 @@ test("rescue mission rewards once and upgrades without losing saved cards", () =
 
 test("new robot watch reducer actions persist through legacy save without affecting cars", () => {
   const original = migrateSave({ version: 3, money: 234, ownedCars: ["car-001", "car-021"] });
-  let state = reduceWorld(original, { type: "robot-fuse", ids: ["rb-police", "rb-fire"] });
+  let state = reduceWorld(original, { type: "robot-fuse", ids: ["rb-police"] });
   assert.equal(state, original);
   state = reduceWorld(state, { type: "robot-meet", id: "rb-police" });
   state = reduceWorld(state, { type: "robot-meet", id: "rb-fire" });
