@@ -1,0 +1,28 @@
+name: Robot Watch Format (temporary)
+on:
+  push:
+    branches: [feat/robot-watch-fusion-20261101]
+permissions:
+  contents: write
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/robot-watch-fusion-20261101
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - name: Format robot watch files
+        run: |
+          bunx prettier --write src/components/hyunjun/RobotWatch.tsx src/components/hyunjun/Village.tsx src/components/hyunjun/useRobotWorld.ts src/components/hyunjun/adventure.css src/game/robot-engine.ts src/game/robot-engine.test.ts src/game/robot-catalog.ts src/lib/world-model.ts
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/components/hyunjun/RobotWatch.tsx src/components/hyunjun/Village.tsx src/components/hyunjun/useRobotWorld.ts src/components/hyunjun/adventure.css src/game/robot-engine.ts src/game/robot-engine.test.ts src/game/robot-catalog.ts src/lib/world-model.ts
+          if ! git diff --cached --quiet; then
+            git commit -m "style(robot): apply repository prettier formatting"
+            git push origin HEAD:feat/robot-watch-fusion-20261101
+          fi
