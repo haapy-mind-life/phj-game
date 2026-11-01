@@ -126,6 +126,27 @@ test("boss: approaches, warns, and its slam only hits a giant still inside the c
   assert.equal(dodged.boss.phase, "attack");
 });
 
+test("boss: walks again between slams instead of slamming in place, and waits until close", () => {
+  let b = freshBoss();
+  const far = { x: BOSS_ARENA.x + 700, y: BOSS_ARENA.y };
+  b = stepBoss(b, far, 0, 0.05).boss;
+  // Long after the walk window, a giant that is still far is followed, not slammed.
+  b = stepBoss(b, far, 5000, 0.1).boss;
+  assert.equal(b.phase, "approach");
+  const near = { x: b.pos.x + 300, y: b.pos.y };
+  b = stepBoss(b, near, 5100, 0.1).boss;
+  assert.equal(b.phase, "telegraph");
+  b = stepBoss(b, near, b.until, 0.1).boss;
+  assert.equal(b.phase, "attack");
+  b = stepBoss(b, near, b.until, 0.1).boss;
+  assert.equal(b.phase, "approach");
+  // Right after a slam it walks for a while before the next one.
+  const pos = b.pos;
+  b = stepBoss(b, { x: near.x + 200, y: near.y }, b.until - 2400, 0.1).boss;
+  assert.equal(b.phase, "approach");
+  assert.ok(worldDistance(b.pos, pos) > 0, "it moved");
+});
+
 test("boss: shield first, then health, stagger on big hits, retreat at 0 and come back", () => {
   let b = freshBoss();
   let r = hitBoss(b, GIANT_DAMAGE, 0);

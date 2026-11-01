@@ -37,13 +37,13 @@ export const DRILL_HALF = 130;
 export const DRILL_PERIOD = 24;
 /** Formation offsets in the squad's own frame (forward = +x). */
 const FORMATIONS: Record<SquadBehavior, readonly Point[]> = {
-  // V formation while patrolling.
+  // Patrol squads walk in a column along their route (see armyPosition).
   patrol: [
     { x: 0, y: 0 },
-    { x: -45, y: -40 },
-    { x: -45, y: 40 },
-    { x: -90, y: -80 },
-    { x: -90, y: 80 },
+    { x: 0, y: 0 },
+    { x: 0, y: 0 },
+    { x: 0, y: 0 },
+    { x: 0, y: 0 },
   ],
   // Shoulder-to-shoulder line while drilling.
   drill: [
@@ -168,10 +168,16 @@ export function formationOffset(behavior: SquadBehavior, slot: number, heading: 
   return { x: o.x * c - o.y * s, y: o.x * s + o.y * c };
 }
 /** Where one army robot stands at `seconds` when it is going about its day. */
+/** Patrol squads march in a column: each robot walks the leader's path this much later. */
+export const COLUMN_LAG = 1.8;
 export function armyPosition(robot: ArmyRobot, seconds: number): Point {
   const squad = squadOf(robot);
+  if (squad.behavior === "patrol")
+    return wrapPoint(squadPose(squad, seconds - robot.slot * COLUMN_LAG).at);
+  // Drill squads march in a line across their axis, the same way round in both directions,
+  // so nobody jumps when the squad turns.
   const pose = squadPose(squad, seconds);
-  const o = formationOffset(squad.behavior, robot.slot, pose.heading);
+  const o = formationOffset("drill", robot.slot, squad.axis === "x" ? 0 : Math.PI / 2);
   return wrapPoint({ x: pose.at.x + o.x, y: pose.at.y + o.y });
 }
 /** Army robots near `center`, nearest first, at most `limit` (only these get drawn). */

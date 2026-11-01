@@ -12,13 +12,17 @@ export const BOSS_SHIELD = 40;
 export const BOSS_SPEED = 90;
 /** The boss notices the giant from this far away. */
 export const BOSS_SIGHT = 760;
-export const TELEGRAPH_MS = 1600;
+// Long enough for a 7-year-old to see the warning and walk out (PROPOSED balance).
+export const TELEGRAPH_MS = 2000;
+/** The boss walks this long between slams, and only winds up when the giant is this close. */
+export const APPROACH_MS = 2500;
+export const SLAM_REACH = 520;
 export const ATTACK_MS = 700;
 export const STAGGER_MS = 900;
 export const BOSS_RETREAT_MS = 20000;
 /** Standing inside the warning circle when the slam lands is a hit; stepping out dodges it. */
 export const BLAST_RADIUS = 170;
-export const BOSS_DAMAGE = 25;
+export const BOSS_DAMAGE = 20;
 export const GIANT_HP = 100;
 /** The giant's arm cannon. Giant hits don't count toward card uses (PROPOSED). */
 export const GIANT_WEAPON: Weapon = {
@@ -59,20 +63,24 @@ export const freshBoss = (): Boss => ({
 export function stepBoss(b: Boss, giant: Point | null, now: number, dt: number) {
   const hit = (boss: Boss, damage = 0) => ({ boss, giantDamage: damage });
   if (b.phase === "retreat") return hit(now >= b.until ? freshBoss() : b);
-  if (b.phase === "stagger") return hit(now >= b.until ? { ...b, phase: "approach" } : b);
+  if (b.phase === "stagger")
+    return hit(now >= b.until ? { ...b, phase: "approach", until: now + APPROACH_MS } : b);
   if (b.phase === "attack")
-    return hit(now >= b.until ? { ...b, phase: "approach", target: null } : b);
+    return hit(
+      now >= b.until ? { ...b, phase: "approach", target: null, until: now + APPROACH_MS } : b,
+    );
   if (b.phase === "telegraph") {
     if (now < b.until) return hit(b);
     const caught = !!giant && !!b.target && worldDistance(giant, b.target) <= BLAST_RADIUS;
     return hit({ ...b, phase: "attack", until: now + ATTACK_MS }, caught ? BOSS_DAMAGE : 0);
   }
   if (!giant || worldDistance(giant, b.pos) > BOSS_SIGHT) return hit({ ...b, phase: "idle" });
-  if (b.phase === "idle") return hit({ ...b, phase: "approach", until: now + 2500 });
+  if (b.phase === "idle") return hit({ ...b, phase: "approach", until: now + APPROACH_MS });
   // approach: close in, then wind up a slam where the giant is standing now.
   const d = worldDelta(b.pos, giant);
   const len = Math.hypot(d.x, d.y);
-  if (len < 240 || now >= b.until)
+  // It always walks for a while between slams, so there is time to hit back.
+  if (now >= b.until && len < SLAM_REACH)
     return hit({ ...b, phase: "telegraph", target: { ...giant }, until: now + TELEGRAPH_MS });
   const step = Math.min(len, BOSS_SPEED * Math.min(dt, 0.1));
   const next = wrapPoint({ x: b.pos.x + (d.x / len) * step, y: b.pos.y + (d.y / len) * step });

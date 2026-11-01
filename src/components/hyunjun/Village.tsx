@@ -13,6 +13,13 @@ import { RobotWorld } from "./RobotWorld";
 import { RobotActorView } from "./RobotActorView";
 import { robotById } from "@/game/robot-catalog";
 import { RobotWatch } from "./RobotWatch";
+import { RobotArmyView } from "./RobotArmyView";
+import { GiantFusionArt } from "./GiantArt";
+import { useRobotArmy } from "./useRobotArmy";
+import { GIANT_SPEED } from "@/game/robot-giant-battle";
+import { RALLY_SITE } from "@/game/robot-mass-fusion";
+import { LEGENDS } from "@/game/robot-catalog";
+import { SQUADS, ARMY } from "@/game/robot-army";
 import { useRobotWorld, type WatchTab } from "./useRobotWorld";
 import { RestaurantScene } from "./RestaurantScene";
 import { useLivingWorld } from "./useLivingWorld";
@@ -113,6 +120,10 @@ import "./adventure.css";
 let returnPosition: Point = { ...SPAWN };
 const mapX = (x: number) => 10 + (x / MAP.width) * 320;
 const mapY = (y: number) => 14 + (y / MAP.height) * 132;
+/** Each of the giant's 12 parts takes the colour of the squad leader that formed it. */
+const GIANT_PART_COLORS = SQUADS.slice(0, 12).map(
+  (sq) => robotById(ARMY.find((r) => r.squadId === sq.id && r.slot === 0)!.species).color,
+);
 export function Village() {
   const identity = usePlayerIdentity();
   const { state, dispatch, ready } = useGame();
@@ -472,7 +483,20 @@ export function Village() {
     watchOpen: watchTab,
     setWatchOpen: setWatchTab,
   });
-  const robotSpeed = robot.actor?.mode === "ride" ? 1.25 : 1;
+  const army = useRobotArmy({
+    pos,
+    allowed: robotAllowed,
+    robots: state.robots,
+    dispatch,
+    message: setMessage,
+    onGiant: robot.recall,
+  });
+  const robotSpeed = army.giant ? GIANT_SPEED : robot.actor?.mode === "ride" ? 1.25 : 1;
+  // The giant forms when assembling starts at the rally square and stays until it splits.
+  const giantShown =
+    army.fusion.phase === "assembling" ||
+    army.fusion.phase === "giant" ||
+    army.fusion.phase === "splitting";
   const nearDrawing = Math.hypot(pos.x - 5010, pos.y - 520) < 110;
   // Each interior has its own family region; outdoor anchors stay fixed while inside.
   const familyRegion: FamilyRegion = living.building
@@ -750,6 +774,8 @@ export function Village() {
   const travelTo = (arrival: Point, words: string) => {
     // A summoned robot travels along.
     robot.arrive(arrival);
+    // The giant is too big to travel by map; it splits back into the army first.
+    army.split();
     if (living.building) living.leaveBuilding();
     if (living.restaurant) living.leaveRestaurant();
     setRegion("village");
@@ -955,6 +981,9 @@ export function Village() {
                 />
               }
               {region === "village" && !living.interior && (
+                <RobotArmyView player={pos} army={army} />
+              )}
+              {region === "village" && !living.interior && (
                 <RobotWorld
                   player={pos}
                   robot={robot}
@@ -1101,6 +1130,23 @@ export function Village() {
                       moving={walking}
                       diving
                     />
+                  ) : giantShown ? (
+                    <div className="hj-giant-rider">
+                      <GiantFusionArt
+                        phase={
+                          army.fusion.phase === "assembling"
+                            ? "assembling"
+                            : army.fusion.phase === "splitting"
+                              ? "splitting"
+                              : "giant"
+                        }
+                        partColors={GIANT_PART_COLORS}
+                        legends={LEGENDS.map((l) => l.legendary!)}
+                        weaponOut={army.weaponOut}
+                        size={250}
+                        label={`${identity.name}가 탄 100대 초대형 합체 로봇`}
+                      />
+                    </div>
                   ) : robot.actor?.mode === "ride" ? (
                     <RobotActorView
                       team={robot.team}
@@ -1479,6 +1525,7 @@ export function Village() {
                 ...LANDMARKS.map((l) => ({ label: l.emoji + " " + l.name, x: l.x, y: l.y + 90 })),
                 { label: "🚧 공사장", x: CONSTRUCTION.x, y: CONSTRUCTION.y + 90 },
                 { label: "🍔 맥도날드 시티점", x: 4700, y: 2470 },
+                { label: "🤖 군단 집결 광장", x: RALLY_SITE.x, y: RALLY_SITE.y - 120 },
                 { label: "🍔 맥도날드 바닷가점", x: 13200, y: 1820 },
                 ...(state.homeLot !== "original"
                   ? [{ label: "🏠 이사 간 우리 집", x: home.x, y: home.y + 60 }]
@@ -1540,6 +1587,21 @@ export function Village() {
                     {robot.compass}
                   </span>
                 )}
+                {army.giant && (
+                  <span className="hj-robot-card" data-giant-card>
+                    🦾 초대형 로봇 ⚡ {Math.max(0, army.giantHp)}/{army.giantMax}
+                  </span>
+                )}
+                {army.fusion.phase === "gathering" && (
+                  <span className="hj-robot-card" data-rally-card>
+                    📣 집결 중 {new Set(army.fusion.arrived).size}/100
+                  </span>
+                )}
+                {army.compass && (
+                  <span className="hj-robot-card hj-compass" data-army-compass>
+                    {army.compass}
+                  </span>
+                )}
               </p>
               <Joystick onMove={movement.setStick} />
               <div className="adv-action-buttons">
@@ -1548,7 +1610,7 @@ export function Village() {
                     내리기
                   </button>
                 )}
-                {robotAllowed && (
+                {robotAllowed && !giantShown && (
                   <button
                     className="hj-car-mode hj-watch-button"
                     onClick={() => setWatchTab("summon")}
@@ -1556,7 +1618,24 @@ export function Village() {
                     ⌚ 시계
                   </button>
                 )}
-                {robot.actor ? (
+                {giantShown ? (
+                  <>
+                    <button
+                      className="hj-car-mode hj-fuse-button"
+                      disabled={!army.giant}
+                      onClick={army.split}
+                    >
+                      초대형 합체 풀기
+                    </button>
+                    <button
+                      className="hj-car-mode hj-weapon-button"
+                      disabled={!army.giant}
+                      onClick={army.strike}
+                    >
+                      ⚔ 거대 빔
+                    </button>
+                  </>
+                ) : robot.actor ? (
                   <>
                     <button
                       className="hj-car-mode hj-fuse-button"
@@ -1671,6 +1750,21 @@ export function Village() {
           }}
           onMission={robot.startMission}
           onClose={() => setWatchTab(false)}
+          army={{
+            total: army.total,
+            unique: army.unique,
+            legendsFound: army.legendsFound,
+            atRally: army.atRally,
+            phase: army.fusion.phase,
+            onCall: () => {
+              setWatchTab(false);
+              army.call();
+            },
+            onSplit: () => {
+              setWatchTab(false);
+              army.split();
+            },
+          }}
         />
       )}
       {station && (

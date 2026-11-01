@@ -79,6 +79,14 @@ test("every robot stays on open ground, away from doors, stations and missions, 
   }
 });
 
+test("robots never jump: positions change smoothly, also at turns and corners", () => {
+  for (const robot of ARMY)
+    for (let t = 0; t < 40; t += 0.1) {
+      const d = worldDistance(armyPosition(robot, t), armyPosition(robot, t + 0.1));
+      assert.ok(d < 8, `${robot.instanceId} jumped ${d.toFixed(1)} at ${t.toFixed(1)}s`);
+    }
+});
+
 test("robots really move over time, the same way every time", () => {
   for (const robot of ARMY) {
     const a = armyPosition(robot, 3),
