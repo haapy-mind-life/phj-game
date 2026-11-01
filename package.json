@@ -10,6 +10,9 @@
     "preview": "vite preview",
     "test": "node --experimental-strip-types --test src/lib/*.test.ts src/game/*.test.ts",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "check": "npm test && npm run typecheck && npm run lint && npm run check:docs",
+    "check:docs": "node scripts/check-doc-links.mjs",
     "format": "prettier --write .",
     "build:pages": "vite build --config vite.pages.config.ts && node scripts/finalize-pages.mjs",
     "preview:pages": "vite preview --config vite.pages.config.ts --outDir dist-pages"

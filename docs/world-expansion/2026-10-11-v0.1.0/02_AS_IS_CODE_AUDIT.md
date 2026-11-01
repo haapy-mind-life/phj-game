@@ -52,5 +52,5 @@
 - `src/lib/world-model.test.ts` + `world-store.test.ts`: 보상·세이브 마이그레이션·저장 실패.
 - `npm test`, `npx tsc --noEmit`, `npm run lint`, `npm run build`, `npm run build:pages`가 이후 PR 기본 게이트.
 
-이 문서의 문장과 초기 `docs/PROJECT_STATUS_2026-10-11.md`가 충돌할 경우, **최신 `main` 코드/Actions 증거를 먼저** 확인한다.
+이 문서의 문장과 초기 `docs/archive/PROJECT_STATUS_2026-10-11.md`가 충돌할 경우, **최신 `main` 코드/Actions 증거를 먼저** 확인한다.
 
