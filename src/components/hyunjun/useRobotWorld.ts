@@ -65,10 +65,12 @@ export type RobotActor = {
   others: RobotSpeciesId[];
 };
 export type StrikeEffect = { kind: string; from: Point; to: Point; hit: boolean; at: number };
-export type RobotMission =
+/** `id` ties delayed mission steps to the mission that started them. */
+export type RobotMission = { id: number } & (
   | { mode: "villain" }
   | { mode: "rescue"; rescue: Rescue; thanked: boolean }
-  | { mode: "thief"; thief: Thief; rewarded: boolean };
+  | { mode: "thief"; thief: Thief; rewarded: boolean }
+);
 export type WatchTab = "summon" | "fuse" | "mission";
 type Job = { kind: "villain" | "rescue" | "thief"; at: Point };
 const SUMMON_MS = 900;
@@ -113,11 +115,22 @@ export function useRobotWorld({
   const [powerUpAt, setPowerUpAt] = useState(0);
   const lastStrike = useRef(-1e9);
   const timers = useRef<number[]>([]);
+  // Mission steps outlive summons and fusions, so recalling a robot never cancels a reward.
+  const missionTimers = useRef<number[]>([]);
+  const missionSerial = useRef(0);
+  // Joining robots bring extra energy only on the first fusion of a summon.
+  const fusedThisSummon = useRef(false);
   const weaponTimer = useRef(0);
   const live = useRef({ pos, facing, actor, mission });
   live.current = { pos, facing, actor, mission };
   const later = (ms: number, fn: () => void) => {
     timers.current.push(window.setTimeout(fn, ms));
+  };
+  /** Runs `fn` on the mission later only if it is still the same mission. */
+  const laterMission = (id: number, ms: number, fn: (m: RobotMission) => RobotMission | null) => {
+    missionTimers.current.push(
+      window.setTimeout(() => setMission((m) => (m?.id === id ? fn(m) : m)), ms),
+    );
   };
   const clearTimers = useCallback(() => {
     timers.current.forEach((t) => clearTimeout(t));
@@ -126,6 +139,7 @@ export function useRobotWorld({
   useEffect(
     () => () => {
       timers.current.forEach((t) => clearTimeout(t));
+      missionTimers.current.forEach((t) => clearTimeout(t));
       clearTimeout(weaponTimer.current);
     },
     [],
@@ -134,11 +148,12 @@ export function useRobotWorld({
   const team = actor?.team ?? [];
   const busy = !!actor && actor.phase !== "active";
   const actorPos = actor ? (actor.mode === "ride" ? pos : actor.pos) : pos;
-  const energyMax = ROBOT_ENERGY + (team.length - 1) * 2;
+  const energyMax = ROBOT_ENERGY + (Math.max(1, team.length) - 1) * 2;
   const energy = Math.max(0, energyMax - damage);
   const recall = useCallback(
     (words?: string) => {
       clearTimers();
+      fusedThisSummon.current = false;
       setActor(null);
       setDamage(0);
       setWeaponOut(false);
@@ -234,6 +249,7 @@ export function useRobotWorld({
     dispatch({ type: "robot-meet", id });
     clearTimers();
     const at = wrapPoint({ x: pos.x + facing * 110, y: pos.y + 10 });
+    fusedThisSummon.current = false;
     setActor({
       team: [id],
       mode: actor?.mode ?? "follow",
@@ -254,6 +270,12 @@ export function useRobotWorld({
     }
     for (const id of ids) dispatch({ type: "robot-meet", id });
     clearTimers();
+    // The first fusion of a summon adds the members' energy; later ones keep the energy the
+    // robot has, so splitting and re-fusing can't refill the bar.
+    const fresh0 = !fusedThisSummon.current;
+    fusedThisSummon.current = true;
+    const nextMax = ROBOT_ENERGY + (ids.length - 1) * 2;
+    if (!fresh0) setDamage(nextMax - energy);
     const fresh = wrapPoint({ x: pos.x + facing * 110, y: pos.y + 10 });
     const center = actor?.mode === "ride" ? pos : (actor?.pos ?? fresh);
     setActor({
@@ -285,8 +307,8 @@ export function useRobotWorld({
     later(SPLIT_MS + RETURN_MS, () =>
       setActor((a) => (a ? { ...a, phase: "active", others: [] } : a)),
     );
-    // A single robot can't hold more damage than its own energy bar.
-    setDamage((d) => Math.min(d, ROBOT_ENERGY - 1));
+    // The core keeps the energy it had, up to its own smaller bar.
+    setDamage(ROBOT_ENERGY - Math.min(energy, ROBOT_ENERGY));
     message("합체 해제! 로봇 친구들은 시계 속으로 돌아갔어. 카드는 그대로야.");
   };
   const setMode = (mode: "follow" | "ride") => {
@@ -303,14 +325,15 @@ export function useRobotWorld({
       return;
     }
     setWatchOpen(false);
+    const id = ++missionSerial.current;
     if (mode === "villain") {
-      setMission({ mode });
+      setMission({ id, mode });
       message(`${VILLAIN_NAME}이 나타났어! 남쪽으로 가서 무기로 막아 줘!`);
     } else if (mode === "rescue") {
-      setMission({ mode, rescue: startRescue(), thanked: false });
+      setMission({ id, mode, rescue: startRescue(), thanked: false });
       message("친구가 불꽃 덤불에 갇혔어! 북동쪽으로 가서 구해 주자!");
     } else {
-      setMission({ mode, thief: startThief(), rewarded: false });
+      setMission({ id, mode, thief: startThief(), rewarded: false });
       message("도둑 로봇이 별코인 자루를 들고 서쪽 들판으로 도망갔어! 경찰 로봇과 잡아 보자!");
     }
   };
@@ -387,14 +410,14 @@ export function useRobotWorld({
       const rescue = douseRescue(mission.rescue, amount);
       setMission({ ...mission, rescue });
       if (rescue.phase === "safe") {
-        words.push("불꽃 덤불이 다 꺼졌어! 친구가 안전해졌어!");
-        const n = robots.rescues + 1;
-        later(1200, () => {
-          dispatch({ type: "robot-mission", mode: "rescue", n });
-          setMission((m) => (m?.mode === "rescue" ? { ...m, thanked: true } : m));
-          message(`친구: "고마워, 로봇아! 덕분에 살았어!" 🔩 부품 +${MISSION_PARTS}`);
+        // Paid right away; only the friend's thank-you waits a moment.
+        dispatch({ type: "robot-mission", mode: "rescue", n: robots.rescues + 1 });
+        words.push(`불꽃 덤불이 다 꺼졌어! 친구가 안전해졌어! 🔩 부품 +${MISSION_PARTS}`);
+        laterMission(mission.id, 1200, (m) => {
+          message(`친구: "고마워, 로봇아! 덕분에 살았어!"`);
+          return m.mode === "rescue" ? { ...m, thanked: true } : m;
         });
-        later(6000, () => setMission((m) => (m?.mode === "rescue" ? null : m)));
+        laterMission(mission.id, 6000, () => null);
       } else words.push(`${weapon.name}로 덤불을 껐어! 남은 불꽃 ${rescue.burning}개`);
     } else if (aim.kind === "thief" && mission?.mode === "thief") {
       const police = team.some((id) => robotById(id).family === "police");
@@ -403,12 +426,10 @@ export function useRobotWorld({
         dispatch({ type: "robot-mission", mode: "thief", n: robots.catches + 1 });
         setMission({ ...mission, thief: hit.thief, rewarded: true });
         words.push(`도둑 로봇을 잡았어! 별코인 자루를 되찾았어! 🔩 부품 +${MISSION_PARTS}`);
-        later(2000, () =>
-          setMission((m) =>
-            m?.mode === "thief" ? { ...m, thief: { ...m.thief, phase: "retreating" } } : m,
-          ),
+        laterMission(mission.id, 2000, (m) =>
+          m.mode === "thief" ? { ...m, thief: { ...m.thief, phase: "retreating" } } : m,
         );
-        later(6000, () => setMission((m) => (m?.mode === "thief" ? null : m)));
+        laterMission(mission.id, 6000, () => null);
       } else {
         setMission({ ...mission, thief: hit.thief });
         words.push(

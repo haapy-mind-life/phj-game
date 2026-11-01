@@ -11,6 +11,7 @@ import { WorldExpansion, WorldCopies, LegacySection, WorldOverlay } from "./Worl
 import { People } from "./People";
 import { RobotWorld } from "./RobotWorld";
 import { RobotActorView } from "./RobotActorView";
+import { robotById } from "@/game/robot-catalog";
 import { RobotWatch } from "./RobotWatch";
 import { useRobotWorld, type WatchTab } from "./useRobotWorld";
 import { RestaurantScene } from "./RestaurantScene";
@@ -1103,7 +1104,7 @@ export function Village() {
                   ) : robot.actor?.mode === "ride" ? (
                     <RobotActorView
                       team={robot.team}
-                      others={[]}
+                      others={robot.actor.others.map(robotById)}
                       grades={robot.grades}
                       phase={robot.actor.phase}
                       mode="ride"

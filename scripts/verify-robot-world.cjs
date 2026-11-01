@@ -235,8 +235,13 @@ async function open(browser, viewport, save, errors) {
       assert.equal(await attr(rescue, "data-burning"), "1", "fire arms put out two bushes");
       await g.strike();
       await page.locator('[data-rescue="safe"]').waitFor();
-      await page.locator('[data-rescue="thanked"]').waitFor();
+      // Sending the robot home right away must not cancel the reward or the thank-you.
+      await btn("⌚ 시계").click();
+      await page.getByRole("button", { name: "⌚ 시계로 돌려보내기" }).click();
+      assert.equal(await actor.count(), 0);
       assert.equal((await saved()).robots.rescues, 1);
+      await page.locator('[data-rescue="thanked"]').waitFor();
+      await g.fuse(["경찰 로봇", "소방 로봇"]);
       await page.screenshot({ path: `${out}/at11-rescue-${name}.png` });
       console.log(`PASS ${name} AT-11 friend in danger -> rescued -> thanked, paid once`);
 
@@ -283,6 +288,10 @@ async function open(browser, viewport, save, errors) {
       await page.screenshot({ path: `${out}/at12-thief-${name}.png` });
       assert.equal((await saved()).robots.catches, 1);
       await page.locator('[data-thief="retreating"]').first().waitFor();
+      // A new chase started right away is not ended by the last chase's timers.
+      await g.mission("💰 도둑 잡기");
+      await page.waitForTimeout(6500);
+      assert.ok(["fleeing", "stunned"].includes(await attr(thief, "data-thief")));
       console.log(`PASS ${name} AT-12 thief ran, was chased and arrested by the police robot`);
 
       // AT-13: reload keeps robots and the old village progress.

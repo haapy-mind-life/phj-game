@@ -216,6 +216,9 @@ test("every robot save shape loads; old progress and existing cars and coins are
   });
   assert.equal(w.robots.parts, 6);
   assert.equal(w.robots.cards["rb-sky"]?.grade, 1);
+  // That branch's one grade covered every starter robot, not only cards already saved.
+  assert.equal(w.robots.cards["rb-police"]?.grade, 1);
+  assert.equal(w.robots.cards["rb-fire"]?.grade, 1);
   assert.equal(w.robots.fusionBest, 3);
   assert.equal(w.robots.fusionCount, 4);
   assert.equal(w.robots.wins, 2);

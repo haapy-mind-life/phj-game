@@ -73,6 +73,10 @@ export function normalizeRobots(input: unknown): RobotProgress {
       ),
     };
   }
+  // The draft watch branch kept one grade for the whole watch: every starter robot had it.
+  if (watchGrade > 0)
+    for (const robot of ROBOTS)
+      if (robot.starter) out.cards[robot.id] ??= { uses: 0, grade: watchGrade };
   // A full card always owns what it opens, even if an older save lost the unlocked card.
   for (const robot of ROBOTS)
     if (robot.unlocks && out.cards[robot.id]?.uses === CARD_USES_TO_UNLOCK)
