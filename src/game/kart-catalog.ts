@@ -9,7 +9,7 @@ export type KartEntry = {
   | { status: "planned"; route?: never }
   | {
       status: "playable" | "existing";
-      route: "/" | "/race" | "/house" | "/greenhouse";
+      route: "/" | "/race" | "/house" | "/greenhouse" | "/peanuts";
     }
 );
 export const KART_GAMES = [
@@ -237,9 +237,10 @@ export const KART_GAMES = [
     id: "mn-08",
     kind: "mini",
     name: "박현준 땅콩 톡톡",
-    genre: "타이밍",
-    description: "떨어지는 땅콩 껍질 순서대로 깨기",
-    status: "planned",
+    genre: "순서 퍼즐",
+    description: "순서대로 껍질을 톡톡! 60초 안에 땅콩 8개에 도전",
+    status: "playable",
+    route: "/peanuts",
   },
   {
     id: "mn-09",

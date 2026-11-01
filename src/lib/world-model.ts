@@ -162,7 +162,7 @@ export type GameState = {
   friendship: Record<FriendId, number>;
   animals: Record<AnimalId, AnimalState>;
   settledRuns: string[];
-  miniBest: Record<"treasure" | "stars" | "fishing" | "constellation", number>;
+  miniBest: Record<"treasure" | "stars" | "fishing" | "constellation" | "peanuts", number>;
   settledMinis: string[];
   settledFoodSales: string[];
   visitedSeaTreasures: string[];
@@ -265,6 +265,7 @@ export function migrateSave(input: unknown): GameState {
           .slice(-200)
       : [],
     miniBest: {
+      peanuts: finite(object(raw["miniBest"])["peanuts"], 0, 8),
       constellation: finite(object(raw["miniBest"])["constellation"], 0, 6),
       treasure: finite(object(raw["miniBest"])["treasure"], 0, 6),
       stars: finite(object(raw["miniBest"])["stars"], 0, 18),
@@ -381,7 +382,7 @@ export type WorldAction =
   | {
       type: "settle-mini";
       id: string;
-      game: "treasure" | "stars" | "fishing" | "constellation";
+      game: "treasure" | "stars" | "fishing" | "constellation" | "peanuts";
       score: number;
     }
   | { type: "plant"; index: number; crop: CropId }
@@ -591,7 +592,7 @@ export function reduceWorld(state: GameState, action: WorldAction): GameState {
     };
   }
   if (action.type === "settle-mini") {
-    const limits = { treasure: 6, stars: 18, fishing: 5, constellation: 6 };
+    const limits = { treasure: 6, stars: 18, fishing: 5, constellation: 6, peanuts: 8 };
     if (
       !Object.hasOwn(limits, action.game) ||
       !action.id ||
