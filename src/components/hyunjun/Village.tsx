@@ -801,6 +801,9 @@ export function Village() {
           : (robot.label() ?? living.label());
   return (
     <Shell
+      onKart={() => {
+        if (diving) returnPosition = { ...SPAWN };
+      }}
       active="home"
       title={`${identity.name}의 큰 세계 여행`}
       subtitle="마을에서 바닷가, 바다와 하늘까지! 왼쪽 조이스틱을 밀어 출발해요."

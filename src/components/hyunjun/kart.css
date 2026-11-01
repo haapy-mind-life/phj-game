@@ -1,0 +1,209 @@
+.hj-kart-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 6px 12px;
+  border-radius: 16px;
+  background: #f0eaff;
+  color: #48337a;
+  font-size: 15px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.kart-hub {
+  max-width: 1100px;
+  margin: auto;
+  padding: 24px 16px max(24px, env(safe-area-inset-bottom));
+  color: #253b40;
+  font-family: "Jua", sans-serif;
+}
+.kart-header {
+  text-align: center;
+  padding: 12px 0 20px;
+}
+.kart-eyebrow {
+  color: #566e73;
+}
+.kart-header h1 {
+  font-size: clamp(36px, 7vw, 56px);
+  margin: 8px 0;
+  color: #365d52;
+}
+.kart-header p {
+  display: inline-block;
+  margin: 0;
+  background: #fff1b7;
+  padding: 8px 20px;
+  border-radius: 24px;
+}
+.kart-start {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.kart-start a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 175px;
+  padding: 16px 8px;
+  border: 2px solid #fff;
+  border-radius: 26px;
+  box-shadow: 0 5px 0 #253b4014;
+  color: inherit;
+  text-align: center;
+  text-decoration: none;
+}
+.kart-world {
+  background: #d7efcf;
+}
+.kart-run {
+  background: #d8eaff;
+}
+.kart-start a > span {
+  font-size: 42px;
+}
+.kart-start strong {
+  font-size: clamp(19px, 3vw, 28px);
+}
+.kart-start small {
+  font-size: 14px;
+}
+.kart-hub h2 {
+  font-size: 25px;
+  margin: 0 0 8px;
+}
+.kart-hub section > p {
+  line-height: 1.65;
+  color: #53676d;
+}
+.kart-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.kart-hub button,
+.kart-hub footer a {
+  min-width: 44px;
+  min-height: 44px;
+  border: 2px solid #c1d3ce;
+  border-radius: 16px;
+  padding: 8px 14px;
+  background: #fff;
+  color: #344d45;
+  font: inherit;
+  cursor: pointer;
+}
+.kart-filters button[aria-pressed="true"] {
+  background: #365d52;
+  color: #fff;
+  border-color: #365d52;
+}
+.kart-list-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 12px 0;
+}
+.kart-list-tools button + button {
+  margin-left: 8px;
+}
+.kart-list {
+  display: flex;
+  overflow-x: auto;
+  gap: 16px;
+  padding: 4px 2px 18px;
+  margin: 0;
+  list-style: none;
+  scroll-snap-type: x proximity;
+}
+.kart-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 min(280px, 85%);
+  min-height: 275px;
+  padding: 20px;
+  border: 2px solid #d8e3dc;
+  border-radius: 24px;
+  background: #fffdf6;
+  scroll-snap-align: start;
+}
+.kart-badge {
+  align-self: flex-start;
+  background: #ececf0;
+  color: #505265;
+  border-radius: 12px;
+  padding: 5px 10px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+.kart-playable {
+  background: #dbefda;
+  color: #285231;
+}
+.kart-existing {
+  background: #dceafa;
+  color: #305675;
+}
+.kart-card small {
+  color: #637575;
+}
+.kart-card h3 {
+  font-size: 22px;
+  margin: 12px 0;
+}
+.kart-card p {
+  line-height: 1.6;
+  margin: 0 0 20px;
+}
+.kart-card a,
+.kart-wait {
+  margin-top: auto;
+  padding: 12px;
+  border-radius: 14px;
+  text-align: center;
+}
+.kart-card a {
+  color: #fff;
+  background: #365d52;
+  text-decoration: none;
+  min-height: 44px;
+}
+.kart-wait {
+  color: #667373;
+  background: #eef1ed;
+  font-size: 14px;
+}
+.kart-hub footer {
+  padding: 24px 0;
+  text-align: center;
+}
+.kart-hub footer a {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+.kart-hub :focus-visible,
+.hj-kart-link:focus-visible {
+  outline: 3px solid #ad6408;
+  outline-offset: 3px;
+}
+@media (max-width: 400px) {
+  .kart-hub {
+    padding-inline: 12px;
+  }
+  .hj-kart-link {
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kart-list {
+    scroll-behavior: auto;
+  }
+}
