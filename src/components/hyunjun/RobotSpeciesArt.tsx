@@ -122,6 +122,19 @@ function RobotBody({ robot, grade = 0 }: { robot: RobotSpecies; grade?: number }
           <rect x="112" y="95" width="6" height="6" rx="2" fill="#9ef3ff" />
         </g>
       )}
+      {grade >= 2 && (
+        // 강철: riveted steel plates on chest and legs.
+        <g fill="#d5dde3" stroke="#6b7680" strokeWidth="2">
+          <rect x="32" y="90" width="16" height="14" rx="3" />
+          <rect x="72" y="90" width="16" height="14" rx="3" />
+          <rect x="38" y="112" width="17" height="10" rx="2" />
+          <rect x="65" y="112" width="17" height="10" rx="2" />
+          <g fill="#6b7680" stroke="none">
+            <circle cx="36" cy="94" r="1.6" />
+            <circle cx="84" cy="94" r="1.6" />
+          </g>
+        </g>
+      )}
       {grade >= 1 && (
         <g fill="#f5c542" stroke="#8a6a12" strokeWidth="2">
           <rect x="14" y="54" width="22" height="12" rx="5" />
@@ -132,89 +145,65 @@ function RobotBody({ robot, grade = 0 }: { robot: RobotSpecies; grade?: number }
     </g>
   );
 }
+/** The robot's own weapon, drawn out of its right arm when used. */
+function DrawnWeapon({ robot }: { robot: RobotSpecies }) {
+  const kind = robot.weapon.kind;
+  return (
+    <g className="hj-solo-weapon">
+      {kind === "sword" && (
+        <g>
+          <rect x="96" y="84" width="8" height="12" rx="2" fill="#f5c542" />
+          <rect x="97" y="20" width="6" height="66" rx="3" fill="#9ef3ff" stroke="#2f8fd8" />
+        </g>
+      )}
+      {kind === "cannon" && (
+        <g>
+          <rect x="96" y="80" width="26" height="12" rx="4" fill="#5b6670" />
+          <path d="M122 86q10-8 14-2q-2 8-14 6z" fill="#9fe2ff" />
+        </g>
+      )}
+      {kind === "wind" && (
+        <g transform="translate(112 72)">
+          <path
+            className="hj-solo-spin"
+            d="M0-16q8 8 0 16q-8 8-16 0q8-8 16-16z M0 0q16 4 12 14q-10 0-12-14z"
+            fill="#b9fff2"
+            stroke={robot.color}
+            strokeWidth="2"
+          />
+        </g>
+      )}
+    </g>
+  );
+}
 export function RobotSpeciesArt({
   robot,
   grade = 0,
   moving = false,
+  weaponOut = false,
   size = 96,
   label = robot.name,
 }: {
   robot: RobotSpecies;
   grade?: number;
   moving?: boolean;
+  weaponOut?: boolean;
   size?: number;
   label?: string;
 }) {
   return (
     <svg
       className={`hj-mech${moving ? " moving" : ""}`}
-      viewBox="0 0 120 150"
-      width={size}
+      viewBox="0 0 140 150"
+      width={size * (140 / 120)}
       height={size * 1.25}
       role="img"
       aria-label={label}
+      data-weapon={weaponOut ? "drawn" : "stowed"}
     >
       <ellipse cx="60" cy="144" rx="34" ry="5" fill="#355e6426" />
       <RobotBody robot={robot} grade={grade} />
-    </svg>
-  );
-}
-/** 2단: the second robot locks on as a backpack. 3단: a third joins on the other side and the
- * whole fusion grows and glows, so each stage reads differently on screen (RB-07, RB-08). */
-export function FusionArt({
-  team,
-  grades,
-  moving = false,
-  size = 96,
-  label,
-}: {
-  team: RobotSpecies[];
-  grades: number[];
-  moving?: boolean;
-  size?: number;
-  label: string;
-}) {
-  const [core, left, right] = team;
-  if (!core) return null;
-  const stage = team.length;
-  return (
-    <svg
-      className={`hj-mech hj-fusion stage-${stage}${moving ? " moving" : ""}`}
-      viewBox="-50 -20 220 175"
-      width={size * (stage > 1 ? 1.6 : 1)}
-      height={size * 1.25 * (stage > 1 ? 1.16 : 1)}
-      role="img"
-      aria-label={label}
-      data-fusion={stage}
-    >
-      <ellipse cx="60" cy="146" rx={34 + stage * 14} ry="6" fill="#355e6426" />
-      {stage === 3 && <ellipse cx="60" cy="72" rx="98" ry="82" fill="#ffe27a55" />}
-      {left && (
-        <g transform="translate(-44 18) scale(0.72)">
-          <RobotBody robot={left} grade={grades[1] ?? 0} />
-        </g>
-      )}
-      {right && (
-        <g transform="translate(78 18) scale(0.72)">
-          <RobotBody robot={right} grade={grades[2] ?? 0} />
-        </g>
-      )}
-      <g
-        transform={
-          stage === 1 ? undefined : `translate(60 75) scale(${1 + stage * 0.08}) translate(-60 -75)`
-        }
-      >
-        <RobotBody robot={core} grade={grades[0] ?? 0} />
-      </g>
-      {stage > 1 && (
-        <path
-          d="M8 70h104"
-          stroke="#ffe45c"
-          strokeWidth="5"
-          strokeDasharray="6 8"
-          strokeLinecap="round"
-        />
-      )}
+      {weaponOut && <DrawnWeapon robot={robot} />}
     </svg>
   );
 }
