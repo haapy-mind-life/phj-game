@@ -252,7 +252,8 @@ export function useRobotWorld({
     fusedThisSummon.current = false;
     setActor({
       team: [id],
-      mode: actor?.mode ?? "follow",
+      // Hyunjun chose riding (2026-11-01); following is still one tap away in the watch.
+      mode: actor?.mode ?? "ride",
       phase: "summoning",
       pos: isWalkable(at) ? at : { ...pos },
       others: [],
@@ -260,7 +261,7 @@ export function useRobotWorld({
     setDamage(0);
     setWatchOpen(false);
     later(SUMMON_MS, () => setActor((a) => (a ? { ...a, phase: "active" } : a)));
-    message(`${robotName(robotById(id), robots)} 소환! 시계 카드에서 로봇이 나왔어!`);
+    message(`${robotName(robotById(id), robots)} 소환! 로봇에 탔어. 조이스틱으로 직접 움직여 봐!`);
   };
   const fuse = (ids: RobotSpeciesId[]) => {
     if (!allowed) return;
@@ -280,7 +281,7 @@ export function useRobotWorld({
     const center = actor?.mode === "ride" ? pos : (actor?.pos ?? fresh);
     setActor({
       team: ids,
-      mode: actor?.mode ?? "follow",
+      mode: actor?.mode ?? "ride",
       phase: "gathering",
       pos: center,
       others: ids,
