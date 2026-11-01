@@ -2304,7 +2304,6 @@
   margin: 0 0 4px;
 }
 
-
 /* The physical card is replaced by an illustrated card stored inside a summon watch. */
 .hj-watch {
   width: min(680px, 100%);
@@ -2318,13 +2317,44 @@
   box-shadow: 0 20px 70px #15273885;
   overscroll-behavior: contain;
 }
-.hj-watch-header { display: flex; justify-content: space-between; gap: 10px; align-items: start; }
-.hj-watch h2 { margin: 0 0 5px; font-size: 23px; }
-.hj-watch h3 { margin: 16px 0 7px; font-size: 17px; }
-.hj-watch small { display: block; font-size: 12px; line-height: 1.4; }
-.hj-watch button { cursor: pointer; touch-action: manipulation; min-height: 44px; border-radius: 13px; border: 2px solid #93a7b9; background: #fff; color: #233c57; font: inherit; padding: 6px 12px; }
-.hj-watch button:disabled { opacity: .55; cursor: default; }
-.hj-watch button:focus-visible { outline: 3px solid #eead44; outline-offset: 2px; }
+.hj-watch-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: start;
+}
+.hj-watch h2 {
+  margin: 0 0 5px;
+  font-size: 23px;
+}
+.hj-watch h3 {
+  margin: 16px 0 7px;
+  font-size: 17px;
+}
+.hj-watch small {
+  display: block;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.hj-watch button {
+  cursor: pointer;
+  touch-action: manipulation;
+  min-height: 44px;
+  border-radius: 13px;
+  border: 2px solid #93a7b9;
+  background: #fff;
+  color: #233c57;
+  font: inherit;
+  padding: 6px 12px;
+}
+.hj-watch button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.hj-watch button:focus-visible {
+  outline: 3px solid #eead44;
+  outline-offset: 2px;
+}
 .hj-watch-dial {
   margin: 12px auto;
   padding: 14px;
@@ -2339,18 +2369,63 @@
   gap: 8px;
   text-align: center;
 }
-.hj-watch-dial b { display: block; }
-.hj-watch-dial .hj-watch-rim { font-size: 16px; color: #365b88; }
-.hj-watch-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.hj-watch-cards button { padding: 7px 3px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.hj-watch-cards button b { font-size: 12px; }
-.hj-watch-cards button small { font-size: 10px; }
-.hj-watch button.chosen { border-color: #e6a329; background: #fff2c8; box-shadow: inset 0 0 0 2px #f1cc75; }
-.hj-watch-fuse-choices, .hj-watch-missions { display: flex; flex-wrap: wrap; gap: 7px; }
-.hj-watch-primary { width: 100%; margin: 10px 0; font-weight: 900 !important; background: #ffd466 !important; border-color: #c48f3a !important; }
-.hj-watch-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin: 8px 0; font-size: 12px; }
-.hj-watch-stats span { background: #e5f0f6; padding: 8px; border-radius: 10px; }
-.adv-action-buttons .hj-watch-open, .adv-action-buttons .hj-watch-skill {
+.hj-watch-dial b {
+  display: block;
+}
+.hj-watch-dial .hj-watch-rim {
+  font-size: 16px;
+  color: #365b88;
+}
+.hj-watch-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.hj-watch-cards button {
+  padding: 7px 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.hj-watch-cards button b {
+  font-size: 12px;
+}
+.hj-watch-cards button small {
+  font-size: 10px;
+}
+.hj-watch button.chosen {
+  border-color: #e6a329;
+  background: #fff2c8;
+  box-shadow: inset 0 0 0 2px #f1cc75;
+}
+.hj-watch-fuse-choices,
+.hj-watch-missions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.hj-watch-primary {
+  width: 100%;
+  margin: 10px 0;
+  font-weight: 900 !important;
+  background: #ffd466 !important;
+  border-color: #c48f3a !important;
+}
+.hj-watch-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin: 8px 0;
+  font-size: 12px;
+}
+.hj-watch-stats span {
+  background: #e5f0f6;
+  padding: 8px;
+  border-radius: 10px;
+}
+.adv-action-buttons .hj-watch-open,
+.adv-action-buttons .hj-watch-skill {
   min-height: 44px;
   border: 3px solid #fff8e8;
   border-radius: 15px;
@@ -2360,20 +2435,53 @@
   padding: 6px;
   touch-action: manipulation;
 }
-.adv-action-buttons .hj-watch-open { grid-column: 1 / -1; background: #bde9ef; }
-.adv-action-buttons .hj-watch-skill:disabled { opacity: .6; }
-.hj-watch-helper, .hj-watch-enemy {
-  position: absolute; z-index: 6; transform: translate(-50%,-70%);
-  display: flex; flex-direction: column; align-items: center;
-  pointer-events: none; text-align: center;
+.adv-action-buttons .hj-watch-open {
+  grid-column: 1 / -1;
+  background: #bde9ef;
 }
-.hj-watch-helper b, .hj-watch-enemy span, .hj-watch-enemy strong, .hj-watch-enemy small {
-  padding: 3px 7px; border-radius: 9px; background: #e4f4ff; font-size: 11px; white-space: nowrap;
+.adv-action-buttons .hj-watch-skill:disabled {
+  opacity: 0.6;
 }
-.hj-watch-enemy { background: #efba91; border: 5px solid #8b5570; border-radius: 22px; padding: 18px 6px; }
-.hj-watch-enemy strong { font-size: 18px; background: #ffe2cd; }
+.hj-watch-helper,
+.hj-watch-enemy {
+  position: absolute;
+  z-index: 6;
+  transform: translate(-50%, -70%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  text-align: center;
+}
+.hj-watch-helper b,
+.hj-watch-enemy span,
+.hj-watch-enemy strong,
+.hj-watch-enemy small {
+  padding: 3px 7px;
+  border-radius: 9px;
+  background: #e4f4ff;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.hj-watch-enemy {
+  background: #efba91;
+  border: 5px solid #8b5570;
+  border-radius: 22px;
+  padding: 18px 6px;
+}
+.hj-watch-enemy strong {
+  font-size: 18px;
+  background: #ffe2cd;
+}
 @media (max-width: 450px) {
-  .hj-watch { padding: 10px; border-width: 3px; }
-  .hj-watch h2 { font-size: 19px; }
-  .hj-watch-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .hj-watch {
+    padding: 10px;
+    border-width: 3px;
+  }
+  .hj-watch h2 {
+    font-size: 19px;
+  }
+  .hj-watch-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }

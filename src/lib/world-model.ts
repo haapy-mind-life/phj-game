@@ -404,12 +404,17 @@ export type WorldAction =
   | { type: "upgrade-house" }
   | { type: "move-house"; lot: string };
 export function reduceWorld(state: GameState, action: WorldAction): GameState {
-  if (action.type === "robot-fuse" || action.type === "robot-mission" || action.type === "robot-upgrade") {
-    const robots = action.type === "robot-fuse"
-      ? applyRobotFusion(state.robots, action.ids)
-      : action.type === "robot-mission"
-        ? awardRobotMission(state.robots, action.id, action.mode)
-        : upgradeRobotGrade(state.robots);
+  if (
+    action.type === "robot-fuse" ||
+    action.type === "robot-mission" ||
+    action.type === "robot-upgrade"
+  ) {
+    const robots =
+      action.type === "robot-fuse"
+        ? applyRobotFusion(state.robots, action.ids)
+        : action.type === "robot-mission"
+          ? awardRobotMission(state.robots, action.id, action.mode)
+          : upgradeRobotGrade(state.robots);
     return robots === state.robots ? state : { ...state, robots };
   }
   if (action.type === "robot-meet" || action.type === "robot-card") {

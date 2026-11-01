@@ -8,7 +8,16 @@ import {
   ROBOTS,
   robotPosition,
 } from "./robot-catalog.ts";
-import { applyCardUse, applyRobotFusion, awardRobotMission, emptyRobots, isWatchCardAvailable, meetRobot, normalizeRobots, upgradeRobotGrade } from "./robot-engine.ts";
+import {
+  applyCardUse,
+  applyRobotFusion,
+  awardRobotMission,
+  emptyRobots,
+  isWatchCardAvailable,
+  meetRobot,
+  normalizeRobots,
+  upgradeRobotGrade,
+} from "./robot-engine.ts";
 import { isWalkable, PORTALS, SPAWN } from "./adventure.ts";
 import { migrateSave, reduceWorld } from "../lib/world-model.ts";
 import { PREMIUM_CARS } from "./world-content.ts";

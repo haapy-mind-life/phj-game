@@ -51,7 +51,9 @@ export function normalizeRobots(input: unknown): RobotProgress {
     materials: finiteCount(raw["materials"], 10000),
     grade: finiteCount(raw["grade"], WATCH_GRADES.length - 1),
     settled: Array.isArray(raw["settled"])
-      ? raw["settled"].filter((id): id is string => typeof id === "string" && id.length > 0 && id.length < 100).slice(-50)
+      ? raw["settled"]
+          .filter((id): id is string => typeof id === "string" && id.length > 0 && id.length < 100)
+          .slice(-50)
       : [],
   };
   for (const [id, value] of Object.entries(cards)) {

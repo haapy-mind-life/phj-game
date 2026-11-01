@@ -758,7 +758,20 @@ export function Village() {
     setMapOpen(false);
     setMessage(words);
   };
-  const robotWatchAllowed = region === "village" && !living.interior && !seaOpen && !truckOpen && !mini && !drawing && !station && !garageOpen && !mapOpen && plane === "off" && !submarine && !driving && !diving;
+  const robotWatchAllowed =
+    region === "village" &&
+    !living.interior &&
+    !seaOpen &&
+    !truckOpen &&
+    !mini &&
+    !drawing &&
+    !station &&
+    !garageOpen &&
+    !mapOpen &&
+    plane === "off" &&
+    !submarine &&
+    !driving &&
+    !diving;
   const livingActionLabel =
     mission && !mission.done && region === "village" && !living.interior
       ? missionPlay.label
@@ -952,29 +965,59 @@ export function Village() {
                 <>
                   <RobotWorld player={pos} roaming={robot.roaming} nearTarget={robot.nearTarget} />
                   {robot.summoned && !robot.riding && (
-                    <div className="hj-watch-helper" data-watch-helper style={{ left: pos.x + 85, top: pos.y + 30 }}>
+                    <div
+                      className="hj-watch-helper"
+                      data-watch-helper
+                      style={{ left: pos.x + 85, top: pos.y + 30 }}
+                    >
                       <div className="hj-watch-fused-actors">
-                        {(robot.fusionActive.length > 1 ? robot.fusionActive : [robot.summoned.id]).map((id) => (
+                        {(robot.fusionActive.length > 1
+                          ? robot.fusionActive
+                          : [robot.summoned.id]
+                        ).map((id) => (
                           <RobotSpeciesArt
                             key={id}
-                            robot={robot.fusionActive.length > 1 ? ROBOTS.find((r) => r.id === id)! : robot.summoned!}
+                            robot={
+                              robot.fusionActive.length > 1
+                                ? ROBOTS.find((r) => r.id === id)!
+                                : robot.summoned!
+                            }
                             size={robot.fusionActive.length > 1 ? 54 : 70}
                             moving={walking}
                             label={`소환된 ${id}`}
                           />
                         ))}
                       </div>
-                      <b>{robot.fusionActive.length > 1 ? `${robot.fusionActive.length}단 합체` : robot.summoned.name}</b>
+                      <b>
+                        {robot.fusionActive.length > 1
+                          ? `${robot.fusionActive.length}단 합체`
+                          : robot.summoned.name}
+                      </b>
                     </div>
                   )}
                   {robot.mission && (
-                    <div className="hj-watch-enemy" data-watch-mission style={{ left: robot.mission.target.x, top: robot.mission.target.y }}>
+                    <div
+                      className="hj-watch-enemy"
+                      data-watch-mission
+                      style={{ left: robot.mission.target.x, top: robot.mission.target.y }}
+                    >
                       {robot.mission.mode === "rescue" ? (
                         <FriendArt index={3} moving />
                       ) : (
-                        <RobotSpeciesArt robot={ROBOTS[3]} moving size={84} label={robot.mission.mode === "thief" ? "도둑 로봇" : "악당 로봇"} />
+                        <RobotSpeciesArt
+                          robot={ROBOTS[3]}
+                          moving
+                          size={84}
+                          label={robot.mission.mode === "thief" ? "도둑 로봇" : "악당 로봇"}
+                        />
                       )}
-                      <strong>{robot.mission.mode === "rescue" ? "친구를 도와줘!" : robot.mission.mode === "thief" ? "도둑 로봇" : "악당 로봇"}</strong>
+                      <strong>
+                        {robot.mission.mode === "rescue"
+                          ? "친구를 도와줘!"
+                          : robot.mission.mode === "thief"
+                            ? "도둑 로봇"
+                            : "악당 로봇"}
+                      </strong>
                       <small>남은 단계 {robot.mission.hp}</small>
                     </div>
                   )}
@@ -1541,12 +1584,26 @@ export function Village() {
             <Joystick onMove={movement.setStick} />
             <div className="adv-action-buttons">
               {robotWatchAllowed && (
-                <button className="hj-watch-open" data-watch-open onClick={() => robot.setWatchOpen(true)}>⌚ 로봇 시계</button>
+                <button
+                  className="hj-watch-open"
+                  data-watch-open
+                  onClick={() => robot.setWatchOpen(true)}
+                >
+                  ⌚ 로봇 시계
+                </button>
               )}
               {robotWatchAllowed && robot.activeRobot && (
                 <>
-                  <button className="hj-watch-skill" onClick={() => robot.useCard()}>카드 기술 {robot.uses}/7</button>
-                  <button className="hj-watch-skill" onClick={() => robot.attack()} disabled={!robot.mission}>무기 · 돕기</button>
+                  <button className="hj-watch-skill" onClick={() => robot.useCard()}>
+                    카드 기술 {robot.uses}/7
+                  </button>
+                  <button
+                    className="hj-watch-skill"
+                    onClick={() => robot.attack()}
+                    disabled={!robot.mission}
+                  >
+                    무기 · 돕기
+                  </button>
                 </>
               )}
               {plane === "ground" && (

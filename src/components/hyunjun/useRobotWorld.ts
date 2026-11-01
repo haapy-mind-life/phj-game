@@ -24,7 +24,12 @@ import type { GameState, WorldAction } from "@/lib/world-model";
 
 /** Watch summons robot helpers to the open world; no card is physically inserted. */
 export function useRobotWorld({
-  pos, seconds, allowed, state, dispatch, message,
+  pos,
+  seconds,
+  allowed,
+  state,
+  dispatch,
+  message,
 }: {
   pos: Point;
   seconds: number;
@@ -57,11 +62,14 @@ export function useRobotWorld({
     }
   }, [allowed]);
   const robots = state.robots;
-  const roaming = ROBOTS.filter((r) => (r.starter || hasCard(robots, r.id)) && r.id !== riding && r.id !== summoned)
-    .map((robot) => ({ robot, p: robotPosition(robot, seconds) }));
+  const roaming = ROBOTS.filter(
+    (r) => (r.starter || hasCard(robots, r.id)) && r.id !== riding && r.id !== summoned,
+  ).map((robot) => ({ robot, p: robotPosition(robot, seconds) }));
   const near = allowed
-    ? roaming.map((r) => ({ ...r, d: worldDistance(pos, r.p) }))
-      .filter((r) => r.d < MEET_RANGE).sort((a,b) => a.d - b.d)[0]?.robot
+    ? roaming
+        .map((r) => ({ ...r, d: worldDistance(pos, r.p) }))
+        .filter((r) => r.d < MEET_RANGE)
+        .sort((a, b) => a.d - b.d)[0]?.robot
     : undefined;
   const ridingRobot = riding ? robotById(riding) : null;
   const summonedRobot = summoned ? robotById(summoned) : null;
@@ -94,21 +102,31 @@ export function useRobotWorld({
     lastCard.current = now;
     const unlocked = applyCardUse(robots, activeId).unlocked;
     dispatch({ type: "robot-card", id: activeId });
-    message(unlocked
-      ? `축하해! 새로운 로봇 카드가 열렸어! ${robotById(unlocked).name} · 시계를 열어 봐!`
-      : `${activeRobot?.skill}! 카드 ${uses + 1}/7 · 일곱 번 쓰면 업그레이드!`);
+    message(
+      unlocked
+        ? `축하해! 새로운 로봇 카드가 열렸어! ${robotById(unlocked).name} · 시계를 열어 봐!`
+        : `${activeRobot?.skill}! 카드 ${uses + 1}/7 · 일곱 번 쓰면 업그레이드!`,
+    );
     return true;
   };
   const toggleFusionMember = (id: RobotSpeciesId) => {
     if (!isWatchCardAvailable(robots, id)) return;
     setFusionIds((current) =>
-      current.includes(id) ? current.filter((x) => x !== id)
-      : current.length < 3 ? [...current, id] : current);
+      current.includes(id)
+        ? current.filter((x) => x !== id)
+        : current.length < 3
+          ? [...current, id]
+          : current,
+    );
   };
   const fuse = () => {
     const ids = fusionIds;
-    if (ids.length < 2 || ids.length > 3 || new Set(ids).size !== ids.length ||
-        ids.some((id) => !isWatchCardAvailable(robots, id))) {
+    if (
+      ids.length < 2 ||
+      ids.length > 3 ||
+      new Set(ids).size !== ids.length ||
+      ids.some((id) => !isWatchCardAvailable(robots, id))
+    ) {
       message("시계에서 서로 다른 로봇을 2개 또는 3개 골라 줘!");
       return;
     }
@@ -130,11 +148,20 @@ export function useRobotWorld({
     const right = { x: pos.x + 320, y: pos.y + 85 };
     const left = { x: pos.x - 320, y: pos.y - 85 };
     const target = isWalkable(right) ? right : isWalkable(left) ? left : { ...pos };
-    setMission({ mode, hp: mode === "villain" ? 3 : 2, target, id: `${Date.now()}-${missionSerial.current}` });
+    setMission({
+      mode,
+      hp: mode === "villain" ? 3 : 2,
+      target,
+      id: `${Date.now()}-${missionSerial.current}`,
+    });
     setWatchOpen(false);
-    message(mode === "villain" ? "악당 로봇 출현! 기술과 무기로 막아 줘!"
-      : mode === "rescue" ? "친구가 위험해! 로봇을 움직여 구하러 가자!"
-      : "도둑 로봇을 발견했어! 경찰 로봇과 함께 잡아 보자!");
+    message(
+      mode === "villain"
+        ? "악당 로봇 출현! 기술과 무기로 막아 줘!"
+        : mode === "rescue"
+          ? "친구가 위험해! 로봇을 움직여 구하러 가자!"
+          : "도둑 로봇을 발견했어! 경찰 로봇과 함께 잡아 보자!",
+    );
   };
   const attack = () => {
     if (!allowed || !activeId || !mission) {
@@ -149,15 +176,21 @@ export function useRobotWorld({
     if (nextHp > 0) {
       setMission({ ...mission, hp: nextHp });
       activateCard();
-      message(`${activeRobot?.skill} 발사! ${mission.mode === "rescue" ? "구조 지점" : "악당"}까지 ${nextHp}번 남았어!`);
+      message(
+        `${activeRobot?.skill} 발사! ${mission.mode === "rescue" ? "구조 지점" : "악당"}까지 ${nextHp}번 남았어!`,
+      );
       return;
     }
     dispatch({ type: "robot-mission", id: mission.id, mode: mission.mode });
     activateCard();
     setMission(null);
-    message(mission.mode === "villain" ? "악당을 물리쳤어! 강화 재료를 받았어!"
-      : mission.mode === "rescue" ? "친구 구출 성공! 정말 고마워!"
-      : "도둑 로봇을 잡았어! 마을이 안전해졌어!");
+    message(
+      mission.mode === "villain"
+        ? "악당을 물리쳤어! 강화 재료를 받았어!"
+        : mission.mode === "rescue"
+          ? "친구 구출 성공! 정말 고마워!"
+          : "도둑 로봇을 잡았어! 마을이 안전해졌어!",
+    );
   };
   const upgrade = () => {
     const cost = upgradeCost(robots.grade);
@@ -175,7 +208,8 @@ export function useRobotWorld({
   const label = (): string | null => {
     if (!allowed) return null;
     if (activeRobot && nearTarget && !mission) return `카드 쓰기 (${uses}/${CARD_USES_TO_UNLOCK})`;
-    if (!riding && near && !summoned) return `${near.name} ${hasCard(robots, near.id) ? "타기" : "만나기"}`;
+    if (!riding && near && !summoned)
+      return `${near.name} ${hasCard(robots, near.id) ? "타기" : "만나기"}`;
     return null;
   };
   const act = (): boolean => {
@@ -199,10 +233,28 @@ export function useRobotWorld({
     message(`${robotById(riding).name}에서 내렸어.`);
   };
   return {
-    riding: ridingRobot, summoned: summonedRobot, activeRobot,
-    fusionActive, fusionIds, toggleFusionMember, fuse,
-    mission, startMission, attack, upgrade,
-    watchOpen, setWatchOpen, selected, setSelected, summon,
-    roaming, nearTarget, uses, label, act, dismount, activateCard,
+    riding: ridingRobot,
+    summoned: summonedRobot,
+    activeRobot,
+    fusionActive,
+    fusionIds,
+    toggleFusionMember,
+    fuse,
+    mission,
+    startMission,
+    attack,
+    upgrade,
+    watchOpen,
+    setWatchOpen,
+    selected,
+    setSelected,
+    summon,
+    roaming,
+    nearTarget,
+    uses,
+    label,
+    act,
+    dismount,
+    activateCard,
   };
 }
