@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { Point } from "@/game/adventure";
+import { isWalkable, type Point } from "@/game/adventure";
 import {
   CARD_COOLDOWN_MS,
   CARD_USES_TO_UNLOCK,
@@ -43,6 +43,7 @@ export function useRobotWorld({
     id: string;
     mode: RobotMissionMode;
     hp: number;
+    target: Point;
   } | null>(null);
   const lastCard = useRef(0);
   const missionSerial = useRef(0);
@@ -126,7 +127,10 @@ export function useRobotWorld({
       return;
     }
     missionSerial.current += 1;
-    setMission({ mode, hp: mode === "villain" ? 3 : 2, id: `${Date.now()}-${missionSerial.current}` });
+    const right = { x: pos.x + 320, y: pos.y + 85 };
+    const left = { x: pos.x - 320, y: pos.y - 85 };
+    const target = isWalkable(right) ? right : isWalkable(left) ? left : { ...pos };
+    setMission({ mode, hp: mode === "villain" ? 3 : 2, target, id: `${Date.now()}-${missionSerial.current}` });
     setWatchOpen(false);
     message(mode === "villain" ? "악당 로봇 출현! 기술과 무기로 막아 줘!"
       : mode === "rescue" ? "친구가 위험해! 로봇을 움직여 구하러 가자!"
@@ -135,6 +139,10 @@ export function useRobotWorld({
   const attack = () => {
     if (!allowed || !activeId || !mission) {
       message("시계로 로봇을 소환하고 임무를 골라 줘!");
+      return;
+    }
+    if (worldDistance(pos, mission.target) > 220) {
+      message("먼저 로봇과 함께 목표가 있는 곳으로 이동해 줘!");
       return;
     }
     const nextHp = mission.hp - (fusionActive.length >= 2 ? 2 : 1);
