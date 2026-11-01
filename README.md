@@ -19,7 +19,7 @@ npm run build:pages             # GitHub Pages용 정적 빌드 → dist-pages/
 
 | 경로 | 역할 |
 |---|---|
-| `src/routes/` | 화면 경로: `/`(마을 월드), `/kart`(게임 목록), `/race`(러너), `/peanuts`(땅콩 톡톡), `/house`, `/greenhouse`. Pages 정적 빌드는 `src/pages-entry.tsx`의 해시 라우터에도 같은 경로를 등록한다 |
+| `src/routes/` | 화면 경로: `/`(마을 월드), `/kart`(게임 목록), `/race`(러너), `/peanuts`(땅콩 톡톡), `/rooms`(방 깨기), `/rooms`(방 깨기), `/house`, `/greenhouse`(온실). Pages 정적 빌드는 `src/pages-entry.tsx`의 해시 라우터에도 같은 경로를 등록한다 |
 | `src/game/` | 화면과 분리된 순수 규칙(로봇·월드·러너 엔진)과 `*.test.ts` 단위 테스트 |
 | `src/lib/` | 공통 저장 상태 `world-model.ts`(reducer·저장 마이그레이션), 가족방 연결 |
 | `src/components/hyunjun/` | 게임 화면 UI와 그림(SVG) 컴포넌트 |
