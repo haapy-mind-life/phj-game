@@ -1,8 +1,11 @@
 import { CARS, canBuyCar, ENGINE_COST, SPECIAL_COST, type CarUpgrade } from "../game/cars.ts";
 import { HOME_LOTS, type HomeLotId } from "../game/kid-world.ts";
-import { isRobotId, type RobotSpeciesId } from "../game/robot-catalog.ts";
+import { isRobotId, type RobotMissionMode, type RobotSpeciesId } from "../game/robot-catalog.ts";
 import {
   applyCardUse,
+  applyRobotFusion,
+  awardRobotMission,
+  upgradeRobotGrade,
   meetRobot,
   normalizeRobots,
   type RobotProgress,
@@ -392,12 +395,23 @@ export type WorldAction =
   | { type: "place-decor"; id: DecorId; x: number; y: number }
   | { type: "remove-decor"; index: number }
   | { type: "robot-meet" | "robot-card"; id: RobotSpeciesId }
+  | { type: "robot-fuse"; ids: RobotSpeciesId[] }
+  | { type: "robot-mission"; id: string; mode: RobotMissionMode }
+  | { type: "robot-upgrade" }
   | { type: "toggle-yard"; id: YardId }
   | { type: "start-party"; now?: string }
   | { type: "collect-candy"; id: string; now?: string }
   | { type: "upgrade-house" }
   | { type: "move-house"; lot: string };
 export function reduceWorld(state: GameState, action: WorldAction): GameState {
+  if (action.type === "robot-fuse" || action.type === "robot-mission" || action.type === "robot-upgrade") {
+    const robots = action.type === "robot-fuse"
+      ? applyRobotFusion(state.robots, action.ids)
+      : action.type === "robot-mission"
+        ? awardRobotMission(state.robots, action.id, action.mode)
+        : upgradeRobotGrade(state.robots);
+    return robots === state.robots ? state : { ...state, robots };
+  }
   if (action.type === "robot-meet" || action.type === "robot-card") {
     if (!isRobotId(action.id)) return state;
     const robots =
