@@ -3,6 +3,8 @@ import { HOME_LOTS, type HomeLotId } from "../game/kid-world.ts";
 import { isRobotId, type RobotSpeciesId } from "../game/robot-catalog.ts";
 import {
   applyCardUse,
+  armyResult,
+  discoverLegend,
   meetRobot,
   missionReward,
   normalizeRobots,
@@ -399,6 +401,8 @@ export type WorldAction =
   | { type: "robot-win"; win: number }
   | { type: "robot-fuse"; ids: RobotSpeciesId[] }
   | { type: "robot-mission"; mode: "rescue" | "thief"; n: number }
+  | { type: "robot-discover"; id: RobotSpeciesId }
+  | { type: "robot-army"; kind: "massFusions" | "bossWins" | "minionWaves"; n: number }
   | { type: "toggle-yard"; id: YardId }
   | { type: "start-party"; now?: string }
   | { type: "collect-candy"; id: string; now?: string }
@@ -408,14 +412,20 @@ export function reduceWorld(state: GameState, action: WorldAction): GameState {
   if (
     action.type === "robot-win" ||
     action.type === "robot-fuse" ||
-    action.type === "robot-mission"
+    action.type === "robot-mission" ||
+    action.type === "robot-discover" ||
+    action.type === "robot-army"
   ) {
     const robots =
-      action.type === "robot-win"
-        ? winBattle(state.robots, action.win)
-        : action.type === "robot-fuse"
-          ? recordFusion(state.robots, action.ids)
-          : missionReward(state.robots, action.mode, action.n);
+      action.type === "robot-discover"
+        ? discoverLegend(state.robots, action.id)
+        : action.type === "robot-army"
+          ? armyResult(state.robots, action.kind, action.n)
+          : action.type === "robot-win"
+            ? winBattle(state.robots, action.win)
+            : action.type === "robot-fuse"
+              ? recordFusion(state.robots, action.ids)
+              : missionReward(state.robots, action.mode, action.n);
     return robots === state.robots ? state : { ...state, robots };
   }
   if (

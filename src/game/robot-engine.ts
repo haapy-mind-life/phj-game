@@ -8,6 +8,7 @@ import {
   UPGRADE_COST,
   VILLAIN_RESPAWN_MS,
   WIN_PARTS,
+  isLegendId,
   isRobotId,
   robotById,
   type RobotSpeciesId,
@@ -28,6 +29,10 @@ export type RobotProgress = {
   /** Biggest fusion made so far, and how many fusions in total (watch progress). */
   fusionBest: number;
   fusionCount: number;
+  /** Robot army (v3): finished 100-robot fusions, giant boss wins and minion waves cleared. */
+  massFusions: number;
+  bossWins: number;
+  minionWaves: number;
 };
 export const emptyRobots = (): RobotProgress => ({
   cards: {},
@@ -37,6 +42,9 @@ export const emptyRobots = (): RobotProgress => ({
   catches: 0,
   fusionBest: 1,
   fusionCount: 0,
+  massFusions: 0,
+  bossWins: 0,
+  minionWaves: 0,
 });
 const count = (v: unknown, max: number) =>
   typeof v === "number" && Number.isFinite(v) ? Math.min(max, Math.max(0, Math.floor(v))) : 0;
@@ -58,6 +66,9 @@ export function normalizeRobots(input: unknown): RobotProgress {
     catches: count(raw["catches"], 1e6),
     fusionBest: Math.max(1, count(raw["fusionBest"], MAX_FUSION)),
     fusionCount: count(raw["fusionCount"], 1e6),
+    massFusions: count(raw["massFusions"], 1e6),
+    bossWins: count(raw["bossWins"], 1e6),
+    minionWaves: count(raw["minionWaves"], 1e6),
   };
   for (const [id, value] of Object.entries(record(raw["cards"]))) {
     if (!isRobotId(id)) continue;
@@ -88,6 +99,21 @@ export const hasCard = (p: RobotProgress, id: RobotSpeciesId) => p.cards[id] !==
 export const isWatchCardAvailable = (p: RobotProgress, id: RobotSpeciesId) =>
   robotById(id).starter || hasCard(p, id);
 export const gradeOf = (p: RobotProgress, id: RobotSpeciesId) => p.cards[id]?.grade ?? 0;
+/** Meeting a legend in the world stores its card in the watch, once. */
+export function discoverLegend(p: RobotProgress, id: RobotSpeciesId): RobotProgress {
+  if (!isLegendId(id) || hasCard(p, id)) return p;
+  return { ...p, cards: { ...p.cards, [id]: { uses: 0, grade: 0 } } };
+}
+export const ARMY_REWARD = { massFusions: 0, bossWins: 6, minionWaves: 2 } as const;
+/** Army results pay once: `n` must be the next count, so repeats and reloads change nothing. */
+export function armyResult(
+  p: RobotProgress,
+  kind: "massFusions" | "bossWins" | "minionWaves",
+  n: number,
+): RobotProgress {
+  if (n !== p[kind] + 1) return p;
+  return { ...p, [kind]: n, parts: Math.min(999, p.parts + ARMY_REWARD[kind]) };
+}
 /** The first summon writes the starter card into the saved watch; later summons change nothing. */
 export function meetRobot(p: RobotProgress, id: RobotSpeciesId): RobotProgress {
   if (hasCard(p, id) || !isWatchCardAvailable(p, id)) return p;
