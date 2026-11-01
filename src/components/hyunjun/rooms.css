@@ -1,0 +1,209 @@
+.rooms-game {
+  max-width: 760px;
+  margin: auto;
+  padding: 20px;
+  border: 2px solid #bdd6d2;
+  border-radius: 28px;
+  background: #fffdf1;
+  text-align: center;
+}
+.rooms-record {
+  color: #586965;
+}
+.rooms-intro ol {
+  display: grid;
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+}
+.rooms-intro li {
+  padding: 14px;
+  background: #e7eee2;
+  border-radius: 18px;
+}
+.rooms-intro li > span {
+  margin-right: 12px;
+  font-size: 28px;
+}
+.rooms-intro p {
+  line-height: 1.65;
+}
+.rooms-intro li p {
+  margin: 8px 0 0;
+}
+.rooms-progress {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+.rooms-progress span {
+  min-width: 58px;
+  padding: 8px;
+  border: 2px solid #c3d4cb;
+  border-radius: 14px;
+}
+.rooms-progress [aria-current] {
+  background: #ffe8b0;
+  border-color: #9a6f29;
+}
+.rooms-rule {
+  min-height: 44px;
+  line-height: 1.6;
+  margin: 4px 0;
+}
+.rooms-signal {
+  padding: 10px;
+  border-radius: 12px;
+  min-height: 44px;
+}
+.rooms-signal.green {
+  background: #deedda;
+  color: #305433;
+}
+.rooms-signal.red {
+  background: #ffe0d2;
+  color: #763e26;
+}
+.rooms-board {
+  width: min(100%, 420px);
+  aspect-ratio: 7 / 5;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-rows: repeat(5, 1fr);
+  position: relative;
+  margin: 8px auto;
+  border: 3px solid #698e85;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f5e7c5;
+}
+.rooms-tile {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  border: 1px solid #d3c9a9;
+  font-size: clamp(19px, 5vw, 38px);
+}
+.rooms-tile.wall {
+  background: repeating-linear-gradient(0deg, #8fa99f, #8fa99f 14px, #a4bbb0 15px, #a4bbb0 18px);
+  border-color: #7c998d;
+}
+.rooms-game[data-room="1"] .rooms-tile.wall {
+  background: #c6a47a;
+  border-color: #a88961;
+}
+.rooms-game[data-room="2"] .rooms-tile.wall {
+  background: #98accc;
+  border-color: #748eae;
+}
+.rooms-tile.plate {
+  background: #ffe5a1;
+}
+.rooms-tile.bridge.open {
+  background: #9dcd90;
+  color: #21491f;
+}
+.rooms-tile.bridge.closed {
+  background: #ffb49b;
+  color: #6e3028;
+}
+.rooms-tile.door {
+  background: #f7d999;
+}
+.rooms-player {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-size: clamp(22px, 5vw, 42px);
+  line-height: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 1px #38524866);
+}
+.rooms-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 56px);
+  grid-template-rows: repeat(2, 52px);
+  justify-content: center;
+  gap: 6px;
+  margin: 14px 0;
+}
+.rooms-pad button,
+.rooms-actions button {
+  border: 2px solid #8dac9d;
+  border-radius: 16px;
+  background: #e2efdc;
+  color: #2f5145;
+  font: inherit;
+  min-height: 48px;
+  cursor: pointer;
+}
+.rooms-pad button {
+  font-size: 24px;
+  touch-action: manipulation;
+}
+.rooms-pad button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.rooms-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+.rooms-actions button {
+  padding: 10px 16px;
+}
+.rooms-result {
+  background: #fff2ca;
+  padding: 18px 12px;
+  border-radius: 20px;
+  margin-top: 16px;
+}
+.rooms-return {
+  display: block;
+  width: fit-content;
+  margin: 20px auto 0;
+  min-height: 44px;
+  padding: 12px 18px;
+  color: #40564d;
+  text-decoration: underline;
+}
+.rooms-game :focus-visible {
+  outline: 3px solid #a5631e;
+  outline-offset: 3px;
+}
+@media (max-width: 400px) {
+  .rooms-game {
+    padding: 16px 8px;
+  }
+  .rooms-game h2 {
+    font-size: 22px;
+  }
+}
+
+.rooms-shell .hj-heading {
+  margin: 12px 0;
+}
+.rooms-shell .hj-heading h1 {
+  font-size: clamp(26px, 4vw, 36px);
+}
+.rooms-shell .hj-heading p {
+  display: none;
+}
+.rooms-game h2 {
+  margin: 8px 0;
+}
+.rooms-record {
+  margin: 4px 0 10px;
+}
+.rooms-signal {
+  margin: 6px 0;
+}
+.rooms-progress span {
+  padding: 6px;
+}
+@media (max-width: 600px) {
+  .rooms-shell .hj-brand small {
+    display: none;
+  }
+}

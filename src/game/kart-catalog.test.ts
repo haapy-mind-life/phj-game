@@ -15,7 +15,7 @@ test("only verified existing entry points can launch; planned games cannot navig
   const games: readonly KartEntry[] = KART_GAMES;
   assert.deepEqual(
     games.filter((g) => g.status === "playable").map((g) => g.route),
-    ["/", "/race", "/peanuts"],
+    ["/", "/race", "/rooms", "/peanuts"],
   );
   assert.deepEqual(
     games.filter((g) => g.status === "existing").map((g) => g.route),

@@ -10,16 +10,18 @@ export function Shell({
   active,
   children,
   onKart,
+  className = "",
 }: {
   title: string;
   subtitle: string;
   active: "home" | "run" | "farm" | "room" | "mini";
   children: ReactNode;
   onKart?: () => void;
+  className?: string;
 }) {
   const { state, ready, storageWarning } = useGame();
   return (
-    <main className={`hj-shell${active === "home" ? " kid-world-shell" : ""}`}>
+    <main className={`hj-shell${active === "home" ? " kid-world-shell" : ""} ${className}`}>
       <div className="hj-container">
         <header className="hj-topbar">
           <Link to="/" className="hj-brand">
