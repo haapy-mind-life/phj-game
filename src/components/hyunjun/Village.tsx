@@ -10,6 +10,7 @@ import { DELIVERY_GARAGE, MISSION_LABELS, type MissionKind } from "@/game/place-
 import { WorldExpansion, WorldCopies, LegacySection, WorldOverlay } from "./WorldExpansion";
 import { People } from "./People";
 import { RobotWorld } from "./RobotWorld";
+import { RobotWatch } from "./RobotWatch";
 import { RobotSpeciesArt } from "./RobotSpeciesArt";
 import { useRobotWorld } from "./useRobotWorld";
 import { RestaurantScene } from "./RestaurantScene";
@@ -433,7 +434,7 @@ export function Village() {
   const [diving, setDiving] = useState(false);
   const [camping, setCamping] = useState(false);
   const [facing, setFacing] = useState(1);
-  const consoleShown = !mini && !drawing && !mapOpen && !garageOpen && !truckOpen;
+  const consoleShown = !mini && !drawing && !mapOpen && !garageOpen && !truckOpen && !station;
   const viewport = useRef<HTMLDivElement>(null);
   const portal = nearestPortal(pos);
   // After moving house, the old lot is an empty lot rather than the decorating entrance.
@@ -755,7 +756,7 @@ export function Village() {
     setMapOpen(false);
     setMessage(words);
   };
-  const livingActionLabel =
+  const robotWatchAllowed = region === "village" && !living.interior && !seaOpen && !truckOpen && !mini && !drawing && !station && !garageOpen && !mapOpen && plane === "off" && !submarine && !driving && !diving;\n  const livingActionLabel =
     mission && !mission.done && region === "village" && !living.interior
       ? missionPlay.label
       : nearbyStation
@@ -1507,7 +1508,7 @@ export function Village() {
             )}
             <Joystick onMove={movement.setStick} />
             <div className="adv-action-buttons">
-              {plane === "ground" && (
+              {robotWatchAllowed && (\n                <button className="hj-watch-open" data-watch-open onClick={() => robot.setWatchOpen(true)}>⌚ 로봇 시계</button>\n              )}\n              {robotWatchAllowed && robot.activeRobot && (\n                <>\n                  <button className="hj-watch-skill" onClick={() => robot.useCard()}>카드 기술 {robot.uses}/7</button>\n                  <button className="hj-watch-skill" onClick={() => robot.attack()} disabled={!robot.mission}>무기 · 돕기</button>\n                </>\n              )}\n              {plane === "ground" && (
                 <button className="hj-car-mode" onClick={leavePlane}>
                   내리기
                 </button>
