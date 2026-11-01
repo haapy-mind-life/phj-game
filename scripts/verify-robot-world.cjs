@@ -384,6 +384,40 @@ async function open(browser, viewport, save, errors) {
       console.log("PASS tablet AT-10 7th use: grade 0->1, hit 1->2, new card, kept after reload");
       await page.close();
     }
+    // AT-15: taking a car sends the robot back into the watch, and the car still drives.
+    for (const viewport of [
+      { width: 1280, height: 900 },
+      { width: 390, height: 844 },
+    ]) {
+      const g = await open(browser, viewport, SEED, errors);
+      const { page, btn, position } = g;
+      await g.summon("경찰 로봇");
+      assert.equal(await btn("차 타기").count(), 0, "car button replaced while a robot is out");
+      await page.getByRole("button", { name: /자동차 \d+대/ }).click();
+      await page
+        .getByLabel("자동차 성장 차고")
+        .locator("article button[aria-pressed]")
+        .first()
+        .click();
+      await page
+        .locator(".hj-drive-now")
+        .click()
+        .catch(() => {});
+      await page.waitForTimeout(400);
+      assert.equal(await page.locator("[data-robot-actor]").count(), 0, "robot back in the watch");
+      assert.equal(await btn("⌚ 시계").count(), 0, "no watch while driving");
+      const x0 = (await position()).x;
+      await page.keyboard.down("ArrowRight");
+      await page.waitForTimeout(500);
+      await page.keyboard.up("ArrowRight");
+      assert.ok((await position()).x - x0 > 100, "the car drives");
+      await btn("내리기").click();
+      assert.equal(await btn("⌚ 시계").count(), 1);
+      console.log(
+        `PASS ${viewport.width} AT-15 car sends the robot home; car drives; watch returns`,
+      );
+      await page.close();
+    }
     assert.deepEqual(errors, []);
     console.log("PASS no browser runtime errors");
   } finally {
