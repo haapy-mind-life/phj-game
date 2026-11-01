@@ -491,6 +491,12 @@ export function Village() {
     message: setMessage,
     onGiant: robot.recall,
   });
+  // The army can't be infected while it is rallying, a giant or walking home.
+  const armyBusy = army.fusion.phase !== "idle";
+  const clearMist = robot.clearMist;
+  useEffect(() => {
+    if (armyBusy) clearMist();
+  }, [armyBusy, clearMist]);
   const robotSpeed = army.giant ? GIANT_SPEED : robot.actor?.mode === "ride" ? 1.25 : 1;
   // The giant forms when assembling starts at the rally square and stays until it splits.
   const giantShown =
@@ -984,7 +990,7 @@ export function Village() {
                 />
               }
               {region === "village" && !living.interior && (
-                <RobotArmyView player={pos} army={army} />
+                <RobotArmyView player={pos} army={army} mist={robot.mist} />
               )}
               {region === "village" && !living.interior && (
                 <RobotWorld
@@ -1162,6 +1168,10 @@ export function Village() {
                       poweringUp={Date.now() - robot.powerUpAt < 1500}
                       label={`${identity.name}가 탄 ${robot.team.map((r) => r.name).join("+")}`}
                       world={pos}
+                      form={robot.form}
+                      // The player's wrapper already mirrors by direction; +1 makes left-facing
+                      // side art agree with it.
+                      facing={1}
                     />
                   ) : driving ? (
                     <CarArt car={carById(carId)} size={98} />
@@ -1654,6 +1664,15 @@ export function Village() {
                     >
                       ⚔ {robot.weapon?.name}
                     </button>
+                    {robot.transformLabel && (
+                      <button
+                        className="hj-car-mode hj-form-button"
+                        disabled={robot.busy}
+                        onClick={robot.transform}
+                      >
+                        {robot.transformLabel}
+                      </button>
+                    )}
                   </>
                 ) : (
                   region === "village" &&

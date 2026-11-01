@@ -3,9 +3,11 @@ import {
   CARD_USES_TO_UNLOCK,
   GRADES,
   ALL_ROBOTS,
+  FEATURED_MAIN,
   LEGENDS,
   MAX_FUSION,
   ROBOTS,
+  isRosterId,
   type RobotMissionMode,
   type RobotSpeciesId,
 } from "@/game/robot/robot-catalog";
@@ -16,6 +18,8 @@ import { RobotPortrait } from "./RobotPortrait";
 export type WatchTabId = "summon" | "fuse" | "mission" | "army" | "legend";
 const ROLES_2 = ["머리·몸", "팔·무기"];
 const ROLES_3 = ["머리·몸", "팔·무기", "다리·날개"];
+const FEATURED = FEATURED_MAIN.map((id) => ROBOTS.find((r) => r.id === id)!);
+const OTHER_ROBOTS = ROBOTS.filter((r) => !FEATURED_MAIN.includes(r.id));
 /**
  * The wrist robot-summon watch. Every card is already stored in the watch (no card to find or
  * insert): pick a picture, then summon, fuse or send the robot on a job.
@@ -64,10 +68,37 @@ export function RobotWatch({
   const chosen = ALL_ROBOTS.find((r) => r.id === selected)!;
   const uses = progress.cards[selected]?.uses ?? 0;
   const roles = picks.length > 2 ? ROLES_3 : ROLES_2;
+  const specialPick = picks.some(isRosterId);
+  // Tira and Emblus fuse only with each other, so the other cards rest while one is picked.
+  const pickBlocked = (id: RobotSpeciesId) =>
+    picks.length > 0 && !picks.includes(id) && isRosterId(id) !== specialPick;
   const togglePick = (id: RobotSpeciesId) =>
     setPicks((p) =>
-      p.includes(id) ? p.filter((x) => x !== id) : p.length < MAX_FUSION ? [...p, id] : p,
+      p.includes(id)
+        ? p.filter((x) => x !== id)
+        : p.length < MAX_FUSION && !pickBlocked(id)
+          ? [...p, id]
+          : p,
     );
+  const summonCard = (r: (typeof ROBOTS)[number]) => {
+    const open = isWatchCardAvailable(progress, r.id);
+    return (
+      <button
+        type="button"
+        key={r.id}
+        disabled={!open}
+        className={selected === r.id ? "chosen" : ""}
+        aria-pressed={selected === r.id}
+        onClick={() => setSelected(r.id)}
+        aria-label={`${r.name} 카드${open ? "" : " (잠김)"}`}
+        data-card={r.id}
+      >
+        <RobotPortrait robot={r} grade={gradeOf(progress, r.id)} size={46} />
+        <b>{r.name}</b>
+        <small>{open ? `${progress.cards[r.id]?.uses ?? 0}/7` : "🔒 7번 쓰면 열려"}</small>
+      </button>
+    );
+  };
   return (
     <div className="hj-garage-backdrop" onClick={onClose}>
       <section
@@ -126,27 +157,11 @@ export function RobotWatch({
         {tab === "summon" && (
           <>
             <div className="hj-watch-cards" role="group" aria-label="시계에 저장된 로봇 카드">
-              {ROBOTS.map((r) => {
-                const open = isWatchCardAvailable(progress, r.id);
-                return (
-                  <button
-                    type="button"
-                    key={r.id}
-                    disabled={!open}
-                    className={selected === r.id ? "chosen" : ""}
-                    aria-pressed={selected === r.id}
-                    onClick={() => setSelected(r.id)}
-                    aria-label={`${r.name} 카드${open ? "" : " (잠김)"}`}
-                    data-card={r.id}
-                  >
-                    <RobotPortrait robot={r} grade={gradeOf(progress, r.id)} size={46} />
-                    <b>{r.name}</b>
-                    <small>
-                      {open ? `${progress.cards[r.id]?.uses ?? 0}/7` : "🔒 7번 쓰면 열려"}
-                    </small>
-                  </button>
-                );
-              })}
+              {FEATURED.map(summonCard)}
+            </div>
+            <p className="hj-watch-help">다른 로봇</p>
+            <div className="hj-watch-cards" role="group" aria-label="다른 로봇 카드">
+              {OTHER_ROBOTS.map(summonCard)}
             </div>
             <button className="hj-watch-go" onClick={() => onSummon(selected)}>
               ✨ {chosen.name} 소환!
@@ -164,8 +179,9 @@ export function RobotWatch({
         {tab === "fuse" && (
           <>
             <p className="hj-watch-help">
-              로봇을 2개 또는 3개 눌러 봐! 처음 고른 로봇이 머리·몸, 두 번째가 팔·무기, 세 번째가
-              다리·날개가 돼.
+              {specialPick
+                ? "티라와 엠블러스는 둘이 특수 합체해! 티라 머리는 가슴, 꼬리와 손발은 해독 칼이 돼."
+                : "로봇을 2개 또는 3개 눌러 봐! 처음 고른 로봇이 머리·몸, 두 번째가 팔·무기, 세 번째가 다리·날개가 돼."}
             </p>
             <div className="hj-watch-cards" role="group" aria-label="합체할 로봇 고르기">
               {available.map((r) => {
@@ -176,12 +192,23 @@ export function RobotWatch({
                     key={r.id}
                     className={at >= 0 ? "chosen" : ""}
                     aria-pressed={at >= 0}
+                    disabled={pickBlocked(r.id)}
                     onClick={() => togglePick(r.id)}
                     aria-label={`합체: ${r.name}`}
                   >
                     <RobotPortrait robot={r} grade={gradeOf(progress, r.id)} size={46} />
                     <b>{r.name}</b>
-                    <small>{at >= 0 ? `${at + 1}. ${roles[at]}` : "고르기"}</small>
+                    <small>
+                      {at >= 0
+                        ? specialPick
+                          ? r.id === "rb-emblus"
+                            ? "몸·손"
+                            : "가슴·해독 칼"
+                          : `${at + 1}. ${roles[at]}`
+                        : isRosterId(r.id)
+                          ? "특수 합체"
+                          : "고르기"}
+                    </small>
                   </button>
                 );
               })}
@@ -203,7 +230,14 @@ export function RobotWatch({
               disabled={picks.length < 2}
               onClick={() => onFuse(picks)}
             >
-              💥 {picks.length >= 2 ? `${picks.length}단 합체 시작!` : "2개 이상 골라 줘"}
+              💥{" "}
+              {picks.length >= 2
+                ? specialPick
+                  ? "특수 합체 시작!"
+                  : `${picks.length}단 합체 시작!`
+                : specialPick
+                  ? "짝꿍 로봇을 골라 줘"
+                  : "2개 이상 골라 줘"}
             </button>
             {team.length > 1 && (
               <button className="hj-watch-row-button" onClick={onSplit}>
@@ -225,11 +259,15 @@ export function RobotWatch({
               <button disabled={!mode} onClick={() => onMission("thief")}>
                 💰 도둑 잡기
               </button>
+              <button disabled={!mode} onClick={() => onMission("cure")}>
+                🟢 미스트 해독
+              </button>
             </div>
             <div className="hj-watch-stats">
               <span>🏆 악당 {progress.wins}</span>
               <span>🧡 구조 {progress.rescues}</span>
               <span>🚓 체포 {progress.catches}</span>
+              <span>🟢 해독 {progress.cures}</span>
               <span>🔩 부품 {progress.parts}</span>
               <span>💥 최고 {progress.fusionBest}단</span>
             </div>

@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import type { Point } from "@/game/world/adventure";
 import type { RobotSpecies } from "@/game/robot/robot-catalog";
+import type { RobotForm } from "@/game/robot/robot-forms";
 import { FusedRobotArt } from "./FusedRobotArt";
 import { SummonBeamArt } from "./MissionArt";
 import { RobotPortrait } from "./RobotPortrait";
@@ -27,6 +28,8 @@ export function RobotActorView({
   label,
   world,
   style,
+  form = "robot",
+  facing = -1,
 }: {
   team: RobotSpecies[];
   others: RobotSpecies[];
@@ -39,6 +42,8 @@ export function RobotActorView({
   label: string;
   world: Point;
   style?: CSSProperties;
+  form?: RobotForm;
+  facing?: number;
 }) {
   const core = team[0];
   if (!core) return null;
@@ -61,6 +66,7 @@ export function RobotActorView({
       data-grade={grades[0] ?? 0}
       data-weapon={weaponOut ? "drawn" : "stowed"}
       data-fusion-phase={fusionPhase}
+      data-form={form}
       data-x={Math.round(world.x)}
       data-y={Math.round(world.y)}
       style={style}
@@ -115,8 +121,11 @@ export function RobotActorView({
             grade={grades[0] ?? 0}
             moving={moving}
             weaponOut={weaponOut}
-            size={grades[0] ? 92 : 82}
+            size={(grades[0] ? 92 : 82) * (core.worldScale ?? 1)}
             label={label}
+            form={form}
+            changing={phase === "transforming"}
+            facing={facing}
           />
           {phase === "returning" &&
             others.map((r) => (

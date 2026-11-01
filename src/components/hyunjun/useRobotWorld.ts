@@ -22,9 +22,11 @@ import {
 } from "@/game/robot/robot-catalog";
 import {
   applyCardUse,
+  fusionOrder,
   freshVillain,
   gradeOf,
   hitVillain,
+  isSpecialFusion,
   isWatchCardAvailable,
   resolveStrike,
   teamPower,
@@ -42,6 +44,23 @@ import {
   type Rescue,
   type Thief,
 } from "@/game/robot/robot-missions";
+import { armyRobot, armyPosition } from "@/game/robot/robot-army";
+import {
+  beginTransform,
+  canStrikeInForm,
+  canTransform,
+  finishTransform,
+  interruptTransform,
+  type RobotForm,
+} from "@/game/robot/robot-forms";
+import {
+  cureRobot,
+  mistCleared,
+  mistTargets,
+  startMist,
+  stillInfected,
+  type Mist,
+} from "@/game/robot/robot-infection";
 import { worldDelta, worldDistance, wrapPoint } from "@/game/world/world-space";
 import type { GameState, WorldAction } from "@/lib/world-model";
 
@@ -54,7 +73,7 @@ export const robotName = (robot: RobotSpecies, robots: RobotProgress) => {
  * into one body) → active; splitting goes splitting → returning (members beam back) → active.
  */
 export type ActorPhase =
-  "summoning" | "active" | "gathering" | "assembling" | "splitting" | "returning";
+  "summoning" | "active" | "gathering" | "assembling" | "splitting" | "returning" | "transforming";
 export type RobotActor = {
   team: RobotSpeciesId[];
   mode: "follow" | "ride";
@@ -63,6 +82,8 @@ export type RobotActor = {
   pos: Point;
   /** Members gathering for a fusion, or leaving after a split. */
   others: RobotSpeciesId[];
+  /** Tira's egg or Emblus's ambulance; never saved, a reload stands the robot up again. */
+  form: RobotForm;
 };
 export type StrikeEffect = { kind: string; from: Point; to: Point; hit: boolean; at: number };
 /** `id` ties delayed mission steps to the mission that started them. */
@@ -70,9 +91,18 @@ export type RobotMission = { id: number } & (
   | { mode: "villain" }
   | { mode: "rescue"; rescue: Rescue; thanked: boolean }
   | { mode: "thief"; thief: Thief; rewarded: boolean }
+  | { mode: "cure"; mist: Mist; rewarded: boolean }
 );
 export type WatchTab = "summon" | "fuse" | "mission" | "army" | "legend";
-type Job = { kind: "villain" | "rescue" | "thief"; at: Point };
+type Job =
+  { kind: "villain" | "rescue" | "thief"; at: Point } | { kind: "cure"; id: string; at: Point };
+const TRANSFORM_MS = 900;
+const FORM_BUTTON: Record<RobotForm, string> = {
+  robot: "",
+  egg: "🦖 티라로 변신",
+  ambulance: "🤖 로봇으로 변신",
+};
+const FORM_NAME: Record<RobotForm, string> = { robot: "로봇", egg: "공룡알", ambulance: "구급차" };
 const SUMMON_MS = 900;
 const GATHER_MS = 800;
 const ASSEMBLE_MS = 1400;
@@ -80,6 +110,16 @@ const SPLIT_MS = 800;
 const RETURN_MS = 900;
 const WEAPON_SHOW_MS = 1300;
 const ARROWS = ["→", "↘", "↓", "↙", "←", "↖", "↑", "↗"];
+
+function nearestInfected(mist: Mist, from: Point) {
+  const seconds = Date.now() / 1000;
+  const spots = stillInfected(mist)
+    .map((id) => armyRobot(id))
+    .filter((robot) => !!robot)
+    .map((robot) => armyPosition(robot, seconds))
+    .sort((a, b) => worldDistance(from, a) - worldDistance(from, b));
+  return spots[0] ? { name: "감염 로봇", at: spots[0] } : null;
+}
 
 /** The robot watch: summon a robot, fuse 2–3 robots, fight, rescue and catch the thief. */
 export function useRobotWorld({
@@ -257,18 +297,21 @@ export function useRobotWorld({
       phase: "summoning",
       pos: isWalkable(at) ? at : { ...pos },
       others: [],
+      form: "robot",
     });
     setDamage(0);
     setWatchOpen(false);
     later(SUMMON_MS, () => setActor((a) => (a ? { ...a, phase: "active" } : a)));
     message(`${robotName(robotById(id), robots)} 소환! 로봇에 탔어. 조이스틱으로 직접 움직여 봐!`);
   };
-  const fuse = (ids: RobotSpeciesId[]) => {
+  const fuse = (picked: RobotSpeciesId[]) => {
     if (!allowed) return;
-    if (!validFusion(robots, ids)) {
+    if (!validFusion(robots, picked)) {
       message("시계에서 서로 다른 로봇을 2개 또는 3개 골라 줘!");
       return;
     }
+    const ids = fusionOrder(picked);
+    const special = isSpecialFusion(ids);
     for (const id of ids) dispatch({ type: "robot-meet", id });
     clearTimers();
     // The first fusion of a summon adds the members' energy; later ones keep the energy the
@@ -285,15 +328,22 @@ export function useRobotWorld({
       phase: "gathering",
       pos: center,
       others: ids,
+      form: "robot",
     });
     setWatchOpen(false);
-    message(`${ids.length}단 합체 시작! ${ids.map((id) => robotById(id).name).join(" + ")}`);
+    message(
+      special
+        ? "특수 합체 시작! 티라 머리는 엠블러스 가슴으로, 꼬리와 손발은 해독 칼로!"
+        : `${ids.length}단 합체 시작! ${ids.map((id) => robotById(id).name).join(" + ")}`,
+    );
     later(GATHER_MS, () => setActor((a) => (a ? { ...a, phase: "assembling", others: [] } : a)));
     later(GATHER_MS + ASSEMBLE_MS, () => {
       dispatch({ type: "robot-fuse", ids });
       setActor((a) => (a ? { ...a, phase: "active" } : a));
       message(
-        `${ids.length}단 합체 완성! 한 몸이 된 합체 로봇이야 💥 힘 ${teamPower(robots, ids)} · ${teamWeapon(ids).name}`,
+        special
+          ? `특수 합체 완성! 엠블러스가 ${teamWeapon(ids).name}을 들었어 🟢 힘 ${teamPower(robots, ids)}`
+          : `${ids.length}단 합체 완성! 한 몸이 된 합체 로봇이야 💥 힘 ${teamPower(robots, ids)} · ${teamWeapon(ids).name}`,
       );
     });
   };
@@ -312,6 +362,21 @@ export function useRobotWorld({
     setDamage(ROBOT_ENERGY - Math.min(energy, ROBOT_ENERGY));
     message("합체 해제! 로봇 친구들은 시계 속으로 돌아갔어. 카드는 그대로야.");
   };
+  const transform = () => {
+    if (!actor || busy) return;
+    const next = beginTransform(actor.team, { form: actor.form, changing: false });
+    if (!next) return;
+    setActor({ ...actor, phase: "transforming", form: next.form });
+    later(TRANSFORM_MS, () => {
+      const done = finishTransform(next);
+      setActor((a) =>
+        a?.phase === "transforming" ? { ...a, phase: "active", form: done.form } : a,
+      );
+    });
+    message(
+      `철컥철컥! ${robotById(actor.team[0]!).name}이 ${FORM_NAME[next.form]} 모습으로 바뀌어!`,
+    );
+  };
   const setMode = (mode: "follow" | "ride") => {
     if (!actor) return;
     setActor({ ...actor, mode, pos: { ...pos } });
@@ -327,7 +392,19 @@ export function useRobotWorld({
     }
     setWatchOpen(false);
     const id = ++missionSerial.current;
-    if (mode === "villain") {
+    if (mode === "cure") {
+      if (!team.includes("rb-emblus")) {
+        message("미스트 해독은 엠블러스만 할 수 있어! 시계에서 엠블러스를 불러 줘.");
+        return;
+      }
+      const mist = startMist(id, mistTargets(actorPos, Date.now() / 1000));
+      if (!mist) {
+        message("근처에 군단 로봇이 없어. 부대 가까이 가서 다시 시작해 줘!");
+        return;
+      }
+      setMission({ id, mode, mist, rewarded: false });
+      message(`미스트 바이러스! 보라색 로봇 ${mist.infected.length}대를 해독 무기로 고쳐 주자!`);
+    } else if (mode === "villain") {
       setMission({ id, mode });
       message(`${VILLAIN_NAME}이 나타났어! 남쪽으로 가서 무기로 막아 줘!`);
     } else if (mode === "rescue") {
@@ -338,19 +415,31 @@ export function useRobotWorld({
       message("도둑 로봇이 별코인 자루를 들고 서쪽 들판으로 도망갔어! 경찰 로봇과 잡아 보자!");
     }
   };
-  // The weapon aims at the nearest job, so a far swing is honestly "too far".
-  const jobs: Job[] = [];
-  if (!villain.retreating) jobs.push({ kind: "villain", at: VILLAIN_SPOT });
-  if (mission?.mode === "rescue" && mission.rescue.phase === "danger")
-    jobs.push({ kind: "rescue", at: RESCUE_SPOT });
-  if (
-    mission?.mode === "thief" &&
-    (mission.thief.phase === "fleeing" || mission.thief.phase === "stunned")
-  )
-    jobs.push({ kind: "thief", at: mission.thief.pos });
-  const aim =
-    jobs.sort((a, b) => worldDistance(actorPos, a.at) - worldDistance(actorPos, b.at))[0] ?? null;
   const weapon = team.length ? teamWeapon(team) : null;
+  // The weapon aims at the nearest job, so a far swing is honestly "too far". The antidote only
+  // ever aims at infected robots and other weapons never do, so nothing else can count as a cure.
+  const nearestJob = (now: number): Job | null => {
+    const jobs: Job[] = [];
+    if (weapon?.kind === "antidote") {
+      if (mission?.mode === "cure")
+        for (const id of stillInfected(mission.mist)) {
+          const robot = armyRobot(id);
+          if (robot) jobs.push({ kind: "cure", id, at: armyPosition(robot, now / 1000) });
+        }
+    } else {
+      if (!villain.retreating) jobs.push({ kind: "villain", at: VILLAIN_SPOT });
+      if (mission?.mode === "rescue" && mission.rescue.phase === "danger")
+        jobs.push({ kind: "rescue", at: RESCUE_SPOT });
+      if (
+        mission?.mode === "thief" &&
+        (mission.thief.phase === "fleeing" || mission.thief.phase === "stunned")
+      )
+        jobs.push({ kind: "thief", at: mission.thief.pos });
+    }
+    return (
+      jobs.sort((x, y) => worldDistance(actorPos, x.at) - worldDistance(actorPos, y.at))[0] ?? null
+    );
+  };
 
   /** Counts one valid skill use on every robot in the team (same judgement as the hit). */
   const countUse = () => {
@@ -373,12 +462,21 @@ export function useRobotWorld({
       message(actor ? "합체하는 중이야! 잠깐만." : "먼저 시계에서 로봇을 소환해 줘!");
       return;
     }
+    if (!canStrikeInForm({ form: actor.form, changing: false })) {
+      message(`${FORM_NAME[actor.form]} 모습이야! 먼저 변신 버튼으로 로봇이 돼 줘.`);
+      return;
+    }
     const now = Date.now();
     setWeaponOut(true);
     clearTimeout(weaponTimer.current);
     weaponTimer.current = window.setTimeout(() => setWeaponOut(false), WEAPON_SHOW_MS);
+    const aim = nearestJob(now);
     if (!aim) {
-      message(`${weapon.name}을 꺼냈어! 지금은 맞힐 상대가 없어.`);
+      message(
+        weapon.kind === "antidote"
+          ? `${weapon.name}을 꺼냈어! 고쳐 줄 감염 로봇이 없어. 🚨 출동에서 미스트 해독을 골라 봐.`
+          : `${weapon.name}을 꺼냈어! 지금은 맞힐 상대가 없어.`,
+      );
       return;
     }
     const result = resolveStrike(weapon, actorPos, aim.at, now, lastStrike.current);
@@ -395,7 +493,16 @@ export function useRobotWorld({
     }
     const power = teamPower(robots, team);
     const words: string[] = [];
-    if (aim.kind === "villain") {
+    if (aim.kind === "cure" && mission?.mode === "cure") {
+      const mist = cureRobot(mission.mist, aim.id);
+      const clear = mistCleared(mist);
+      setMission({ ...mission, mist, rewarded: mission.rewarded || clear });
+      if (clear && !mission.rewarded) {
+        dispatch({ type: "robot-mission", mode: "cure", n: robots.cures + 1 });
+        words.push(`미스트가 다 걷혔어! 로봇들이 다시 건강해졌어 🟢 🔩 부품 +${MISSION_PARTS}`);
+        laterMission(mission.id, 2500, () => null);
+      } else words.push(`${weapon.name} 명중! 남은 감염 로봇 ${stillInfected(mist).length}대`);
+    } else if (aim.kind === "villain") {
       const hit = hitVillain(villain, power, now);
       setVillain(hit.villain);
       if (hit.defeated) {
@@ -469,7 +576,20 @@ export function useRobotWorld({
     return true;
   };
   /** Map travel takes the robot along. */
-  const arrive = (at: Point) => setActor((a) => (a ? { ...a, pos: { ...at } } : a));
+  const arrive = (at: Point) => {
+    // A change cut short by travel ends in the safe robot pose; the timer no longer applies.
+    if (actor?.phase === "transforming") clearTimers();
+    setActor((a) => {
+      if (!a) return a;
+      if (a.phase !== "transforming") return { ...a, pos: { ...at } };
+      const safe = interruptTransform({ form: a.form, changing: true });
+      return { ...a, pos: { ...at }, phase: "active", form: safe.form };
+    });
+  };
+  /** The army is on the move (100-robot rally): the mist lifts, unpaid and with nothing lost. */
+  const clearMist = useCallback(() => {
+    setMission((m) => (m?.mode === "cure" && !m.rewarded ? null : m));
+  }, []);
 
   const goal =
     mission?.mode === "rescue" && !mission.thanked
@@ -478,7 +598,9 @@ export function useRobotWorld({
         ? { name: "도둑 잡기", at: mission.thief.pos }
         : mission?.mode === "villain"
           ? { name: "악당 막기", at: VILLAIN_SPOT }
-          : null;
+          : mission?.mode === "cure" && !mission.rewarded
+            ? nearestInfected(mission.mist, actorPos)
+            : null;
   const compass = goal
     ? (() => {
         const d = worldDelta(pos, goal.at);
@@ -486,9 +608,23 @@ export function useRobotWorld({
         return `🧭 ${goal.name} ${arrow} ${Math.round(Math.hypot(d.x, d.y) / 50)}걸음`;
       })()
     : null;
+  const soloForm = actor && canTransform(actor.team) ? actor : null;
+  const transformLabel = !soloForm
+    ? null
+    : soloForm.form !== "robot"
+      ? FORM_BUTTON[soloForm.form]
+      : soloForm.team[0] === "rb-tira"
+        ? "🥚 알로 변신"
+        : "🚑 구급차로 변신";
   return {
     actor,
     actorPos,
+    facing,
+    form: actor?.form ?? ("robot" as RobotForm),
+    transform,
+    transformLabel,
+    mist: mission?.mode === "cure" ? mission.mist : null,
+    clearMist,
     busy,
     team: team.map(robotById),
     grades: team.map((id) => gradeOf(robots, id)),

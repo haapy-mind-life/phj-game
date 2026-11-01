@@ -1,0 +1,46 @@
+/* Featured robots (RobotRosterArt), the mist virus and the antidote weapon. */
+.hj-roster {
+  overflow: visible;
+}
+/* Only the weapon wrapper gets a fill-box origin; inner groups keep their SVG transforms. */
+.hj-roster .hj-roster-weapon {
+  transform-box: fill-box;
+  transform-origin: 50% 90%;
+}
+.hj-roster.weapon-out .hj-roster-weapon {
+  animation: hj-roster-swing 0.4s ease-out;
+  filter: drop-shadow(0 0 4px #fff7b0);
+}
+.hj-roster.changing {
+  animation: hj-roster-change 0.9s ease-in-out;
+}
+@keyframes hj-roster-swing {
+  from {
+    transform: rotate(-22deg) scale(0.9);
+  }
+}
+@keyframes hj-roster-change {
+  50% {
+    filter: brightness(1.6);
+  }
+}
+/* Mist virus: a purple state change, nothing scary. */
+.hj-army-robot .hj-mist-cloud {
+  position: absolute;
+  inset: -12px -14px 6px;
+  border-radius: 50%;
+  background: radial-gradient(#b16cff66, #b16cff00 72%);
+  pointer-events: none;
+}
+.hj-army-robot.infected svg {
+  filter: hue-rotate(250deg) saturate(1.4) brightness(0.92);
+}
+.hj-army-robot.infected > i {
+  background: #d7a6ff !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hj-roster.weapon-out .hj-roster-weapon,
+  .hj-roster.changing {
+    animation: none;
+  }
+}

@@ -4,7 +4,7 @@ import type { Point } from "../world/adventure.ts";
 // 2026-11-01 robot watch update (docs/robot-fusion/2026-11-01-watch-integration).
 // `workName` keeps the name Hyunjun gave; screens show the descriptive `name` until the
 // display names are checked (02_REVIEW_AND_SUPPLEMENT.md R4).
-export type RobotFamily = "police" | "fire" | "sky";
+export type RobotFamily = "police" | "fire" | "sky" | "rescue";
 export type RobotSpeciesId =
   | "rb-police"
   | "rb-fire"
@@ -12,12 +12,16 @@ export type RobotSpeciesId =
   | "rb-thunder-police"
   | "rb-volcano-fire"
   | "rb-laser-sky"
+  | RosterId
   | LegendId;
+/** Hyunjun's own two robots (roster v1.1, 2026-11-02): in the 100, never added on top of it. */
+export type RosterId = "rb-tira" | "rb-emblus";
 /** The six legendary robots (requirements v3 RA-102): their own robots, not the six above. */
 export type LegendId =
   "lg-shield" | "lg-wing" | "lg-deep" | "lg-steel" | "lg-thunder" | "lg-guardian";
-export type RobotMissionMode = "villain" | "rescue" | "thief";
-export type WeaponKind = "sword" | "cannon" | "wind";
+export type RobotMissionMode = "villain" | "rescue" | "thief" | "cure";
+/** `antidote` only ever aims at infected robots, so a cure can't be faked on anything else. */
+export type WeaponKind = "sword" | "cannon" | "wind" | "antidote";
 /** Each robot carries its own weapon; a fusion fights with the weapon on its arms. */
 export type Weapon = {
   name: string;
@@ -47,6 +51,8 @@ export type RobotSpecies = {
   role?: string;
   /** Where to look for a legend, shown in the watch until it is found. */
   hint?: string;
+  /** World size against a regular robot (cards stay one size so they stay readable). */
+  worldScale?: number;
 };
 export const CARD_USES_TO_UNLOCK = 7;
 const SWORD: Weapon = { name: "빛 검", kind: "sword", range: 170, cooldownMs: 1100 };
@@ -128,7 +134,49 @@ export const ROBOTS: readonly RobotSpecies[] = [
     weapon: { ...WIND, name: "레이저 부메랑", range: 250 },
     starter: false,
   },
+  {
+    id: "rb-tira",
+    name: "티라",
+    workName: "티라",
+    family: "rescue",
+    skill: "꼬리 휘두르기",
+    color: "#2c7f8f",
+    accent: "#ffb02e",
+    mark: "none",
+    weapon: { ...SWORD, name: "꼬리 휘두르기", range: 150, cooldownMs: 900 },
+    starter: true,
+    worldScale: 0.72,
+  },
+  {
+    id: "rb-emblus",
+    name: "엠블러스",
+    workName: "엠블러스",
+    family: "rescue",
+    skill: "해독 집게",
+    color: "#d8403a",
+    accent: "#23c267",
+    mark: "none",
+    weapon: { name: "해독 집게", kind: "antidote", range: 190, cooldownMs: 1100 },
+    starter: true,
+    worldScale: 1.2,
+  },
 ];
+/** The six robots the watch shows first; the two others stay in the watch underneath. */
+export const FEATURED_MAIN: readonly RobotSpeciesId[] = [
+  "rb-tira",
+  "rb-emblus",
+  "rb-police",
+  "rb-fire",
+  "rb-sky",
+  "rb-thunder-police",
+];
+/** The special fusion weapon: Tira's tail is the blade, its hands and feet are the guard. */
+export const ANTIDOTE_SWORD: Weapon = {
+  name: "해독 칼",
+  kind: "antidote",
+  range: 240,
+  cooldownMs: 900,
+};
 // Legend names are working names until Hyunjun names them (RAQ-06). Each one fights with an
 // existing weapon kind so strikes and effects work unchanged, and lends a family look to 2·3
 // robot fusions.
@@ -228,6 +276,7 @@ export const LEGENDS: readonly RobotSpecies[] = [
 export const ALL_ROBOTS: readonly RobotSpecies[] = [...ROBOTS, ...LEGENDS];
 export const ROBOT_IDS: readonly string[] = ALL_ROBOTS.map((r) => r.id);
 export const robotById = (id: RobotSpeciesId) => ALL_ROBOTS.find((r) => r.id === id)!;
+export const isRosterId = (v: unknown): v is RosterId => v === "rb-tira" || v === "rb-emblus";
 export const isLegendId = (v: unknown): v is LegendId =>
   typeof v === "string" && LEGENDS.some((l) => l.id === v);
 export const isRobotId = (v: unknown): v is RobotSpeciesId =>
