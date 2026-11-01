@@ -214,6 +214,11 @@ const frameTimes = (page, ms) =>
       assert.ok(
         await page.getByRole("button", { name: "방패 전설 로봇 카드 (아직 못 찾음)" }).isDisabled(),
       );
+      // Every legend still to find has a hint; the panel still fits the screen width.
+      assert.equal(await page.locator("[data-legend-hint]").count(), 6);
+      assert.match(await page.locator('[data-legend-hint="lg-steel"]').innerText(), /벚꽃 마을/);
+      await page.locator("[data-legend-hint]").last().scrollIntoViewIfNeeded();
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
       if (full) await page.screenshot({ path: `${out}/ra-at06-legendary-six-${name}.png` });
       await btn("소환 시계 닫기").click();
       if (full) {
@@ -226,6 +231,9 @@ const frameTimes = (page, ms) =>
         assert.ok((await saved()).robots.cards["lg-shield"]);
         await btn("⌚ 시계").click();
         await page.getByRole("tab", { name: "⭐ 전설" }).click();
+        // A found legend's hint is gone; the other five remain.
+        assert.equal(await page.locator('[data-legend-hint="lg-shield"]').count(), 0);
+        assert.equal(await page.locator("[data-legend-hint]").count(), 5);
         await page.getByRole("button", { name: "방패 전설 로봇 카드", exact: true }).click();
         await page.getByRole("button", { name: "✨ 방패 전설 로봇 소환!" }).click();
         await page.locator('[data-robot-actor][data-phase="active"]').first().waitFor();

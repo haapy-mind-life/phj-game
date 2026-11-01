@@ -272,6 +272,15 @@ export function RobotWatch({
             >
               ✨ {chosen.legendary ? chosen.name : "전설 로봇"} 소환!
             </button>
+            {army.legendsFound < LEGENDS.length && (
+              <ul className="hj-legend-hints" aria-label="전설 로봇 힌트">
+                {LEGENDS.filter((r) => !isWatchCardAvailable(progress, r.id)).map((r) => (
+                  <li key={r.id} data-legend-hint={r.id}>
+                    <b>🔍 {r.name}</b> {r.hint}
+                  </li>
+                ))}
+              </ul>
+            )}
           </>
         )}
         {tab === "army" && (
