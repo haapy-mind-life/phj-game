@@ -1,0 +1,86 @@
+{
+  "baseSHA": "6bc756fc1ad9b7d710c669c94f82b42692ecd36f",
+  "branch": "feat/phj-walkable-greenhouse-20261101",
+  "state": "tested working tree before commit",
+  "timestamp": "2026-11-01T08:39:58.352367+00:00",
+  "environment": "Node v24.16.0; existing playwright-core/headless Chromium; Pages preview",
+  "checks": {
+    "unit": "PASS 170/170",
+    "typescript": "PASS",
+    "changedFileLint": "PASS",
+    "build": "PASS",
+    "pagesBuild": "PASS (existing bundle size warning)",
+    "physicalSamsungAndSPen": "NOT_RUN"
+  },
+  "greenhouse": [
+    {
+      "width": 360,
+      "result": "PASS",
+      "movement": "touch joystick",
+      "distanceGates": true,
+      "collision": true,
+      "freeAndPaidSeeds": true,
+      "waterAnimation": true,
+      "legacyGoldAndFifthHarvest": true,
+      "oneHarvest": true,
+      "cancelAndBlurStop": true,
+      "reloadAndReturn": true,
+      "assetsPreserved": true
+    },
+    {
+      "width": 390,
+      "result": "PASS",
+      "movement": "touch joystick",
+      "distanceGates": true,
+      "collision": true,
+      "freeAndPaidSeeds": true,
+      "waterAnimation": true,
+      "legacyGoldAndFifthHarvest": true,
+      "oneHarvest": true,
+      "cancelAndBlurStop": true,
+      "reloadAndReturn": true,
+      "assetsPreserved": true
+    },
+    {
+      "width": 1280,
+      "result": "PASS",
+      "movement": "keyboard",
+      "distanceGates": true,
+      "collision": true,
+      "freeAndPaidSeeds": true,
+      "waterAnimation": true,
+      "legacyGoldAndFifthHarvest": true,
+      "oneHarvest": true,
+      "cancelAndBlurStop": true,
+      "reloadAndReturn": true,
+      "assetsPreserved": true
+    }
+  ],
+  "hubRegression": [
+    {
+      "width": 360,
+      "result": "PASS",
+      "worldMovement": true,
+      "returnPosition": true,
+      "savePreserved": true,
+      "historyAndReload": true
+    },
+    {
+      "width": 390,
+      "result": "PASS",
+      "worldMovement": true,
+      "returnPosition": true,
+      "savePreserved": true,
+      "historyAndReload": true
+    },
+    {
+      "width": 1280,
+      "result": "PASS",
+      "worldMovement": true,
+      "returnPosition": true,
+      "savePreserved": true,
+      "historyAndReload": true
+    }
+  ],
+  "scope": "Existing /greenhouse becomes walkable. The same six plots, crop types/costs, water, gold and harvest multiplier (1.5), wallet, save key and version 3 are reused with no save schema/reducer changes. Plot buttons select only; actual care requires walkable position within 82 units. Entrance/hub return and movement cancellation are supported."
+}

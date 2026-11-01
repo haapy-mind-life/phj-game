@@ -11,6 +11,7 @@ export function Shell({
   children,
   onKart,
   className = "",
+  showHomeReturn = true,
 }: {
   title: string;
   subtitle: string;
@@ -18,6 +19,7 @@ export function Shell({
   children: ReactNode;
   onKart?: () => void;
   className?: string;
+  showHomeReturn?: boolean;
 }) {
   const { state, ready, storageWarning } = useGame();
   return (
@@ -46,7 +48,7 @@ export function Shell({
           </p>
         )}
         {children}
-        {active !== "home" && active !== "mini" && (
+        {showHomeReturn && active !== "home" && active !== "mini" && (
           <nav className="hj-home-return" aria-label="마을로 돌아가기">
             <Link to="/">🏡 마을로 돌아가기</Link>
           </nav>
