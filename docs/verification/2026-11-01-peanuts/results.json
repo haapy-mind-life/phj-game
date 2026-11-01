@@ -1,0 +1,75 @@
+{
+  "baseSHA": "c687bf92c2fdbbd67f9bf32e7518fc4be0817da7",
+  "branch": "feat/phj-kart-peanuts-20261101",
+  "state": "tested working tree before commit",
+  "timestamp": "2026-11-01T07:51:35.144926+00:00",
+  "environment": "Node v24.16.0; existing playwright-core / headless Chromium; Pages preview",
+  "checks": {
+    "unit": "PASS 161/161",
+    "typescript": "PASS",
+    "changedFileLint": "PASS",
+    "build": "PASS",
+    "pagesBuild": "PASS (existing bundle size warning)",
+    "wholeTreeLint": "Known baseline untracked capture-concept-audit.cjs formatting errors; file not changed",
+    "physicalDeviceUAT": "NOT_RUN"
+  },
+  "peanuts": [
+    {
+      "width": 360,
+      "result": "PASS",
+      "winAndRetry": true,
+      "mistakesAndTimeout": true,
+      "pauseAndBlur": true,
+      "rewardsOnce": true,
+      "cancellationAndReload": true,
+      "assetsPreserved": true
+    },
+    {
+      "width": 390,
+      "result": "PASS",
+      "winAndRetry": true,
+      "mistakesAndTimeout": true,
+      "pauseAndBlur": true,
+      "rewardsOnce": true,
+      "cancellationAndReload": true,
+      "assetsPreserved": true
+    },
+    {
+      "width": 1280,
+      "result": "PASS",
+      "winAndRetry": true,
+      "mistakesAndTimeout": true,
+      "pauseAndBlur": true,
+      "rewardsOnce": true,
+      "cancellationAndReload": true,
+      "assetsPreserved": true
+    }
+  ],
+  "hubRegression": [
+    {
+      "width": 360,
+      "result": "PASS",
+      "worldMovement": true,
+      "returnPosition": true,
+      "savePreserved": true,
+      "historyAndReload": true
+    },
+    {
+      "width": 390,
+      "result": "PASS",
+      "worldMovement": true,
+      "returnPosition": true,
+      "savePreserved": true,
+      "historyAndReload": true
+    },
+    {
+      "width": 1280,
+      "result": "PASS",
+      "worldMovement": true,
+      "returnPosition": true,
+      "savePreserved": true,
+      "historyAndReload": true
+    }
+  ],
+  "scope": "One new mini game (mn-08). Large game lg-10 and remaining planned entries are not released. Save key and version 3 preserved; miniBest.peanuts defaults to 0. Partial exit/reload gives no new reward; completed sessions settle once."
+}

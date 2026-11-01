@@ -1,0 +1,130 @@
+.peanut-game {
+  max-width: 720px;
+  margin: auto;
+  padding: 20px;
+  background: #fff8e4;
+  border: 2px solid #dec7a0;
+  border-radius: 28px;
+  text-align: center;
+}
+.peanut-hud {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  font-size: 18px;
+}
+.peanut-record {
+  color: #66553b;
+}
+.peanut-intro p {
+  line-height: 1.75;
+}
+.peanut-picture {
+  font-size: 90px;
+}
+.peanut-order {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 0;
+  list-style: none;
+  gap: 8px;
+}
+.peanut-order li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  border: 2px solid #dac7a3;
+  border-radius: 16px;
+  padding: 8px;
+  min-width: 56px;
+}
+.peanut-order li[aria-current] {
+  border: 3px solid #85531f;
+  background: #ffe6a3;
+}
+.peanut-order .done {
+  background: #e0efdb;
+}
+.peanut-shell {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 24px 0;
+}
+.peanut-shell button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 118px;
+  width: 30%;
+  max-width: 150px;
+  padding: 8px 4px;
+  border-radius: 45%;
+  border: 3px solid #9e6c32;
+  background: repeating-linear-gradient(45deg, #edc88f, #edc88f 9px, #e1b57b 10px, #e1b57b 12px);
+  color: #51300e;
+  font: inherit;
+  font-size: 19px;
+  cursor: pointer;
+  box-shadow: 0 5px 0 #c29359;
+}
+.peanut-shell button span {
+  font-size: 30px;
+}
+.peanut-shell button:active {
+  transform: translateY(3px);
+  box-shadow: none;
+}
+.peanut-shell button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.peanut-feedback {
+  min-height: 48px;
+  line-height: 1.5;
+}
+.peanut-result {
+  background: #fff;
+  border-radius: 22px;
+  padding: 20px 12px;
+  margin: 20px 0;
+}
+.peanut-return {
+  display: block;
+  width: fit-content;
+  margin: 24px auto 0;
+  padding: 12px 18px;
+  min-height: 44px;
+  color: #40564d;
+  text-decoration: underline;
+}
+.peanut-game :focus-visible {
+  outline: 3px solid #335e90;
+  outline-offset: 3px;
+}
+@media (max-width: 400px) {
+  .peanut-game {
+    padding: 16px 8px;
+  }
+  .peanut-hud {
+    font-size: 16px;
+    gap: 8px;
+  }
+}
+
+.peanut-basket {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  font-size: 24px;
+  margin: 16px 0;
+  color: #987545;
+}
+.peanut-shell button[data-cracked="true"] {
+  background: #fff0cb;
+  border-style: dashed;
+}

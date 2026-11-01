@@ -13,7 +13,7 @@ export function Shell({
 }: {
   title: string;
   subtitle: string;
-  active: "home" | "run" | "farm" | "room";
+  active: "home" | "run" | "farm" | "room" | "mini";
   children: ReactNode;
   onKart?: () => void;
 }) {
@@ -44,7 +44,7 @@ export function Shell({
           </p>
         )}
         {children}
-        {active !== "home" && (
+        {active !== "home" && active !== "mini" && (
           <nav className="hj-home-return" aria-label="마을로 돌아가기">
             <Link to="/">🏡 마을로 돌아가기</Link>
           </nav>

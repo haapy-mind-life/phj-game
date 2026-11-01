@@ -17,6 +17,7 @@ import { createRoot } from "react-dom/client";
 import { Village } from "./components/hyunjun/Village";
 import { Runner } from "./components/hyunjun/Runner";
 import { Farm } from "./components/hyunjun/Farm";
+import { PeanutGame } from "./components/hyunjun/PeanutGame";
 import { KartHub } from "./components/hyunjun/KartHub";
 import { House } from "./components/hyunjun/House";
 import "./styles.css";
@@ -65,6 +66,12 @@ const houseRoute = createRoute({
   component: House,
 });
 
+const peanutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/peanuts",
+  component: PeanutGame,
+});
+
 const kartRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/kart",
@@ -72,7 +79,14 @@ const kartRoute = createRoute({
 });
 
 const router = createRouter({
-  routeTree: rootRoute.addChildren([indexRoute, raceRoute, farmRoute, houseRoute, kartRoute]),
+  routeTree: rootRoute.addChildren([
+    indexRoute,
+    raceRoute,
+    farmRoute,
+    houseRoute,
+    kartRoute,
+    peanutRoute,
+  ]),
   history: createHashHistory(),
   defaultPreloadStaleTime: 0,
 });
