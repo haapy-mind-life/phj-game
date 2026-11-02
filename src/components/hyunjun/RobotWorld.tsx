@@ -60,6 +60,8 @@ export function RobotWorld({
           label={`소환된 ${robot.team.map((r) => r.name).join("+")}`}
           world={actor.pos}
           style={screenStyle(actor.pos, player)}
+          form={actor.form}
+          facing={robot.facing}
         />
       )}
       {near(WORKSHOP) && (
@@ -157,7 +159,13 @@ function EffectLine({
   const reach = effect.hit ? 1 : 0.45;
   const end = { x: from.x + (to.x - from.x) * reach, y: from.y - 40 + (to.y - from.y) * reach };
   const color =
-    effect.kind === "cannon" ? "#8ee6ff" : effect.kind === "wind" ? "#b9fff2" : "#ffe45c";
+    effect.kind === "cannon"
+      ? "#8ee6ff"
+      : effect.kind === "wind"
+        ? "#b9fff2"
+        : effect.kind === "antidote"
+          ? "#5dff9c"
+          : "#ffe45c";
   return (
     <g className={`hj-strike hj-strike-${effect.kind}`} data-strike={effect.hit ? "hit" : "miss"}>
       <path

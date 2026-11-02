@@ -1,5 +1,7 @@
 import { useId } from "react";
 import type { RobotSpecies } from "@/game/robot/robot-catalog";
+import { isSpecialFusion } from "@/game/robot/robot-engine";
+import { SpecialFusionArt } from "./RobotRosterArt";
 import "./robot-fusion.css";
 
 // One combined fusion robot: a single skeleton where each body part comes from a team member and
@@ -737,6 +739,17 @@ export function FusedRobotArt({
   const uid = rawId.replace(/[^a-zA-Z0-9_-]/g, "");
   const core = team[0];
   if (!core) return <svg role="img" aria-label={label} width={size} height={size} />;
+  if (isSpecialFusion(team.map((m) => m.id)))
+    return (
+      <SpecialFusionArt
+        grades={grades}
+        weaponOut={weaponOut}
+        moving={moving}
+        size={size}
+        label={label}
+        phase={phase}
+      />
+    );
   const stage = team.length >= 3 ? 3 : 2;
   const armsM = team[1] ?? core;
   const legsM = stage === 3 ? (team[2] ?? core) : core;

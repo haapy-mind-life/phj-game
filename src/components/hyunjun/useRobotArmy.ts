@@ -251,7 +251,7 @@ export function useRobotArmy({
   };
 
   /** What gets drawn at time `t`: nearby robots only (the others keep going, unseen). */
-  const visibleAt = (t: number, center: Point) =>
+  const visibleAt = (t: number, center: Point, always: readonly string[] = []) =>
     // Positions come from the route or the rally, so robots walking in from far away show up.
     ARMY.map((robot) => ({
       robot,
@@ -260,10 +260,25 @@ export function useRobotArmy({
       .filter((r): r is { robot: (typeof ARMY)[number]; at: Point } => r.at !== null)
       .map((r) => ({ ...r, d: worldDistance(r.at, center) }))
       .filter((r) => r.d <= VISIBLE_RADIUS)
-      .sort((a, b) => a.d - b.d)
+      // Robots the player has a job with are always drawn, however busy the square is.
+      .sort(
+        (a, b) =>
+          Number(always.includes(b.robot.instanceId)) -
+            Number(always.includes(a.robot.instanceId)) || a.d - b.d,
+      )
       .slice(0, VISIBLE_LIMIT)
       .map((r) => ({
         ...r,
+        // Which way it is walking, for art drawn from the side.
+        facing:
+          (fusionPosition(
+            fusion,
+            r.robot.instanceId,
+            armyPosition(r.robot, (t + 300) / 1000),
+            t + 300,
+          )?.x ?? r.at.x) >= r.at.x
+            ? 1
+            : -1,
         behavior:
           fusion.phase === "gathering"
             ? fusion.arrived.includes(r.robot.instanceId)

@@ -1,5 +1,6 @@
 import type { Point } from "../world/adventure.ts";
 import {
+  ANTIDOTE_SWORD,
   CARD_USES_TO_UNLOCK,
   MAX_FUSION,
   MAX_GRADE,
@@ -10,6 +11,7 @@ import {
   WIN_PARTS,
   isLegendId,
   isRobotId,
+  isRosterId,
   robotById,
   type RobotSpeciesId,
   type Weapon,
@@ -26,6 +28,8 @@ export type RobotProgress = {
   wins: number;
   rescues: number;
   catches: number;
+  /** Finished mist cures: every infected robot healed with Emblus's antidote weapon. */
+  cures: number;
   /** Biggest fusion made so far, and how many fusions in total (watch progress). */
   fusionBest: number;
   fusionCount: number;
@@ -40,6 +44,7 @@ export const emptyRobots = (): RobotProgress => ({
   wins: 0,
   rescues: 0,
   catches: 0,
+  cures: 0,
   fusionBest: 1,
   fusionCount: 0,
   massFusions: 0,
@@ -64,6 +69,7 @@ export function normalizeRobots(input: unknown): RobotProgress {
     wins: count(raw["wins"], 1e6),
     rescues: count(raw["rescues"], 1e6),
     catches: count(raw["catches"], 1e6),
+    cures: count(raw["cures"], 1e6),
     fusionBest: Math.max(1, count(raw["fusionBest"], MAX_FUSION)),
     fusionCount: count(raw["fusionCount"], 1e6),
     massFusions: count(raw["massFusions"], 1e6),
@@ -84,10 +90,12 @@ export function normalizeRobots(input: unknown): RobotProgress {
       ),
     };
   }
-  // The draft watch branch kept one grade for the whole watch: every starter robot had it.
+  // The draft watch branch kept one grade for the whole watch: every starter robot it knew had
+  // it. Tira and Emblus came later, so that old grade says nothing about them.
   if (watchGrade > 0)
     for (const robot of ROBOTS)
-      if (robot.starter) out.cards[robot.id] ??= { uses: 0, grade: watchGrade };
+      if (robot.starter && !isRosterId(robot.id))
+        out.cards[robot.id] ??= { uses: 0, grade: watchGrade };
   // A full card always owns what it opens, even if an older save lost the unlocked card.
   for (const robot of ROBOTS)
     if (robot.unlocks && out.cards[robot.id]?.uses === CARD_USES_TO_UNLOCK)
@@ -158,10 +166,10 @@ export function winBattle(p: RobotProgress, win: number): RobotProgress {
 /** Same once-only rule for rescues and thief catches. */
 export function missionReward(
   p: RobotProgress,
-  mode: "rescue" | "thief",
+  mode: "rescue" | "thief" | "cure",
   n: number,
 ): RobotProgress {
-  const key = mode === "rescue" ? "rescues" : "catches";
+  const key = mode === "rescue" ? "rescues" : mode === "thief" ? "catches" : "cures";
   if (n !== p[key] + 1) return p;
   return { ...p, [key]: n, parts: Math.min(999, p.parts + MISSION_PARTS) };
 }
@@ -175,12 +183,19 @@ export function upgradeRobot(p: RobotProgress, id: RobotSpeciesId): RobotProgres
     cards: { ...p.cards, [id]: { ...card, grade: card.grade + 1 } },
   };
 }
+/** Tira and Emblus fuse only with each other, in either order, for now (roster v1.1). */
+export const isSpecialFusion = (ids: readonly RobotSpeciesId[]) =>
+  ids.length === 2 && ids.includes("rb-tira") && ids.includes("rb-emblus");
+/** Emblus is always the body and Tira the chest and weapon, whichever card was tapped first. */
+export const fusionOrder = (ids: readonly RobotSpeciesId[]): RobotSpeciesId[] =>
+  isSpecialFusion(ids) ? ["rb-emblus", "rb-tira"] : [...ids];
 /** 2 or 3 different robots that are all in the watch. */
 export const validFusion = (p: RobotProgress, ids: readonly RobotSpeciesId[]) =>
   ids.length >= 2 &&
   ids.length <= MAX_FUSION &&
   new Set(ids).size === ids.length &&
-  ids.every((id) => isRobotId(id) && isWatchCardAvailable(p, id));
+  ids.every((id) => isRobotId(id) && isWatchCardAvailable(p, id)) &&
+  (isSpecialFusion(ids) || !ids.some(isRosterId));
 /** Records a finished fusion in the watch; members' cards and grades are untouched. */
 export function recordFusion(p: RobotProgress, ids: readonly RobotSpeciesId[]): RobotProgress {
   if (!validFusion(p, ids)) return p;
@@ -198,6 +213,7 @@ export const teamPower = (p: RobotProgress, team: readonly RobotSpeciesId[]) =>
   team.reduce((sum, id) => sum + 1 + gradeOf(p, id), 0);
 /** A fusion fights with the weapon on its arms (2nd member) and reaches further per member. */
 export function teamWeapon(team: readonly RobotSpeciesId[]): Weapon {
+  if (isSpecialFusion(team)) return ANTIDOTE_SWORD;
   const arms = robotById(team[1] ?? team[0]!);
   return { ...arms.weapon, range: arms.weapon.range + 40 * (team.length - 1) };
 }

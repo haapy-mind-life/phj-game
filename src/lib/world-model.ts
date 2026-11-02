@@ -411,7 +411,7 @@ export type WorldAction =
   | { type: "robot-meet" | "robot-card" | "robot-upgrade"; id: RobotSpeciesId }
   | { type: "robot-win"; win: number }
   | { type: "robot-fuse"; ids: RobotSpeciesId[] }
-  | { type: "robot-mission"; mode: "rescue" | "thief"; n: number }
+  | { type: "robot-mission"; mode: "rescue" | "thief" | "cure"; n: number }
   | { type: "robot-discover"; id: RobotSpeciesId }
   | { type: "robot-army"; kind: "massFusions" | "bossWins" | "minionWaves"; n: number }
   | { type: "toggle-yard"; id: YardId }

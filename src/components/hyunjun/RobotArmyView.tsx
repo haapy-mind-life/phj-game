@@ -5,6 +5,7 @@ import { robotById } from "@/game/robot/robot-catalog";
 import { BLAST_RADIUS, BOSS_HP, BOSS_SHIELD } from "@/game/robot/robot-giant-battle";
 import { RALLY_SITE } from "@/game/robot/robot-mass-fusion";
 import { screenPoint, worldDistance } from "@/game/world/world-space";
+import { isInfected, stillInfected, type Mist } from "@/game/robot/robot-infection";
 import { GiantBossArt, MinionRobotArt } from "./GiantArt";
 import { RobotPortrait } from "./RobotPortrait";
 import type { useRobotArmy } from "./useRobotArmy";
@@ -19,9 +20,11 @@ const INSIGNIA = ["#ffd23f", "#ff7a6b", "#7fd4ff", "#a6e86b", "#d7a6ff"];
 export function RobotArmyView({
   player,
   army,
+  mist = null,
 }: {
   player: Point;
   army: ReturnType<typeof useRobotArmy>;
+  mist?: Mist | null;
 }) {
   const { fusion, boss } = army;
   // The army's own clock: only this layer redraws as the robots walk.
@@ -30,7 +33,7 @@ export function RobotArmyView({
     const t = window.setInterval(() => setNow(Date.now()), 100);
     return () => clearInterval(t);
   }, []);
-  const visible = army.visibleAt(now, player);
+  const visible = army.visibleAt(now, player, mist ? stillInfected(mist) : []);
   const minions = army.minionsAt(now);
   const at = (p: Point) => {
     const s = screenPoint(p, player);
@@ -42,23 +45,29 @@ export function RobotArmyView({
       data-army-total={army.total}
       data-army-unique={army.unique}
       data-army-visible={visible.length}
+      data-infected-ids={mist ? stillInfected(mist).join(",") : ""}
       data-mass-phase={fusion.phase}
       data-mass-participants={new Set(fusion.participants).size}
       data-mass-arrived={new Set(fusion.arrived).size}
       data-giant-hp={army.giant ? army.giantHp : undefined}
     >
-      {visible.map(({ robot, at: p, behavior }) => (
+      {visible.map(({ robot, at: p, behavior, facing }) => (
         <div
           key={robot.instanceId}
-          className={`hj-army-robot${robot.legendary ? " legend" : ""}`}
+          className={`hj-army-robot${robot.legendary ? " legend" : ""}${isInfected(mist, robot.instanceId) ? " infected" : ""}`}
           data-army-id={robot.instanceId}
+          data-army-species={robot.species}
+          data-infected={isInfected(mist, robot.instanceId) ? "true" : undefined}
           data-behavior={behavior}
           data-legend={robot.legendary ? robot.species : undefined}
           data-x={Math.round(p.x)}
           data-y={Math.round(p.y)}
           style={at(p)}
         >
-          <ArmySprite robot={robot} />
+          {isInfected(mist, robot.instanceId) && (
+            <span className="hj-mist-cloud" aria-hidden="true" />
+          )}
+          <ArmySprite robot={robot} facing={robot.species === "rb-tira" ? facing : -1} />
         </div>
       ))}
       {worldDistance(RALLY_SITE, player) < 1500 && (
@@ -129,11 +138,22 @@ export function RobotArmyView({
   );
 }
 /** A robot's picture never changes while it walks, so it is drawn once and reused. */
-const ArmySprite = memo(function ArmySprite({ robot }: { robot: ArmyRobot }) {
+const ArmySprite = memo(function ArmySprite({
+  robot,
+  facing,
+}: {
+  robot: ArmyRobot;
+  facing: number;
+}) {
   const species = robotById(robot.species);
   return (
     <>
-      <RobotPortrait robot={species} moving size={robot.legendary ? 58 : 46} />
+      <RobotPortrait
+        robot={species}
+        moving
+        size={robot.legendary ? 58 : 46 * (species.worldScale ?? 1)}
+        facing={facing}
+      />
       {robot.legendary ? (
         <b>⭐ {species.name}</b>
       ) : (

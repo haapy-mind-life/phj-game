@@ -98,17 +98,27 @@ export const LEGEND_SQUADS: Readonly<Record<ArmyLegendId, number>> = {
   "lg-deep": 11,
   "lg-guardian": 16,
 };
+/**
+ * Tira and Emblus take over two existing slots so the army stays at exactly 100. They stand in
+ * squad-02, the nearest squad to the start, and no squad leader changes (roster v1.1). Tira has
+ * the front place in the line, because big Emblus would hide it from the place in front.
+ */
+export const ROSTER_SLOTS: Readonly<Record<string, ArmySpecies>> = {
+  "army-008": "rb-emblus",
+  "army-010": "rb-tira",
+};
 export const ARMY: readonly ArmyRobot[] = SQUADS.flatMap((squad, s) =>
   Array.from({ length: SQUAD_SIZE }, (_, slot): ArmyRobot => {
     const legend = (Object.keys(LEGEND_SQUADS) as ArmyLegendId[]).find(
       (id) => LEGEND_SQUADS[id] === s && slot === 0,
     );
     const n = s * SQUAD_SIZE + slot;
+    const instanceId = `army-${String(n + 1).padStart(3, "0")}`;
     return {
-      instanceId: `army-${String(n + 1).padStart(3, "0")}`,
+      instanceId,
       squadId: squad.id,
       slot,
-      species: legend ?? REGULAR[(s * 2 + slot) % REGULAR.length]!,
+      species: legend ?? ROSTER_SLOTS[instanceId] ?? REGULAR[(s * 2 + slot) % REGULAR.length]!,
       legendary: !!legend,
       variant: (n * 7) % 5,
     };
