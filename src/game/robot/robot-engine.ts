@@ -12,6 +12,7 @@ import {
   isDuoId,
   isLegendId,
   isRobotId,
+  isRocketPair,
   isRosterId,
   robotById,
   type RobotSpeciesId,
@@ -190,14 +191,14 @@ export const isSpecialFusion = (ids: readonly RobotSpeciesId[]) =>
 /** Emblus is always the body and Tira the chest and weapon, whichever card was tapped first. */
 export const fusionOrder = (ids: readonly RobotSpeciesId[]): RobotSpeciesId[] =>
   isSpecialFusion(ids) ? ["rb-emblus", "rb-tira"] : [...ids];
-/** 2 or 3 different robots that are all in the watch. The rockets fuse only into Dual Rocket,
- * which has its own timeline (rocket-dual.ts), so the regular fusion never takes them. */
+/** 2 or 3 different robots that are all in the watch. The rockets fuse only with each other,
+ * into Dual Rocket (its 10 s timeline is in rocket-dual.ts). */
 export const validFusion = (p: RobotProgress, ids: readonly RobotSpeciesId[]) =>
   ids.length >= 2 &&
   ids.length <= MAX_FUSION &&
   new Set(ids).size === ids.length &&
   ids.every((id) => isRobotId(id) && isWatchCardAvailable(p, id)) &&
-  !ids.some(isDuoId) &&
+  (isRocketPair(ids) || !ids.some(isDuoId)) &&
   (isSpecialFusion(ids) || !ids.some(isRosterId));
 /** Records a finished fusion in the watch; members' cards and grades are untouched. */
 export function recordFusion(p: RobotProgress, ids: readonly RobotSpeciesId[]): RobotProgress {

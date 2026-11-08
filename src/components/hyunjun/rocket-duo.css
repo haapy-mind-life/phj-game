@@ -1,0 +1,110 @@
+/* Rocket, Rocket X and the Dual Rocket fusion stage (rocket-dual v1 S05). */
+.hj-dual-stage {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+}
+.hj-dual-head {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.hj-dual-count {
+  min-width: 44px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #1d222b;
+  color: #fff;
+  font:
+    800 26px/1.2 system-ui,
+    sans-serif;
+  text-align: center;
+  box-shadow: 0 0 0 3px #f4c542;
+}
+.hj-dual-pair {
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+}
+.hj-dual-member {
+  transition: transform 0.6s ease;
+}
+[data-dual-step="assemble"] .hj-dual-member.left {
+  transform: translateX(28%) scale(0.92);
+  animation: hj-dual-shake 0.5s ease-in-out infinite alternate;
+}
+[data-dual-step="assemble"] .hj-dual-member.right {
+  transform: translateX(-28%) scale(0.92);
+  animation: hj-dual-shake 0.5s ease-in-out infinite alternate-reverse;
+}
+.hj-dual-link {
+  align-self: center;
+  width: 22px;
+  height: 10px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #d8322c, #fff7b0, #22d3ee);
+  box-shadow: 0 0 12px #fff7b0;
+  animation: hj-dual-pulse 0.6s ease-in-out infinite alternate;
+}
+[data-dual-step="assemble"] .hj-dual-link {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+}
+.hj-dual-reveal {
+  filter: drop-shadow(0 0 10px #fff7b0);
+  animation: hj-dual-reveal 0.8s ease-out;
+}
+.hj-dual-step {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #fffdf5;
+  border: 2px solid #f4c542;
+  font:
+    700 13px/1.4 system-ui,
+    sans-serif;
+  white-space: nowrap;
+}
+@keyframes hj-dual-pulse {
+  from {
+    opacity: 0.6;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes hj-dual-shake {
+  from {
+    rotate: -3deg;
+  }
+  to {
+    rotate: 3deg;
+  }
+}
+@keyframes hj-dual-reveal {
+  from {
+    transform: scale(0.7);
+    opacity: 0.4;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+/* RD-AT-22: no shaking or flashing; the steps and the countdown still change on time. */
+@media (prefers-reduced-motion: reduce) {
+  .hj-dual-member,
+  .hj-dual-link,
+  .hj-dual-reveal,
+  [data-dual-step="assemble"] .hj-dual-member.left,
+  [data-dual-step="assemble"] .hj-dual-member.right {
+    animation: none;
+    transition: none;
+  }
+}

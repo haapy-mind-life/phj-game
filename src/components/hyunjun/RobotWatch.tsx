@@ -15,6 +15,7 @@ import {
 import { gradeOf, isWatchCardAvailable, type RobotProgress } from "@/game/robot/robot-engine";
 import { FusedRobotArt } from "./FusedRobotArt";
 import { RobotPortrait } from "./RobotPortrait";
+import { DualRocketArt } from "./RocketDuoArt";
 
 export type WatchTabId = "summon" | "fuse" | "mission" | "army" | "legend";
 const ROLES_2 = ["머리·몸", "팔·무기"];
@@ -64,17 +65,18 @@ export function RobotWatch({
   };
 }) {
   const available = ALL_ROBOTS.filter((r) => isWatchCardAvailable(progress, r.id));
-  // The rockets fuse only into Dual Rocket, which comes with its own countdown (rocket-dual S05).
-  const fusable = available.filter((r) => !isDuoId(r.id));
   const [selected, setSelected] = useState<RobotSpeciesId>(team[0] ?? "rb-police");
   const [picks, setPicks] = useState<RobotSpeciesId[]>([]);
   const chosen = ALL_ROBOTS.find((r) => r.id === selected)!;
   const uses = progress.cards[selected]?.uses ?? 0;
   const roles = picks.length > 2 ? ROLES_3 : ROLES_2;
   const specialPick = picks.some(isRosterId);
-  // Tira and Emblus fuse only with each other, so the other cards rest while one is picked.
+  const rocketPick = picks.some(isDuoId);
+  // Tira + Emblus and Rocket + Rocket X fuse only with each other, so the other cards rest
+  // while one of a pair is picked.
+  const pairGroup = (id: RobotSpeciesId) => (isRosterId(id) ? "roster" : isDuoId(id) ? "duo" : "");
   const pickBlocked = (id: RobotSpeciesId) =>
-    picks.length > 0 && !picks.includes(id) && isRosterId(id) !== specialPick;
+    picks.length > 0 && !picks.includes(id) && pairGroup(id) !== pairGroup(picks[0]!);
   const togglePick = (id: RobotSpeciesId) =>
     setPicks((p) =>
       p.includes(id)
@@ -184,10 +186,12 @@ export function RobotWatch({
             <p className="hj-watch-help">
               {specialPick
                 ? "티라와 엠블러스는 둘이 특수 합체해! 티라 머리는 가슴, 꼬리와 손발은 해독 칼이 돼."
-                : "로봇을 2개 또는 3개 눌러 봐! 처음 고른 로봇이 머리·몸, 두 번째가 팔·무기, 세 번째가 다리·날개가 돼."}
+                : rocketPick
+                  ? "로켓과 로켓 X는 둘이 듀얼 로켓으로 합체해! 10초 동안 준비 → 에너지 연결 → 합체 변형 → 완성."
+                  : "로봇을 2개 또는 3개 눌러 봐! 처음 고른 로봇이 머리·몸, 두 번째가 팔·무기, 세 번째가 다리·날개가 돼."}
             </p>
             <div className="hj-watch-cards" role="group" aria-label="합체할 로봇 고르기">
-              {fusable.map((r) => {
+              {available.map((r) => {
                 const at = picks.indexOf(r.id);
                 return (
                   <button
@@ -207,26 +211,38 @@ export function RobotWatch({
                           ? r.id === "rb-emblus"
                             ? "몸·손"
                             : "가슴·해독 칼"
-                          : `${at + 1}. ${roles[at]}`
+                          : rocketPick
+                            ? r.id === "rb-rocket"
+                              ? "빨간 쪽"
+                              : "파란 쪽"
+                            : `${at + 1}. ${roles[at]}`
                         : isRosterId(r.id)
                           ? "특수 합체"
-                          : "고르기"}
+                          : isDuoId(r.id)
+                            ? "듀얼 합체"
+                            : "고르기"}
                     </small>
                   </button>
                 );
               })}
             </div>
-            {picks.length >= 2 && (
+            {picks.length >= 2 && rocketPick ? (
               <div className="hj-watch-fuse-preview">
-                <FusedRobotArt
-                  team={picks.map((id) => ALL_ROBOTS.find((r) => r.id === id)!)}
-                  grades={picks.map((id) => gradeOf(progress, id))}
-                  weaponOut={false}
-                  size={150}
-                  label={`${picks.length}단 합체 미리보기`}
-                  phase="fused"
-                />
+                <DualRocketArt size={150} label="듀얼 로켓 미리보기" />
               </div>
+            ) : (
+              picks.length >= 2 && (
+                <div className="hj-watch-fuse-preview">
+                  <FusedRobotArt
+                    team={picks.map((id) => ALL_ROBOTS.find((r) => r.id === id)!)}
+                    grades={picks.map((id) => gradeOf(progress, id))}
+                    weaponOut={false}
+                    size={150}
+                    label={`${picks.length}단 합체 미리보기`}
+                    phase="fused"
+                  />
+                </div>
+              )
             )}
             <button
               className="hj-watch-go"
@@ -237,8 +253,10 @@ export function RobotWatch({
               {picks.length >= 2
                 ? specialPick
                   ? "특수 합체 시작!"
-                  : `${picks.length}단 합체 시작!`
-                : specialPick
+                  : rocketPick
+                    ? "듀얼 로켓 합체 시작!"
+                    : `${picks.length}단 합체 시작!`
+                : specialPick || rocketPick
                   ? "짝꿍 로봇을 골라 줘"
                   : "2개 이상 골라 줘"}
             </button>

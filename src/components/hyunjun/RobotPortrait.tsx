@@ -27,7 +27,7 @@ export function RobotPortrait({
   weaponOut?: boolean;
   size?: number;
   label?: string;
-  /** Tira and Emblus only: egg or ambulance, and the moment in between. */
+  /** Tira's egg, Emblus's ambulance or a rocket's car, and the moment in between. */
   form?: RobotForm;
   changing?: boolean;
   /** Side-view art turns to face the way it walks (+1 is right). */
@@ -43,7 +43,6 @@ export function RobotPortrait({
       label={label}
     />
   ) : isDuoId(robot.id) ? (
-    // Robot form only until the car change lands (rocket-dual S03).
     <RocketDuoArt
       id={robot.id}
       grade={grade}
@@ -51,6 +50,9 @@ export function RobotPortrait({
       weaponOut={weaponOut}
       size={size}
       label={label}
+      form={form === "car" ? "car" : "robot"}
+      changing={changing}
+      facing={facing}
     />
   ) : ROSTER_ART_IDS.has(robot.id) ? (
     <RobotRosterArt

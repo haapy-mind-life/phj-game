@@ -15,6 +15,8 @@ import {
   WIN_PARTS,
   WORKSHOP,
   WORKSHOP_RANGE,
+  DUO_IDS,
+  isRocketPair,
   robotById,
   type RobotMissionMode,
   type RobotSpecies,
@@ -46,6 +48,15 @@ import {
 } from "@/game/robot/robot-missions";
 import { armyRobot, armyPosition } from "@/game/robot/robot-army";
 import {
+  advanceRocketFusion,
+  beginRocketFusion,
+  idleDual,
+  secondsLeft,
+  type DualStep,
+  type RocketDualState,
+} from "@/game/robot/rocket-dual";
+import {
+  altForm,
   beginTransform,
   canStrikeInForm,
   canTransform,
@@ -73,7 +84,15 @@ export const robotName = (robot: RobotSpecies, robots: RobotProgress) => {
  * into one body) → active; splitting goes splitting → returning (members beam back) → active.
  */
 export type ActorPhase =
-  "summoning" | "active" | "gathering" | "assembling" | "splitting" | "returning" | "transforming";
+  | "summoning"
+  | "active"
+  | "gathering"
+  | "assembling"
+  | "splitting"
+  | "returning"
+  | "transforming"
+  /** Rocket + Rocket X on their own 10 s countdown (rocket-dual.ts). */
+  | "dualFusing";
 export type RobotActor = {
   team: RobotSpeciesId[];
   mode: "follow" | "ride";
@@ -82,8 +101,10 @@ export type RobotActor = {
   pos: Point;
   /** Members gathering for a fusion, or leaving after a split. */
   others: RobotSpeciesId[];
-  /** Tira's egg or Emblus's ambulance; never saved, a reload stands the robot up again. */
+  /** Tira's egg, Emblus's ambulance or a rocket car; never saved, a reload stands it up again. */
   form: RobotForm;
+  /** Dual Rocket's fusion clock while the rockets fuse. Never saved either. */
+  dual?: RocketDualState | undefined;
 };
 export type StrikeEffect = { kind: string; from: Point; to: Point; hit: boolean; at: number };
 /** `id` ties delayed mission steps to the mission that started them. */
@@ -101,8 +122,20 @@ const FORM_BUTTON: Record<RobotForm, string> = {
   robot: "",
   egg: "🦖 티라로 변신",
   ambulance: "🤖 로봇으로 변신",
+  car: "🤖 로봇으로 변신",
 };
-const FORM_NAME: Record<RobotForm, string> = { robot: "로봇", egg: "공룡알", ambulance: "구급차" };
+const FORM_NAME: Record<RobotForm, string> = {
+  robot: "로봇",
+  egg: "공룡알",
+  ambulance: "구급차",
+  car: "자동차",
+};
+/** What the change button says while standing as a robot. */
+const TO_FORM: Partial<Record<RobotForm, string>> = {
+  egg: "🥚 알로 변신",
+  ambulance: "🚑 구급차로 변신",
+  car: "🚗 자동차로 변신",
+};
 const SUMMON_MS = 900;
 const GATHER_MS = 800;
 const ASSEMBLE_MS = 1400;
@@ -161,8 +194,14 @@ export function useRobotWorld({
   // Joining robots bring extra energy only on the first fusion of a summon.
   const fusedThisSummon = useRef(false);
   const weaponTimer = useRef(0);
-  const live = useRef({ pos, facing, actor, mission });
-  live.current = { pos, facing, actor, mission };
+  // Dual Rocket: one serial per start. `dualLive` is the only fusion whose finish may still be
+  // recorded; stopping, recalling or replacing the robot clears it, so a tick that was already
+  // under way can't record a fusion that no longer exists, and nothing is recorded twice.
+  const dualSerial = useRef(0);
+  const dualLive = useRef(0);
+  const [dualNow, setDualNow] = useState(0);
+  const live = useRef({ pos, facing, actor, mission, robots });
+  live.current = { pos, facing, actor, mission, robots };
   const later = (ms: number, fn: () => void) => {
     timers.current.push(window.setTimeout(fn, ms));
   };
@@ -175,6 +214,7 @@ export function useRobotWorld({
   const clearTimers = useCallback(() => {
     timers.current.forEach((t) => clearTimeout(t));
     timers.current = [];
+    dualLive.current = 0;
   }, []);
   useEffect(
     () => () => {
@@ -306,8 +346,17 @@ export function useRobotWorld({
   };
   const fuse = (picked: RobotSpeciesId[]) => {
     if (!allowed) return;
+    if (actor?.phase === "dualFusing") {
+      message("듀얼 로켓이 합체하는 중이야! 끝날 때까지 기다리거나 합체를 멈춰 줘.");
+      setWatchOpen(false);
+      return;
+    }
     if (!validFusion(robots, picked)) {
       message("시계에서 서로 다른 로봇을 2개 또는 3개 골라 줘!");
+      return;
+    }
+    if (isRocketPair(picked)) {
+      fuseRockets();
       return;
     }
     const ids = fusionOrder(picked);
@@ -347,11 +396,90 @@ export function useRobotWorld({
       );
     });
   };
+  /** Rocket + Rocket X: a 10 s countdown in four steps, then one Dual Rocket (P-01·P-02). */
+  const fuseRockets = () => {
+    const ids: RobotSpeciesId[] = [...DUO_IDS];
+    const now = Date.now();
+    const dual = beginRocketFusion(idleDual(), ids, now, ++dualSerial.current);
+    if (!dual) return;
+    for (const id of ids) dispatch({ type: "robot-meet", id });
+    clearTimers();
+    dualLive.current = dual.fusionId;
+    const fresh0 = !fusedThisSummon.current;
+    fusedThisSummon.current = true;
+    if (!fresh0) setDamage(ROBOT_ENERGY + 2 - energy);
+    const fresh = wrapPoint({ x: pos.x + facing * 110, y: pos.y + 10 });
+    const center = actor?.mode === "ride" ? pos : (actor?.pos ?? fresh);
+    setActor({
+      team: ids,
+      mode: actor?.mode ?? "ride",
+      phase: "dualFusing",
+      pos: center,
+      others: ids,
+      form: "robot",
+      dual,
+    });
+    setDualNow(now);
+    setWatchOpen(false);
+    message("듀얼 로켓 합체 시작! 로켓과 로켓 X가 힘을 모아. 10초만 기다려 줘 ⏱");
+  };
+  /** Stops a Dual Rocket fusion before it is done: Rocket stays, nothing is recorded. */
+  const cancelFusion = useCallback(
+    (words = "합체를 멈췄어! 로켓만 남았어. 카드는 그대로야.") => {
+      dualLive.current = 0;
+      setActor((a) =>
+        a?.phase === "dualFusing"
+          ? {
+              ...a,
+              team: ["rb-rocket"],
+              others: [],
+              phase: "active",
+              form: "robot",
+              dual: undefined,
+            }
+          : a,
+      );
+      message(words);
+    },
+    [message],
+  );
+  const dualFusing = actor?.phase === "dualFusing";
+  useEffect(() => {
+    if (!dualFusing) return;
+    const t = window.setInterval(() => {
+      const a = live.current.actor;
+      if (a?.phase !== "dualFusing" || !a.dual) return;
+      const now = Date.now();
+      setDualNow(now);
+      const r = advanceRocketFusion(a.dual, now);
+      if (r.state === a.dual) return;
+      const id = r.state.fusionId;
+      setActor((cur) =>
+        cur?.phase === "dualFusing" && cur.dual?.fusionId === id
+          ? {
+              ...cur,
+              dual: r.state,
+              phase: r.completed ? "active" : "dualFusing",
+              others: r.completed ? [] : cur.others,
+            }
+          : cur,
+      );
+      if (r.completed && dualLive.current === id) {
+        dualLive.current = 0;
+        dispatch({ type: "robot-fuse", ids: [...DUO_IDS] });
+        message(
+          `듀얼 로켓 완성! 로켓과 로켓 X가 한 몸이 됐어 🚀 힘 ${teamPower(live.current.robots, [...DUO_IDS])}`,
+        );
+      }
+    }, 200);
+    return () => clearInterval(t);
+  }, [dualFusing, dispatch, message]);
   const split = () => {
     if (!actor || team.length < 2 || busy) return;
     const others = team.slice(1);
     const core = team[0]!;
-    setActor({ ...actor, phase: "splitting", others });
+    // Dual Rocket may be driving as the dual car; both rockets step out as robots.
+    setActor({ ...actor, phase: "splitting", others, form: "robot", dual: undefined });
     later(SPLIT_MS, () =>
       setActor((a) => (a ? { ...a, team: [core], phase: "returning", others } : a)),
     );
@@ -373,9 +501,8 @@ export function useRobotWorld({
         a?.phase === "transforming" ? { ...a, phase: "active", form: done.form } : a,
       );
     });
-    message(
-      `철컥철컥! ${robotById(actor.team[0]!).name}이 ${FORM_NAME[next.form]} 모습으로 바뀌어!`,
-    );
+    const who = isRocketPair(actor.team) ? "듀얼 로켓" : robotById(actor.team[0]!).name;
+    message(`철컥철컥! ${who}이 ${FORM_NAME[next.form]} 모습으로 바뀌어!`);
   };
   const setMode = (mode: "follow" | "ride") => {
     if (!actor) return;
@@ -579,6 +706,9 @@ export function useRobotWorld({
   const arrive = (at: Point) => {
     // A change cut short by travel ends in the safe robot pose; the timer no longer applies.
     if (actor?.phase === "transforming") clearTimers();
+    // A Dual Rocket fusion doesn't travel: it stops, and Rocket comes along on its own.
+    if (actor?.phase === "dualFusing")
+      cancelFusion("이동해서 듀얼 로켓 합체를 멈췄어. 다시 합체하려면 시계를 열어 봐!");
     setActor((a) => {
       if (!a) return a;
       if (a.phase !== "transforming") return { ...a, pos: { ...at } };
@@ -608,14 +738,16 @@ export function useRobotWorld({
         return `🧭 ${goal.name} ${arrow} ${Math.round(Math.hypot(d.x, d.y) / 50)}걸음`;
       })()
     : null;
-  const soloForm = actor && canTransform(actor.team) ? actor : null;
+  const soloForm = actor && actor.phase !== "dualFusing" && canTransform(actor.team) ? actor : null;
   const transformLabel = !soloForm
     ? null
     : soloForm.form !== "robot"
       ? FORM_BUTTON[soloForm.form]
-      : soloForm.team[0] === "rb-tira"
-        ? "🥚 알로 변신"
-        : "🚑 구급차로 변신";
+      : (TO_FORM[altForm(soloForm.team)!] ?? null);
+  const dualCountdown =
+    actor?.phase === "dualFusing" && actor.dual
+      ? { step: actor.dual.phase as DualStep, seconds: secondsLeft(actor.dual, dualNow) }
+      : null;
   return {
     actor,
     actorPos,
@@ -623,6 +755,8 @@ export function useRobotWorld({
     form: actor?.form ?? ("robot" as RobotForm),
     transform,
     transformLabel,
+    dualCountdown,
+    cancelFusion,
     mist: mission?.mode === "cure" ? mission.mist : null,
     clearMist,
     busy,

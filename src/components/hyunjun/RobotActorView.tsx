@@ -1,10 +1,12 @@
 import type { CSSProperties } from "react";
 import type { Point } from "@/game/world/adventure";
-import type { RobotSpecies } from "@/game/robot/robot-catalog";
+import { isRocketPair, type RobotSpecies } from "@/game/robot/robot-catalog";
 import type { RobotForm } from "@/game/robot/robot-forms";
+import type { DualStep } from "@/game/robot/rocket-dual";
 import { FusedRobotArt } from "./FusedRobotArt";
 import { SummonBeamArt } from "./MissionArt";
 import { RobotPortrait } from "./RobotPortrait";
+import { DualFusionStage, DualRocketArt } from "./RocketDuoArt";
 import type { ActorPhase } from "./useRobotWorld";
 
 const GATHER_FROM = [
@@ -30,6 +32,7 @@ export function RobotActorView({
   style,
   form = "robot",
   facing = -1,
+  dualCountdown = null,
 }: {
   team: RobotSpecies[];
   others: RobotSpecies[];
@@ -44,6 +47,8 @@ export function RobotActorView({
   style?: CSSProperties;
   form?: RobotForm;
   facing?: number;
+  /** Rocket + Rocket X while their 10 s fusion runs. */
+  dualCountdown?: { step: DualStep; seconds: number } | null;
 }) {
   const core = team[0];
   if (!core) return null;
@@ -51,7 +56,8 @@ export function RobotActorView({
     phase === "gathering" ||
     phase === "assembling" ||
     phase === "splitting" ||
-    phase === "returning"
+    phase === "returning" ||
+    phase === "dualFusing"
       ? phase
       : team.length > 1
         ? "fused"
@@ -76,7 +82,27 @@ export function RobotActorView({
           <SummonBeamArt color={core.color} size={140} />
         </div>
       )}
-      {phase === "gathering" ? (
+      {phase === "dualFusing" && dualCountdown ? (
+        <DualFusionStage step={dualCountdown.step} seconds={dualCountdown.seconds} size={150} />
+      ) : isRocketPair(
+          phase === "splitting" ? [core, ...others].map((r) => r.id) : team.map((r) => r.id),
+        ) &&
+        phase !== "gathering" &&
+        phase !== "assembling" ? (
+        // Dual Rocket stands as one robot or drives as the one dual car; it never falls back to
+        // the generic fused look.
+        <div className={`hj-solo-row${phase === "splitting" ? " hj-dual-splitting" : ""}`}>
+          <DualRocketArt
+            mode={form === "car" ? "car" : "robot"}
+            size={form === "car" ? 130 : 150}
+            label={label}
+            weaponOut={weaponOut}
+            moving={moving}
+            changing={phase === "transforming"}
+            facing={facing}
+          />
+        </div>
+      ) : phase === "gathering" ? (
         // The members walk in from around the core before locking together.
         <div className="hj-gather-group">
           {others.map((r, i) => (
