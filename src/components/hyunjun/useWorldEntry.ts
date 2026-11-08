@@ -45,6 +45,9 @@ export function useWorldEntry() {
   const [state, send] = useReducer(reduceEntry, undefined, () =>
     initialEntry(titlePassed, villageComponent !== null),
   );
+  // Coming back from a mini game: the loading card shows without the title heading,
+  // so it never looks like the start screen came back.
+  const [returning] = useState(() => titlePassed);
   const [loadedAttempt, setLoadedAttempt] = useState(0);
   const { phase, attempt, minShown } = state;
 
@@ -97,5 +100,5 @@ export function useWorldEntry() {
     }
     window.location.reload();
   }, []);
-  return { phase, start, retry, World: phase === "world" ? villageComponent : null };
+  return { phase, returning, start, retry, World: phase === "world" ? villageComponent : null };
 }

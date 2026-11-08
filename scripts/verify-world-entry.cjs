@@ -158,6 +158,16 @@ async function startFromTitle(page, width) {
         assert.equal(await page.locator(".we-screen").count(), 0);
         r.plannedGate = "message only, URL and save unchanged";
 
+        // /house and back. The house door opens the walk-in home, and /house (furniture)
+        // is a button inside it; here the app switches route in place, then the child
+        // taps "back to the village" like on any mini game page.
+        await page.evaluate(() => (location.hash = "#/house"));
+        await page.waitForURL(/#\/house$/);
+        await page.getByRole("link", { name: "🏡 마을로 돌아가기" }).click();
+        await page.locator(".adv-interact").waitFor();
+        assert.equal(await page.evaluate(() => window.__titleSeen), 1, "title only at the start");
+        r.houseRoundTrip = "world → #/house → world, no title";
+
         // Runner round trip: back in the world without the title.
         await walk(page, "x", 1350); // around the lake
         await walk(page, "y", 560);
@@ -204,6 +214,9 @@ async function startFromTitle(page, width) {
       assert.equal(await page.locator("[data-entry-phase]").count(), 0);
       assert.equal(villageRequests.length, 0, "the runner does not wait for the world");
       await page.getByRole("link", { name: "🏡 마을로 돌아가기" }).click();
+      // The world code still has to load here; the card shows without the title heading.
+      await page.locator(".adv-interact, .we-loading").first().waitFor({ timeout: 15000 });
+      assert.equal(await page.locator(".we-title").count(), 0, "no title heading when returning");
       await page.locator(".adv-interact").waitFor({ timeout: 15000 });
       assert.equal(await page.evaluate(() => window.__titleSeen), 0);
       assert.deepEqual(errors, []);

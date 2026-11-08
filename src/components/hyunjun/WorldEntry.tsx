@@ -64,17 +64,19 @@ function Cast({ moving }: { moving: boolean }) {
 
 /** The root route: title → loading → the existing world (Village), unchanged. */
 export function WorldEntry() {
-  const { phase, start, retry, World } = useWorldEntry();
+  const { phase, returning, start, retry, World } = useWorldEntry();
   const reduced = useReducedMotion();
   if (World) return <World />;
   return (
     <main className="we-screen" data-entry-phase={phase}>
       <Scene />
       <div className="we-content">
-        <header className="we-title">
-          <small>{COPY.tagline}</small>
-          <h1>{COPY.title}</h1>
-        </header>
+        {!returning && (
+          <header className="we-title">
+            <small>{COPY.tagline}</small>
+            <h1>{COPY.title}</h1>
+          </header>
+        )}
         <Cast moving={phase === "loading" && !reduced} />
         {phase === "title" && (
           <button type="button" className="we-start" onClick={start}>
