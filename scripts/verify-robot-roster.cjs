@@ -130,7 +130,7 @@ async function cureAll(g, reach) {
       const others = page.getByRole("group", { name: "다른 로봇 카드" });
       assert.deepEqual(
         await others.locator("[data-card]").evaluateAll((els) => els.map((e) => e.dataset.card)),
-        ["rb-volcano-fire", "rb-laser-sky"],
+        ["rb-volcano-fire", "rb-laser-sky", "rb-rocket", "rb-rocket-x"],
       );
       assert.equal(await main.locator("svg[data-roster]").count(), 6, "six own bodies on cards");
       await shot("01-watch-cards");

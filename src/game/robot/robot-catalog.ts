@@ -13,9 +13,14 @@ export type RobotSpeciesId =
   | "rb-volcano-fire"
   | "rb-laser-sky"
   | RosterId
+  | DuoId
   | LegendId;
 /** Hyunjun's own two robots (roster v1.1, 2026-11-02): in the 100, never added on top of it. */
 export type RosterId = "rb-tira" | "rb-emblus";
+/** Rocket and its friend Rocket X (rocket-dual v1, 2026-11-08): two robots that fuse only into
+ * Dual Rocket. Like Tira and Emblus they are not in the hundred-robot army. */
+export type DuoId = "rb-rocket" | "rb-rocket-x";
+export const DUO_IDS: readonly DuoId[] = ["rb-rocket", "rb-rocket-x"];
 /** The six legendary robots (requirements v3 RA-102): their own robots, not the six above. */
 export type LegendId =
   "lg-shield" | "lg-wing" | "lg-deep" | "lg-steel" | "lg-thunder" | "lg-guardian";
@@ -160,6 +165,33 @@ export const ROBOTS: readonly RobotSpecies[] = [
     starter: true,
     worldScale: 1.2,
   },
+  // Weapons are the existing melee kinds for now (rocket-dual Q-04 provisional).
+  {
+    id: "rb-rocket",
+    name: "로켓",
+    workName: "로켓",
+    family: "police",
+    skill: "로켓 주먹",
+    color: "#d8322c",
+    accent: "#f4c542",
+    mark: "none",
+    weapon: { ...SWORD, name: "로켓 주먹", range: 170, cooldownMs: 1000 },
+    starter: true,
+    role: "로켓 X의 친구 · 듀얼 로켓의 빨간 쪽",
+  },
+  {
+    id: "rb-rocket-x",
+    name: "로켓 X",
+    workName: "로켓 X",
+    family: "police",
+    skill: "X 커터",
+    color: "#1f4fb8",
+    accent: "#22d3ee",
+    mark: "none",
+    weapon: { ...SWORD, name: "X 커터", range: 180, cooldownMs: 1100 },
+    starter: true,
+    role: "로켓의 친구 · 듀얼 로켓의 파란 쪽",
+  },
 ];
 /** The six robots the watch shows first; the two others stay in the watch underneath. */
 export const FEATURED_MAIN: readonly RobotSpeciesId[] = [
@@ -272,11 +304,15 @@ export const LEGENDS: readonly RobotSpecies[] = [
     hint: "호박 마을 아래쪽에서 금빛 로봇을 찾아봐.",
   },
 ];
-/** Every robot the watch knows: the six regular robots, then the six legends. */
+/** Every robot the watch knows: the regular robots, then the six legends. */
 export const ALL_ROBOTS: readonly RobotSpecies[] = [...ROBOTS, ...LEGENDS];
 export const ROBOT_IDS: readonly string[] = ALL_ROBOTS.map((r) => r.id);
 export const robotById = (id: RobotSpeciesId) => ALL_ROBOTS.find((r) => r.id === id)!;
 export const isRosterId = (v: unknown): v is RosterId => v === "rb-tira" || v === "rb-emblus";
+export const isDuoId = (v: unknown): v is DuoId => v === "rb-rocket" || v === "rb-rocket-x";
+/** Exactly Rocket and Rocket X, in either order. */
+export const isRocketPair = (ids: readonly unknown[]) =>
+  ids.length === 2 && ids.includes("rb-rocket") && ids.includes("rb-rocket-x");
 export const isLegendId = (v: unknown): v is LegendId =>
   typeof v === "string" && LEGENDS.some((l) => l.id === v);
 export const isRobotId = (v: unknown): v is RobotSpeciesId =>

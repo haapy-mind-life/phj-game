@@ -9,6 +9,7 @@ import {
   UPGRADE_COST,
   VILLAIN_RESPAWN_MS,
   WIN_PARTS,
+  isDuoId,
   isLegendId,
   isRobotId,
   isRosterId,
@@ -91,10 +92,10 @@ export function normalizeRobots(input: unknown): RobotProgress {
     };
   }
   // The draft watch branch kept one grade for the whole watch: every starter robot it knew had
-  // it. Tira and Emblus came later, so that old grade says nothing about them.
+  // it. Tira, Emblus and the rockets came later, so that old grade says nothing about them.
   if (watchGrade > 0)
     for (const robot of ROBOTS)
-      if (robot.starter && !isRosterId(robot.id))
+      if (robot.starter && !isRosterId(robot.id) && !isDuoId(robot.id))
         out.cards[robot.id] ??= { uses: 0, grade: watchGrade };
   // A full card always owns what it opens, even if an older save lost the unlocked card.
   for (const robot of ROBOTS)
@@ -189,12 +190,14 @@ export const isSpecialFusion = (ids: readonly RobotSpeciesId[]) =>
 /** Emblus is always the body and Tira the chest and weapon, whichever card was tapped first. */
 export const fusionOrder = (ids: readonly RobotSpeciesId[]): RobotSpeciesId[] =>
   isSpecialFusion(ids) ? ["rb-emblus", "rb-tira"] : [...ids];
-/** 2 or 3 different robots that are all in the watch. */
+/** 2 or 3 different robots that are all in the watch. The rockets fuse only into Dual Rocket,
+ * which has its own timeline (rocket-dual.ts), so the regular fusion never takes them. */
 export const validFusion = (p: RobotProgress, ids: readonly RobotSpeciesId[]) =>
   ids.length >= 2 &&
   ids.length <= MAX_FUSION &&
   new Set(ids).size === ids.length &&
   ids.every((id) => isRobotId(id) && isWatchCardAvailable(p, id)) &&
+  !ids.some(isDuoId) &&
   (isSpecialFusion(ids) || !ids.some(isRosterId));
 /** Records a finished fusion in the watch; members' cards and grades are untouched. */
 export function recordFusion(p: RobotProgress, ids: readonly RobotSpeciesId[]): RobotProgress {

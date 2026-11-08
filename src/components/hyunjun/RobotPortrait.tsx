@@ -1,8 +1,9 @@
-import type { RobotSpecies } from "@/game/robot/robot-catalog";
+import { isDuoId, type RobotSpecies } from "@/game/robot/robot-catalog";
 import type { RobotForm } from "@/game/robot/robot-forms";
 import { LegendaryRobotArt } from "./LegendaryRobotArt";
 import { ROSTER_ART_IDS } from "./robot-art-kit";
 import { RobotRosterArt } from "./RobotRosterArt";
+import { RocketDuoArt } from "./RocketDuoArt";
 import { RobotSpeciesArt } from "./RobotSpeciesArt";
 
 /**
@@ -39,6 +40,16 @@ export function RobotPortrait({
       moving={moving}
       weaponOut={weaponOut}
       size={size * 1.1}
+      label={label}
+    />
+  ) : isDuoId(robot.id) ? (
+    // Robot form only until the car change lands (rocket-dual S03).
+    <RocketDuoArt
+      id={robot.id}
+      grade={grade}
+      moving={moving}
+      weaponOut={weaponOut}
+      size={size}
       label={label}
     />
   ) : ROSTER_ART_IDS.has(robot.id) ? (
