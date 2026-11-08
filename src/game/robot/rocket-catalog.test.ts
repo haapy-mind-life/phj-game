@@ -102,12 +102,25 @@ test("a saved rocket card survives a save round trip; broken values are cleaned"
   assert.deepEqual(out.cards["rb-rocket-x"], { uses: 0, grade: 0 });
 });
 
-test("until the dual fusion lands (S05), the regular fusion refuses every rocket", () => {
+test("RD-AT-06 the rockets fuse only with each other; every other mix is refused", () => {
   const p = emptyRobots();
-  assert.equal(validFusion(p, ["rb-rocket", "rb-rocket-x"]), false);
+  assert.ok(validFusion(p, ["rb-rocket", "rb-rocket-x"]));
+  assert.ok(validFusion(p, ["rb-rocket-x", "rb-rocket"]));
+  assert.equal(validFusion(p, ["rb-rocket", "rb-rocket"]), false);
   assert.equal(validFusion(p, ["rb-rocket", "rb-police"]), false);
   assert.equal(validFusion(p, ["rb-police", "rb-fire", "rb-rocket-x"]), false);
-  assert.equal(recordFusion(p, ["rb-rocket", "rb-rocket-x"]), p);
+  assert.equal(validFusion(p, ["rb-rocket", "rb-tira"]), false);
   assert.ok(validFusion(p, ["rb-police", "rb-fire"]), "regular fusions still work");
   assert.ok(validFusion(p, ["rb-tira", "rb-emblus"]), "Tira + Emblus still works");
+});
+
+test("RD-AT-11 a finished Dual Rocket is recorded once per call and keeps both cards", () => {
+  const p = normalizeRobots({ cards: { "rb-rocket": { uses: 4, grade: 1 } } });
+  const done = recordFusion(p, ["rb-rocket", "rb-rocket-x"]);
+  assert.equal(done.fusionCount, p.fusionCount + 1);
+  assert.equal(done.fusionBest, 2);
+  assert.deepEqual(done.cards["rb-rocket"], { uses: 4, grade: 1 });
+  assert.deepEqual(done.cards["rb-rocket-x"], { uses: 0, grade: 0 });
+  assert.equal(done.parts, p.parts, "no parts paid or taken");
+  assert.equal(recordFusion(p, ["rb-rocket", "rb-police"]), p);
 });

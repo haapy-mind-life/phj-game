@@ -62,6 +62,7 @@ export function RobotWorld({
           style={screenStyle(actor.pos, player)}
           form={actor.form}
           facing={robot.facing}
+          dualCountdown={robot.dualCountdown}
         />
       )}
       {near(WORKSHOP) && (

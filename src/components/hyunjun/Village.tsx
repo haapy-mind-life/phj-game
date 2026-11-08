@@ -1178,6 +1178,7 @@ export function Village() {
                       // The player's wrapper already mirrors by direction; +1 makes left-facing
                       // side art agree with it.
                       facing={1}
+                      dualCountdown={robot.dualCountdown}
                     />
                   ) : driving ? (
                     <CarArt car={carById(carId)} size={98} />
@@ -1656,13 +1657,25 @@ export function Village() {
                   </>
                 ) : robot.actor ? (
                   <>
-                    <button
-                      className="hj-car-mode hj-fuse-button"
-                      disabled={robot.busy}
-                      onClick={() => (robot.team.length > 1 ? robot.split() : setWatchTab("fuse"))}
-                    >
-                      {robot.team.length > 1 ? "합체 풀기" : "💥 합체"}
-                    </button>
+                    {robot.dualCountdown ? (
+                      // The 10 s Dual Rocket fusion can be stopped; Rocket stays.
+                      <button
+                        className="hj-car-mode hj-fuse-button"
+                        onClick={() => robot.cancelFusion()}
+                      >
+                        ✋ 합체 멈추기
+                      </button>
+                    ) : (
+                      <button
+                        className="hj-car-mode hj-fuse-button"
+                        disabled={robot.busy}
+                        onClick={() =>
+                          robot.team.length > 1 ? robot.split() : setWatchTab("fuse")
+                        }
+                      >
+                        {robot.team.length > 1 ? "합체 풀기" : "💥 합체"}
+                      </button>
+                    )}
                     <button
                       className="hj-car-mode hj-weapon-button"
                       disabled={robot.busy}

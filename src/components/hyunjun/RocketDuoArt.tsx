@@ -1,7 +1,8 @@
 import type { DuoId } from "@/game/robot/robot-catalog";
-import type { DualMode } from "@/game/robot/rocket-dual";
+import type { DualMode, DualStep } from "@/game/robot/rocket-dual";
 import type { ReactNode } from "react";
 import { G, OUT, c, flip, g, gradeMark, l, lamp, mirror, p, r, shadow } from "./robot-art-kit";
+import "./rocket-duo.css";
 
 // Rocket, Rocket X and Dual Rocket (docs/robot-fusion/2026-11-08-rocket-dual-v1/01). Drawn here
 // from the design contract, not traced from the concept poster: pointed V faces (never a box
@@ -164,7 +165,17 @@ function rocketXCar() {
   );
 }
 
-/** Rocket or Rocket X. `car` is drawn now for the design review; the game turns it on in S03. */
+/** Cars are drawn facing right; like Emblus's ambulance they face left by default, and
+ * `facing` > 0 turns them round while they drive right. */
+const carLeft = (kids: ReactNode) => g({ transform: "translate(260 0) scale(-1 1)" }, kids);
+const svgSize = (car: boolean, size: number) => {
+  const viewBox = car ? CAR_VB : VB;
+  const [, , vw, vh] = viewBox.split(" ").map(Number) as [number, number, number, number];
+  const height = size * (car ? 0.8 : 1.25);
+  return { viewBox, width: (height * vw) / vh, height };
+};
+
+/** Rocket or Rocket X, as a robot or as its own car. */
 export function RocketDuoArt({
   id,
   grade = 0,
@@ -173,6 +184,8 @@ export function RocketDuoArt({
   size = 96,
   label,
   form = "robot",
+  changing = false,
+  facing = -1,
 }: {
   id: DuoId;
   grade?: number;
@@ -181,29 +194,30 @@ export function RocketDuoArt({
   size?: number;
   label: string;
   form?: "robot" | "car";
+  changing?: boolean;
+  facing?: number;
 }) {
   const car = form === "car";
-  const viewBox = car ? CAR_VB : VB;
-  const [, , vw, vh] = viewBox.split(" ").map(Number) as [number, number, number, number];
-  const height = size * (car ? 0.8 : 1.25);
+  const { viewBox, width, height } = svgSize(car, size);
+  const turns = car && facing > 0;
   const art: ReactNode = car
-    ? id === "rb-rocket"
-      ? rocketCar()
-      : rocketXCar()
+    ? carLeft(id === "rb-rocket" ? rocketCar() : rocketXCar())
     : id === "rb-rocket"
       ? rocketBody(grade)
       : rocketXBody(grade);
   return (
     <svg
-      className={`hj-mech hj-roster hj-rocket${moving ? " moving" : ""}${weaponOut ? " weapon-out" : ""}`}
+      className={`hj-mech hj-roster hj-rocket${moving ? " moving" : ""}${weaponOut ? " weapon-out" : ""}${changing ? " changing" : ""}`}
       viewBox={viewBox}
-      width={(height * vw) / vh}
+      width={width}
       height={height}
       role="img"
       aria-label={label}
       data-roster={id}
       data-form={form}
+      data-facing={turns ? "right" : "left"}
       data-weapon={weaponOut ? "drawn" : "stowed"}
+      style={turns ? { transform: "scaleX(-1)" } : undefined}
     >
       {art}
     </svg>
@@ -283,32 +297,86 @@ function dualCar() {
   );
 }
 
-/** Dual Rocket as a robot or as the one dual car. Wired into the world in S05. */
+/** Dual Rocket as a robot or as the one dual car. */
 export function DualRocketArt({
   mode = "robot",
   size = 120,
   label = "듀얼 로켓",
+  weaponOut = false,
+  moving = false,
+  changing = false,
+  facing = -1,
 }: {
   mode?: DualMode;
   size?: number;
   label?: string;
+  weaponOut?: boolean;
+  moving?: boolean;
+  changing?: boolean;
+  facing?: number;
 }) {
   const car = mode === "car";
-  const viewBox = car ? CAR_VB : VB;
-  const [, , vw, vh] = viewBox.split(" ").map(Number) as [number, number, number, number];
-  const height = size * (car ? 0.8 : 1.25);
+  const { viewBox, width, height } = svgSize(car, size);
+  const turns = car && facing > 0;
   return (
     <svg
-      className="hj-mech hj-roster hj-rocket-dual"
+      className={`hj-mech hj-roster hj-rocket-dual${moving ? " moving" : ""}${weaponOut ? " weapon-out" : ""}${changing ? " changing" : ""}`}
       viewBox={viewBox}
-      width={(height * vw) / vh}
+      width={width}
       height={height}
       role="img"
       aria-label={label}
       data-roster="dual-rocket"
       data-form={mode}
+      data-facing={turns ? "right" : "left"}
+      style={turns ? { transform: "scaleX(-1)" } : undefined}
     >
-      {car ? dualCar() : dualBody()}
+      {car ? carLeft(dualCar()) : dualBody()}
     </svg>
+  );
+}
+
+const STEP_LABEL: Record<DualStep, string> = {
+  gather: "1 합체 준비",
+  link: "2 에너지 연결",
+  assemble: "3 합체 변형",
+  reveal: "4 듀얼 로켓 완성!",
+};
+/**
+ * The 10 s fusion on stage: the two friends stand side by side, an energy link joins their
+ * cores, their parts lock into one body, then Dual Rocket appears. A big countdown shows how
+ * long is left; with reduced motion the steps still change, only the movement stops.
+ */
+export function DualFusionStage({
+  step,
+  seconds,
+  size = 120,
+}: {
+  step: DualStep;
+  seconds: number;
+  size?: number;
+}) {
+  return (
+    <div className="hj-dual-stage" data-dual-step={step} data-dual-seconds={seconds}>
+      <div className="hj-dual-head" role="status">
+        <span className="hj-dual-count">{seconds}</span>
+        <b className="hj-dual-step">{STEP_LABEL[step]}</b>
+      </div>
+      {step === "reveal" ? (
+        <div className="hj-dual-reveal">
+          <DualRocketArt size={size} label="듀얼 로켓 완성" />
+        </div>
+      ) : (
+        <div className="hj-dual-pair">
+          <div className="hj-dual-member left">
+            <RocketDuoArt id="rb-rocket" label="로켓" size={size * 0.5} moving />
+          </div>
+          {step !== "gather" && <div className="hj-dual-link" />}
+          <div className="hj-dual-member right">
+            <RocketDuoArt id="rb-rocket-x" label="로켓 X" size={size * 0.5} moving />
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
