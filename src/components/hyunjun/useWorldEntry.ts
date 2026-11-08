@@ -54,18 +54,23 @@ export function useWorldEntry() {
   useEffect(() => {
     if (phase !== "loading") return;
     let live = true;
-    const timers = [window.setTimeout(() => send({ type: "failed", attempt }), LOADING_TIMEOUT_MS)];
-    // Presentation only: keeps the spinner from flashing. Success still needs the real load.
-    if (!minShown)
-      timers.push(window.setTimeout(() => send({ type: "minShown", attempt }), LOADING_MIN_MS));
+    // Kept apart from the minShown timer so the 12s deadline is not restarted at 600ms.
+    const timeout = window.setTimeout(() => send({ type: "failed", attempt }), LOADING_TIMEOUT_MS);
     loadVillage().then(
       () => live && setLoadedAttempt(attempt),
       () => live && send({ type: "failed", attempt }),
     );
     return () => {
       live = false;
-      timers.forEach((t) => window.clearTimeout(t));
+      window.clearTimeout(timeout);
     };
+  }, [phase, attempt]);
+
+  // Presentation only: keeps the spinner from flashing. Success still needs the real load.
+  useEffect(() => {
+    if (phase !== "loading" || minShown) return;
+    const timer = window.setTimeout(() => send({ type: "minShown", attempt }), LOADING_MIN_MS);
+    return () => window.clearTimeout(timer);
   }, [phase, attempt, minShown]);
 
   // The save store reads localStorage when first subscribed; both must be ready.
