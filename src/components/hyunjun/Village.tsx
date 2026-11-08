@@ -53,6 +53,7 @@ import {
   PORTALS,
   cameraAt,
   nearestPortal,
+  isPlannedPortal,
   stepPlayer,
   type MiniKind,
   type Point,
@@ -628,7 +629,9 @@ export function Village() {
       setDrawing(true);
       return;
     }
-    if (nearby) {
+    if (nearby && isPlannedPortal(nearby)) {
+      setMessage(`🚧 ${nearby.name} — 아직 준비 중이야. 곧 만들어 줄게! (${nearby.note})`);
+    } else if (nearby) {
       returnPosition = { ...pos };
       if ("game" in nearby) setMini(nearby.game);
       else void nav({ to: nearby.target });
@@ -946,18 +949,20 @@ export function Village() {
                 {PORTALS.filter((g) => g.id !== "house" || state.homeLot === "original").map(
                   (g) => (
                     <div
-                      className={`adv-gate ${nearby?.id === g.id ? "near" : ""}`}
+                      className={`adv-gate ${nearby?.id === g.id ? "near" : ""} ${isPlannedPortal(g) ? "planned" : ""}`}
                       key={g.id}
                       style={{ left: g.x, top: g.y }}
                     >
                       <span>
-                        {g.id === "runner"
-                          ? "달리기"
-                          : g.id === "house"
-                            ? "꾸미기"
-                            : g.id === "farm"
-                              ? "키우기"
-                              : "놀기"}
+                        {isPlannedPortal(g)
+                          ? "준비 중"
+                          : g.id === "runner"
+                            ? "달리기"
+                            : g.id === "house"
+                              ? "꾸미기"
+                              : g.id === "farm"
+                                ? "키우기"
+                                : "놀기"}
                       </span>
                       <b>{g.name}</b>
                       <i />
@@ -1735,7 +1740,7 @@ export function Village() {
                             : nearDrawing
                               ? "별자리 그리기"
                               : nearby
-                                ? `${nearby.name} · 시작`
+                                ? `${nearby.name} · ${isPlannedPortal(nearby) ? "준비 중" : "시작"}`
                                 : Math.hypot(pos.x - 1420, pos.y - 1030) < 100
                                   ? "보리 돌보기"
                                   : "놀이 · 대화")}

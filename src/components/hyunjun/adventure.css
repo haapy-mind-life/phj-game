@@ -76,6 +76,17 @@
   background: #fff3ba;
   box-shadow: 0 0 0 3px #e8c977;
 }
+/* A place that is still being made: same gate, quieter colours, never a game. */
+.adv-gate.planned > span {
+  background: #9a9a8c;
+}
+.adv-gate.planned b {
+  background: #f4f1e6;
+  color: #6b6f66;
+}
+.adv-gate.planned i {
+  border-color: #ffffff88;
+}
 .adv-player,
 .adv-friend,
 .adv-dog {

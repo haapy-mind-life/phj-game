@@ -14,7 +14,8 @@ import {
   RouterProvider,
 } from "@tanstack/react-router";
 import { createRoot } from "react-dom/client";
-import { Village } from "./components/hyunjun/Village";
+import { WorldEntry } from "./components/hyunjun/WorldEntry";
+import { useMarkEntryRoute } from "./components/hyunjun/useWorldEntry";
 import { Runner } from "./components/hyunjun/Runner";
 import { Farm } from "./components/hyunjun/Farm";
 import { RoomEscape } from "./components/hyunjun/RoomEscape";
@@ -26,14 +27,21 @@ import "./hyunjun.css";
 
 const queryClient = new QueryClient();
 
-const rootRoute = createRootRoute({
-  component: () => (
+// An entry file is never hot-swapped, so the fast-refresh export rule does not apply.
+// eslint-disable-next-line react-refresh/only-export-components
+function PagesRoot() {
+  useMarkEntryRoute();
+  return (
     <QueryClientProvider client={queryClient}>
       <FamilyAccountProvider>
         <Outlet />
       </FamilyAccountProvider>
     </QueryClientProvider>
-  ),
+  );
+}
+
+const rootRoute = createRootRoute({
+  component: PagesRoot,
   notFoundComponent: () => (
     <main className="hj-shell">
       <div className="hj-container hj-error">
@@ -49,7 +57,7 @@ const rootRoute = createRootRoute({
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
-  component: Village,
+  component: WorldEntry,
 });
 const raceRoute = createRoute({
   getParentRoute: () => rootRoute,

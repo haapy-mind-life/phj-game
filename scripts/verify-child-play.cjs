@@ -1,5 +1,6 @@
 // Uses isolated fixture saves. Requires an existing playwright-core and Chromium installation.
 const assert = require("node:assert/strict");
+const { enterWorld } = require("./enter-world.cjs");
 const fs = require("node:fs");
 const { chromium } = require(process.env.PLAYWRIGHT_CORE_PATH || "playwright-core");
 const url = process.env.PHJ_PREVIEW_URL || "http://127.0.0.1:4173/phj-game/";
@@ -37,6 +38,7 @@ fs.mkdirSync(out, { recursive: true });
         );
     });
     await page.goto(url, { waitUntil: "domcontentloaded" });
+    await enterWorld(page);
     await page.waitForTimeout(400);
     const btn = (n) => page.getByRole("button", { name: n, exact: true });
     async function pos() {
@@ -225,6 +227,7 @@ fs.mkdirSync(out, { recursive: true });
     assert.equal(await money(), 3240);
     await btn("장사 마치기").click();
     await page.reload();
+    await enterWorld(page);
     assert.equal(await money(), 3240);
     assert.equal(await page.locator(".hj-live-board").count(), 0);
     assert.deepEqual(errors, []);

@@ -1,6 +1,17 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { stepPlayer, cameraAt, BLOCKS, PORTALS, newMini, stepMini, actMini } from "./adventure.ts";
+import {
+  stepPlayer,
+  cameraAt,
+  BLOCKS,
+  PORTALS,
+  SPAWN,
+  isPlannedPortal,
+  nearestPortal,
+  newMini,
+  stepMini,
+  actMini,
+} from "./adventure.ts";
 import { migrateSave, reduceWorld } from "../../lib/world-model.ts";
 
 test("diagonal movement has the same speed and north edge wraps", () => {
@@ -137,4 +148,27 @@ test("walking distance is stable at 10fps and 60fps without teleporting after a 
   assert.ok(Math.abs(smooth.y - slow.y) < 0.001);
   const resumed = stepPlayer(start, { x: 0, y: 1 }, 30);
   assert.ok(resumed.y - start.y <= 24.501);
+});
+
+test("planned places are named gates that never launch anything and keep their distance", () => {
+  const planned = PORTALS.filter(isPlannedPortal);
+  assert.deepEqual(
+    planned.map((g) => g.name),
+    ["박물관", "경찰 롤러코스터", "로봇 기지", "개구리 코인별", "대형 수조", "펭귄 얼음 깨기"],
+  );
+  for (const g of planned) {
+    assert.ok(!("target" in g) && !("game" in g), g.id);
+    assert.ok(g.note.length > 0, g.id);
+    // Not at the start spot, and never close enough to another gate to steal its button.
+    assert.ok(Math.hypot(g.x - SPAWN.x, g.y - SPAWN.y) > 250, g.id);
+    for (const other of PORTALS)
+      if (other.id !== g.id) assert.ok(Math.hypot(g.x - other.x, g.y - other.y) > 300, g.id);
+    assert.equal(nearestPortal(g)?.id, g.id);
+  }
+  assert.equal(new Set(PORTALS.map((g) => g.id)).size, PORTALS.length);
+  // The playable gates are unchanged.
+  assert.deepEqual(
+    PORTALS.filter((g) => !isPlannedPortal(g)).map((g) => g.id),
+    ["house", "runner", "farm", "treasure", "stars", "fishing"],
+  );
 });

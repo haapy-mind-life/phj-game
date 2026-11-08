@@ -1,5 +1,6 @@
 // Isolated preview saves; requires existing playwright-core and headless Chromium.
 const assert = require("node:assert/strict");
+const { enterWorld } = require("./enter-world.cjs");
 const fs = require("node:fs");
 const { chromium } = require(process.env.PLAYWRIGHT_CORE_PATH || "playwright-core");
 const { TOWN_BUILDINGS } = require("../src/game/world/building-interiors.ts");
@@ -27,6 +28,7 @@ fs.mkdirSync(out, { recursive: true });
       await page.goto(process.env.PHJ_PREVIEW_URL || "http://127.0.0.1:4173/phj-game/", {
         waitUntil: "networkidle",
       });
+      await enterWorld(page);
       const btn = (name) => page.getByRole("button", { name, exact: true });
       const action = page.locator(".adv-interact");
       async function position() {
@@ -168,6 +170,7 @@ fs.mkdirSync(out, { recursive: true });
     await page.goto(process.env.PHJ_PREVIEW_URL || "http://127.0.0.1:4173/phj-game/", {
       waitUntil: "networkidle",
     });
+    await enterWorld(page);
     await page.getByRole("button", { name: "지도", exact: true }).click();
     await page.getByRole("button", { name: "💼 아빠 회사", exact: true }).click();
     await page.locator(".adv-interact").click();

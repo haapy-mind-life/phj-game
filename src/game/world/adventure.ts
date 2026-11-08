@@ -20,7 +20,61 @@ export const PORTALS = [
   { id: "treasure", name: "토토의 보물찾기", x: 550, y: 1300, game: "treasure" },
   { id: "stars", name: "루루의 별빛 공원", x: 1250, y: 400, game: "stars" },
   { id: "fishing", name: "호숫가 낚시", x: 2030, y: 1080, game: "fishing" },
+  // Places Hyunjun asked for that have no game yet. A planned gate only says so:
+  // it never navigates, opens a mini game or changes the save.
+  // Spots are open ground away from other doors, stations and robot routes (see tests).
+  {
+    id: "museum",
+    name: "박물관",
+    x: 400,
+    y: 160,
+    status: "planned",
+    note: "물고기·거북이·펭귄 전시",
+  },
+  {
+    id: "coaster",
+    name: "경찰 롤러코스터",
+    x: 2240,
+    y: 160,
+    status: "planned",
+    note: "레일 위를 달리는 경찰차",
+  },
+  {
+    id: "robot-base",
+    name: "로봇 기지",
+    x: 1320,
+    y: 60,
+    status: "planned",
+    note: "로봇들이 모이는 곳",
+  },
+  {
+    id: "frog-coins",
+    name: "개구리 코인별",
+    x: 1860,
+    y: 1440,
+    status: "planned",
+    note: "개구리와 코인·별 모으기",
+  },
+  {
+    id: "aquarium",
+    name: "대형 수조",
+    x: 2600,
+    y: 1400,
+    status: "planned",
+    note: "낚은 물고기를 키우는 곳",
+  },
+  {
+    id: "penguin-ice",
+    name: "펭귄 얼음 깨기",
+    x: 2440,
+    y: 1720,
+    status: "planned",
+    note: "얼음을 깨고 펭귄 구하기",
+  },
 ] as const;
+export type Portal = (typeof PORTALS)[number];
+export const isPlannedPortal = (g: Portal): g is Extract<Portal, { status: "planned" }> =>
+  "status" in g && g.status === "planned";
 export const clamp = (n: number, a: number, b: number) => Math.max(a, Math.min(b, n));
 // Buildings are fixed world content: resolve overlaps once, not on every player/NPC step.
 const WALK_BLOCKS = [
