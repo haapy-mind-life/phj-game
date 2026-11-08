@@ -7,6 +7,7 @@ import {
   LEGENDS,
   MAX_FUSION,
   ROBOTS,
+  isDuoId,
   isRosterId,
   type RobotMissionMode,
   type RobotSpeciesId,
@@ -63,6 +64,8 @@ export function RobotWatch({
   };
 }) {
   const available = ALL_ROBOTS.filter((r) => isWatchCardAvailable(progress, r.id));
+  // The rockets fuse only into Dual Rocket, which comes with its own countdown (rocket-dual S05).
+  const fusable = available.filter((r) => !isDuoId(r.id));
   const [selected, setSelected] = useState<RobotSpeciesId>(team[0] ?? "rb-police");
   const [picks, setPicks] = useState<RobotSpeciesId[]>([]);
   const chosen = ALL_ROBOTS.find((r) => r.id === selected)!;
@@ -184,7 +187,7 @@ export function RobotWatch({
                 : "로봇을 2개 또는 3개 눌러 봐! 처음 고른 로봇이 머리·몸, 두 번째가 팔·무기, 세 번째가 다리·날개가 돼."}
             </p>
             <div className="hj-watch-cards" role="group" aria-label="합체할 로봇 고르기">
-              {available.map((r) => {
+              {fusable.map((r) => {
                 const at = picks.indexOf(r.id);
                 return (
                   <button

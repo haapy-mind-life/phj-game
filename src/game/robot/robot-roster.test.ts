@@ -86,11 +86,12 @@ test("AC-04 the six legends are unchanged", () => {
   );
 });
 
-test("AC-05 the old 12 ids plus the 2 new ones make 14 different species", () => {
-  assert.equal(ALL_ROBOTS.length, 14);
-  assert.equal(new Set(ROBOT_IDS).size, 14);
+test("AC-05 the old 12 ids plus Tira, Emblus and the two rockets make 16 different species", () => {
+  assert.equal(ALL_ROBOTS.length, 16);
+  assert.equal(new Set(ROBOT_IDS).size, 16);
   for (const id of OLD_12) assert.ok(isRobotId(id), id);
   assert.ok(isRobotId("rb-tira") && isRobotId("rb-emblus"));
+  assert.ok(isRobotId("rb-rocket") && isRobotId("rb-rocket-x"));
 });
 
 test("AC-06 an old save with all 12 cards keeps every use, grade and count", () => {
