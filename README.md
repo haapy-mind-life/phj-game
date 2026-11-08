@@ -28,6 +28,7 @@ npm run build:pages             # GitHub Pages용 정적 빌드 → dist-pages/
 | `supabase/` | 가족방 인증·멤버십 마이그레이션 |
 | `docs/` | 요구사항·설계·검증 기록. 시작은 [docs/README.md](docs/README.md) |
 | `MEMORY.md` | 에이전트 공용 작업 기억과 다음 작업 목록 |
+| `legacy/park-runner-game/` | 원래 러너 저장소(`park-runner-game`, 2026-11-08 보관)의 이력째 보관본. 빌드·테스트·린트 대상이 아니며, 아이 사진 파일은 이력에서 제외했다 |
 
 ## 작업 규칙 요약
 
