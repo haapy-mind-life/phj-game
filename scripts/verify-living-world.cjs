@@ -1,6 +1,7 @@
 // Browser integration checks use an isolated browser and fixture saves, never the user's save.
 // Set PLAYWRIGHT_CORE_PATH and CHROMIUM_EXECUTABLE to existing local installations.
 const assert = require("node:assert/strict");
+const { enterWorld } = require("./enter-world.cjs");
 const fs = require("node:fs");
 const path = require("node:path");
 const { chromium } = require(process.env.PLAYWRIGHT_CORE_PATH || "playwright-core");
@@ -25,6 +26,7 @@ async function family() {
   });
   await page.clock.setFixedTime(new Date("2026-10-18T03:00:00Z"));
   await page.goto(previewUrl, { waitUntil: "domcontentloaded" });
+  await enterWorld(page);
   await page.waitForTimeout(300);
   const mode = async () =>
     (await page.locator('svg[aria-label$="실내"]').count())
@@ -181,6 +183,7 @@ async function explore() {
   const b = (n) => page.getByRole("button", { name: n, exact: true });
   await page.clock.setFixedTime(new Date("2026-10-18T03:00:00Z"));
   await page.goto(previewUrl, { waitUntil: "domcontentloaded" });
+  await enterWorld(page);
   await page.waitForTimeout(300);
   const pos = () =>
     page
@@ -308,6 +311,7 @@ async function input() {
   page.on("pageerror", (e) => errors.push(e.message));
   await page.clock.setFixedTime(new Date("2026-10-18T03:00:00Z"));
   await page.goto(previewUrl, { waitUntil: "domcontentloaded" });
+  await enterWorld(page);
   await page.waitForTimeout(300);
   const pos = () =>
     page
@@ -406,6 +410,7 @@ async function season() {
     ),
   );
   await page.goto(previewUrl, { waitUntil: "domcontentloaded" });
+  await enterWorld(page);
   const b = (n) => page.getByRole("button", { name: n, exact: true });
   await b("지도").click();
   await b("21. 호박 마을").click();
@@ -440,6 +445,7 @@ async function restaurants() {
   const b = (n) => page.getByRole("button", { name: n, exact: true });
   await page.clock.setFixedTime(new Date("2026-10-18T03:00:00Z"));
   await page.goto(previewUrl, { waitUntil: "domcontentloaded" });
+  await enterWorld(page);
   async function p() {
     if (await page.locator('svg[aria-label$="실내"]').count())
       return page
@@ -508,6 +514,7 @@ async function seams() {
   const b = (n) => page.getByRole("button", { name: n, exact: true });
   await page.clock.setFixedTime(new Date("2026-10-18T03:00:00Z"));
   await page.goto(previewUrl, { waitUntil: "domcontentloaded" });
+  await enterWorld(page);
   await page.waitForTimeout(300);
   const pos = () =>
     page

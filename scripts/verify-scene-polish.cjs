@@ -1,5 +1,6 @@
 // Credentials are read only from an explicitly supplied private file, never logged.
 const assert = require("node:assert/strict");
+const { enterWorld } = require("./enter-world.cjs");
 const fs = require("node:fs");
 const { chromium } = require(process.env.PLAYWRIGHT_CORE_PATH || "playwright-core");
 const url = process.env.PHJ_PREVIEW_URL || "http://127.0.0.1:4190/phj-game/";
@@ -43,6 +44,7 @@ fs.mkdirSync(out, { recursive: true });
         ),
       );
       await page.goto(url, { waitUntil: "domcontentloaded" });
+      await enterWorld(page);
       await page.locator(".hj-family-toggle").click();
       await page.getByRole("button", { name: account.nickname, exact: true }).click();
       await page.getByLabel("암호", { exact: true }).fill(account.password);
@@ -134,6 +136,7 @@ fs.mkdirSync(out, { recursive: true });
     await page.locator('.hj-mascot[data-identity="dad"]').first().waitFor();
     assert.ok((await page.locator("h1").innerText()).includes("아빠"));
     await page.reload();
+    await enterWorld(page);
     await page.locator('.hj-mascot[data-identity="dad"]').first().waitFor();
     assert.deepEqual(errors, []);
     console.log(

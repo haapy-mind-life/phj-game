@@ -4,6 +4,7 @@
 // villain, 7th use power-up, friend rescue, thief chase, reload and phone layout. Every check
 // reads game state (data-* attributes and the saved game), not just pictures.
 const assert = require("node:assert/strict");
+const { enterWorld } = require("./enter-world.cjs");
 const fs = require("node:fs");
 const { chromium } = require(process.env.PLAYWRIGHT_CORE_PATH || "playwright-core");
 const { VILLAIN_SPOT, RESCUE_SPOT, THIEF_HOME } = require("../src/game/robot/robot-catalog.ts");
@@ -26,6 +27,7 @@ async function open(browser, viewport, save, errors) {
       localStorage.setItem("hyunjun-game-v2", JSON.stringify(seed));
   }, save);
   await page.goto(url, { waitUntil: "networkidle" });
+  await enterWorld(page);
   const btn = (name) => page.getByRole("button", { name, exact: true });
   const actor = page.locator("[data-robot-actor]");
   const saved = () =>
@@ -303,6 +305,7 @@ async function open(browser, viewport, save, errors) {
       // AT-13: reload keeps robots and the old village progress.
       const before = await saved();
       await page.reload({ waitUntil: "networkidle" });
+      await enterWorld(page);
       const after = await saved();
       assert.deepEqual(after.robots, before.robots);
       assert.equal(after.money, 3000);
@@ -378,6 +381,7 @@ async function open(browser, viewport, save, errors) {
       assert.equal(s.cards["rb-police"].grade, 1);
       assert.ok(s.cards["rb-thunder-police"]);
       await page.reload({ waitUntil: "networkidle" });
+      await enterWorld(page);
       await g.btn("⌚ 시계").click();
       await page.getByRole("button", { name: "경찰 로봇 카드", exact: true }).click();
       assert.ok(

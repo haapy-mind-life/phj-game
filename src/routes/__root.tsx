@@ -1,4 +1,5 @@
 import { FamilyAccountProvider } from "../components/hyunjun/useFamilyAccount";
+import { useMarkEntryRoute } from "../components/hyunjun/useWorldEntry";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -56,6 +57,7 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 function Root() {
   const { queryClient } = Route.useRouteContext();
+  useMarkEntryRoute();
   return (
     <QueryClientProvider client={queryClient}>
       <FamilyAccountProvider>

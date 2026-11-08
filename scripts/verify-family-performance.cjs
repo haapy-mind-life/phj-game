@@ -1,6 +1,7 @@
 // Two independent browsers against the local Auth/Realtime fixture; no real credentials required.
 // Set PHJ_CPU_RATE/PHJ_MIN_FPS for a normal or CPU-throttled regression budget.
 const fs = require("node:fs");
+const { enterWorld } = require("./enter-world.cjs");
 const { chromium } = require(process.env.PLAYWRIGHT_CORE_PATH || "playwright-core");
 (async () => {
   const b = await chromium.launch({
@@ -16,6 +17,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_CORE_PATH || "playwright-cor
       await p.goto(process.env.PHJ_PREVIEW_URL || "http://127.0.0.1:4192/phj-game/", {
         waitUntil: "domcontentloaded",
       });
+      await enterWorld(p);
       await p.locator(".hj-family-toggle").click();
       await p.getByRole("button", { name: nickname, exact: true }).click();
       await p.getByLabel("암호", { exact: true }).fill(process.env.PHJ_TEST_PIN || "2468");

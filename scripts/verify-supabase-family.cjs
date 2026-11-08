@@ -1,6 +1,7 @@
 // Contract integration test: real supabase-js client, local fake HTTP/Phoenix service.
 // This does not certify an actual Supabase project's configuration or network availability.
 const assert = require("node:assert/strict");
+const { enterWorld } = require("./enter-world.cjs");
 const fs = require("node:fs");
 const { chromium } = require(process.env.PLAYWRIGHT_CORE_PATH || "playwright-core");
 const url = process.env.PHJ_PREVIEW_URL || "http://127.0.0.1:4183/phj-game/";
@@ -32,6 +33,7 @@ fs.mkdirSync(out, { recursive: true });
         ),
       );
       await page.goto(url, { waitUntil: "domcontentloaded" });
+      await enterWorld(page);
       await page.locator(".hj-family-toggle").click();
       await page.getByRole("form", { name: "부모님 가족 계정 로그인" }).waitFor();
       if (mobile) await page.screenshot({ path: out + "/login-phone.png" });
@@ -177,6 +179,7 @@ fs.mkdirSync(out, { recursive: true });
       "PASS interior visibility, immediate presence leave, automatic-space family separation and unenrolled-account denial",
     );
     await dad.page.reload();
+    await enterWorld(dad.page);
     await dad.page.locator(".hj-family-toggle").click();
     await dad.page.getByText("가족과 연결됐어요", { exact: true }).waitFor();
     assert.equal(

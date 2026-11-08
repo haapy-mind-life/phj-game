@@ -4,6 +4,7 @@
 // reload safety, phone layout and frame times. Checks read the engine (data-* attributes,
 // the save, and the army's own position function), not only pictures.
 const assert = require("node:assert/strict");
+const { enterWorld } = require("./enter-world.cjs");
 const fs = require("node:fs");
 const { chromium } = require(process.env.PLAYWRIGHT_CORE_PATH || "playwright-core");
 const { ARMY, armyPosition } = require("../src/game/robot/robot-army.ts");
@@ -31,6 +32,7 @@ async function open(browser, viewport, errors) {
       localStorage.setItem("hyunjun-game-v2", JSON.stringify(seed));
   }, SEED);
   await page.goto(url, { waitUntil: "networkidle" });
+  await enterWorld(page);
   const btn = (name) => page.getByRole("button", { name, exact: true });
   const army = page.locator(".hj-army").first();
   const attr = (loc, name) => loc.first().getAttribute(name);
@@ -418,6 +420,7 @@ const frameTimes = (page, ms) =>
         "robots walk home from here",
       );
       await page.reload({ waitUntil: "networkidle" });
+      await enterWorld(page);
       const after = await saved();
       assert.deepEqual(after.robots, before);
       assert.equal(after.version, 3);

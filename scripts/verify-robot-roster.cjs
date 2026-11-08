@@ -3,6 +3,7 @@
 // form, heal infected army robots with the weapon, fuse into the antidote sword, and old saves
 // keep everything. Checks read the engine (data-* attributes and the save), not only pictures.
 const assert = require("node:assert/strict");
+const { enterWorld } = require("./enter-world.cjs");
 const fs = require("node:fs");
 const { chromium } = require(process.env.PLAYWRIGHT_CORE_PATH || "playwright-core");
 const { armyPosition, armyRobot } = require("../src/game/robot/robot-army.ts");
@@ -33,6 +34,7 @@ async function open(browser, viewport, errors) {
       localStorage.setItem("hyunjun-game-v2", JSON.stringify(seed));
   }, SEED);
   await page.goto(url, { waitUntil: "networkidle" });
+  await enterWorld(page);
   const btn = (name) => page.getByRole("button", { name, exact: true });
   const saved = () =>
     page.evaluate(() => JSON.parse(localStorage.getItem("hyunjun-game-v2") || "{}"));
@@ -173,6 +175,7 @@ async function cureAll(g, reach) {
       // AC-23 (form): a reload mid-change leaves a safe game with the cards intact.
       await form.click();
       await page.reload({ waitUntil: "networkidle" });
+      await enterWorld(page);
       assert.equal(await page.locator("[data-robot-actor]").count(), 0);
       s = await saved();
       assert.deepEqual(s.robots.cards["rb-police"], OLD_CARDS["rb-police"]);

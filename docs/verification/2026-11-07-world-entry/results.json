@@ -1,0 +1,46 @@
+[
+  {
+    "viewport": "360x780",
+    "villageRequests": 1,
+    "movement": "touch joystick",
+    "plannedGate": "message only, URL and save unchanged",
+    "runnerRoundTrip": "world → #/race → world, no title",
+    "history": "back/forward keep routes, no title",
+    "reload": "title again",
+    "errors": 0
+  },
+  {
+    "viewport": "390x844",
+    "villageRequests": 1,
+    "movement": "touch joystick",
+    "plannedGate": "message only, URL and save unchanged",
+    "runnerRoundTrip": "world → #/race → world, no title",
+    "history": "back/forward keep routes, no title",
+    "reload": "title again",
+    "errors": 0
+  },
+  {
+    "viewport": "844x390",
+    "villageRequests": 1,
+    "movement": "touch joystick",
+    "reload": "title again",
+    "errors": 0
+  },
+  {
+    "viewport": "1280x900",
+    "villageRequests": 1,
+    "movement": "keyboard",
+    "plannedGate": "message only, URL and save unchanged",
+    "runnerRoundTrip": "world → #/race → world, no title",
+    "history": "back/forward keep routes, no title",
+    "reload": "title again",
+    "errors": 0
+  },
+  {
+    "directRace": "runner first, world after without title"
+  },
+  {
+    "failure": "failed → 다시 가기 (reload) → loading → world",
+    "pageErrors": []
+  }
+]
