@@ -7,6 +7,10 @@ export const ARCADE = [
   { key: "coins", catalogId: "mn-04", name: "박현준 코인 톡톡", goal: 15, coinsPerPoint: 2 },
   { key: "jump", catalogId: "mn-05", name: "박현준 빠른 점프", goal: 12, coinsPerPoint: 2 },
   { key: "dodge", catalogId: "mn-17", name: "박현준 장애물 피하기", goal: 20, coinsPerPoint: 1 },
+  { key: "cloud", catalogId: "mn-12", name: "박현준 구름 뛰기", goal: 10, coinsPerPoint: 3 },
+  { key: "surf", catalogId: "mn-13", name: "박현준 파도타기", goal: 25, coinsPerPoint: 1 },
+  { key: "water", catalogId: "mn-11", name: "박현준 물주기", goal: 8, coinsPerPoint: 4 },
+  { key: "range", catalogId: "mn-20", name: "박현준 로봇 사격장", goal: 15, coinsPerPoint: 2 },
 ] as const;
 
 export type ArcadeKey = (typeof ARCADE)[number]["key"];

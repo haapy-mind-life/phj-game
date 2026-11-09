@@ -160,3 +160,125 @@
     box-shadow: none;
   }
 }
+/* 큰 동작 버튼 */
+.arcade-action {
+  width: min(100%, 420px);
+}
+/* 구름 */
+.cloud-field {
+  background: linear-gradient(#8fd0ff, #e6f6ff);
+}
+.cloud-mark {
+  position: absolute;
+  top: 18%;
+  height: 52%;
+  border: 3px dashed #ffffffcc;
+  border-radius: 12px;
+  display: grid;
+  place-items: start center;
+  font-size: 36px;
+}
+.cloud-pad {
+  position: absolute;
+  top: 62%;
+  font-size: 64px;
+  transform: translate(-50%, -50%);
+}
+.cloud-pad.under {
+  filter: drop-shadow(0 0 8px #fff);
+}
+/* 파도 */
+.surf-field {
+  display: grid;
+  align-content: center;
+  gap: 24px;
+  padding: 16px;
+  background: linear-gradient(#bfe8ff, #4aa3d8);
+}
+.surf-bar {
+  position: relative;
+  height: 48px;
+  border-radius: 24px;
+  background: #ffe0d8;
+  border: 3px solid #e07a5f;
+}
+.surf-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: #9be58a;
+}
+.surf-needle {
+  position: absolute;
+  top: 50%;
+  font-size: 40px;
+  transform: translate(-50%, -50%);
+}
+.surf-sea {
+  text-align: center;
+  font-size: 48px;
+}
+/* 물주기 */
+.water-field {
+  background: linear-gradient(#e9f7ff, #f6efe1);
+}
+.water-can {
+  position: absolute;
+  top: 18%;
+  font-size: 44px;
+  transform: translateX(-50%);
+  transition: left 0.15s ease;
+}
+.water-plots {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 14%;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  text-align: center;
+  font-size: 28px;
+}
+.water-plot.aimed {
+  outline: 3px solid #3a8fd8;
+  border-radius: 8px;
+}
+.water-controls {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 8px;
+  width: min(100%, 420px);
+}
+/* 사격장 */
+.range-field {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(#f3efe6, #e3dccb);
+  border-color: #c9b994;
+}
+.range-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 92%;
+  aspect-ratio: 1;
+}
+.range-field .range-pop {
+  position: static;
+  transform: none;
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  background: #fff8e6;
+  border: 3px solid #d9c38f;
+  font-size: 44px;
+}
+.range-hole {
+  border-radius: 16px;
+  background: #00000014;
+}
+@media (prefers-reduced-motion: reduce) {
+  .water-can {
+    transition: none;
+  }
+}

@@ -34,6 +34,29 @@ const PLAYERS = {
       (free < lane ? left : right).click();
     })()`,
   },
+  cloud: {
+    ms: 20,
+    win: `(() => { const f = document.querySelector('.cloud-field');
+      if (f && f.dataset.under === 'true' && Math.abs(Number(f.dataset.cloudX) - 0.5) < 0.06)
+        document.querySelector('.arcade-action').click(); })()`,
+  },
+  surf: {
+    ms: 50,
+    win: `(() => { const f = document.querySelector('.surf-field'); if (!f) return;
+      const n = Number(f.dataset.needle); const [l, r] = document.querySelectorAll('.dodge-controls button');
+      const up = (b) => b.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+      const down = (b) => b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+      up(l); up(r); if (n > 0.08) down(l); else if (n < -0.08) down(r); })()`,
+  },
+  water: {
+    ms: 90,
+    win: `(() => { const f = document.querySelector('.water-field'); if (!f) return;
+      const aim = Number(f.dataset.aim);
+      const dry = [...f.querySelectorAll('[data-plot]')].findIndex((p) => p.dataset.wet === 'false');
+      const [l, pour, r] = document.querySelectorAll('.water-controls button');
+      (dry === aim ? pour : dry > aim ? r : l).click(); })()`,
+  },
+  range: { ms: 60, win: `document.querySelector('.range-pop[data-kind="target"]')?.click()` },
 };
 /** How to lose each game quickly. */
 const LOSE = {
@@ -55,6 +78,25 @@ const LOSE = {
     for (let i = 0; i < 3; i++) await page.locator('[data-lit="false"]').first().click();
   },
   dodge: async () => {},
+  cloud: async (page) => {
+    for (let i = 0; i < 3; i++) {
+      await page.waitForFunction(
+        () => document.querySelector(".cloud-field")?.dataset.under === "false",
+      );
+      await page.locator(".arcade-action").click();
+    }
+  },
+  surf: async () => {},
+  water: async (page) => {
+    for (let i = 0; i < 12; i++) await page.getByRole("button", { name: "💧 물 주기" }).click();
+  },
+  range: async (page) => {
+    for (let i = 0; i < 3; i++) {
+      const friend = page.locator('.range-pop[data-kind="friend"]').first();
+      await friend.waitFor({ timeout: 20000 });
+      await friend.click({ force: true });
+    }
+  },
 };
 
 async function open(browser, viewport, errors) {
