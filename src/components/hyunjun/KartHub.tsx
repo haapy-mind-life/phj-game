@@ -97,7 +97,12 @@ export function KartHub() {
               </small>
               <h3>{game.name}</h3>
               <p>{game.description}</p>
-              {"route" in game ? (
+              {"game" in game ? (
+                <Link to="/mini/$game" params={{ game: game.game }}>
+                  시작하기
+                  <span className="sr-only"> · {game.name}</span>
+                </Link>
+              ) : "route" in game ? (
                 <Link to={game.route}>
                   {game.status === "existing" ? "기존 놀이 열기" : "시작하기"}
                   <span className="sr-only"> · {game.name}</span>

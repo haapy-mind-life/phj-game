@@ -1,3 +1,4 @@
+import type { ArcadeKey } from "./arcade.ts";
 // Runtime availability is explicit; a catalog idea never grants a playable route.
 export type KartEntry = {
   id: string;
@@ -11,6 +12,8 @@ export type KartEntry = {
       status: "playable" | "existing";
       route: "/" | "/race" | "/house" | "/greenhouse" | "/peanuts" | "/rooms";
     }
+  // Arcade minigames share one route; `game` picks the game (arcade.ts).
+  | { status: "playable"; route: "/mini/$game"; game: ArcadeKey }
 );
 export const KART_GAMES = [
   {
@@ -191,8 +194,10 @@ export const KART_GAMES = [
     kind: "mini",
     name: "박현준 풍선 터뜨리기",
     genre: "타이밍",
-    description: "풍선의 이동을 보고 정확한 때에 터치",
-    status: "planned",
+    description: "풍선이 금빛 고리에 들어왔을 때 톡! 10개 터뜨리기",
+    status: "playable",
+    route: "/mini/$game",
+    game: "balloons",
   },
   {
     id: "mn-03",
@@ -207,16 +212,20 @@ export const KART_GAMES = [
     kind: "mini",
     name: "박현준 코인 톡톡",
     genre: "수집",
-    description: "짧은 시간 코인을 제한 없이 탭·회피",
-    status: "planned",
+    description: "떨어지는 코인은 톡, 번개 구름은 피하기. 30초에 15개",
+    status: "playable",
+    route: "/mini/$game",
+    game: "coins",
   },
   {
     id: "mn-05",
     kind: "mini",
     name: "박현준 빠른 점프",
     genre: "반응",
-    description: "발판 위치에 맞춰 점프",
-    status: "planned",
+    description: "빛나는 발판으로 빠르게 점프! 12번 성공하기",
+    status: "playable",
+    route: "/mini/$game",
+    game: "jump",
   },
   {
     id: "mn-06",
@@ -312,8 +321,10 @@ export const KART_GAMES = [
     kind: "mini",
     name: "박현준 장애물 피하기",
     genre: "회피",
-    description: "움직이는 장애물을 피해 도착",
-    status: "planned",
+    description: "좌우로 차선을 바꿔 장애물 20개 지나가기",
+    status: "playable",
+    route: "/mini/$game",
+    game: "dodge",
   },
   {
     id: "mn-18",

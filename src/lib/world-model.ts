@@ -1,3 +1,10 @@
+import {
+  arcadeInfo,
+  arcadeReward,
+  isArcadeKey,
+  normalizeArcadeBest,
+  type ArcadeKey,
+} from "../game/play/arcade.ts";
 import { ROOM_RUN_REWARD } from "../game/play/room-escape.ts";
 import {
   CARS,
@@ -171,6 +178,8 @@ export type GameState = {
   animals: Record<AnimalId, AnimalState>;
   settledRuns: string[];
   miniBest: Record<"treasure" | "stars" | "fishing" | "constellation" | "peanuts", number>;
+  /** Best score per arcade minigame (/mini/$game); same session list as settledMinis. */
+  arcadeBest: Record<ArcadeKey, number>;
   settledMinis: string[];
   settledFoodSales: string[];
   visitedSeaTreasures: string[];
@@ -280,6 +289,7 @@ export function migrateSave(input: unknown): GameState {
       stars: finite(object(raw["miniBest"])["stars"], 0, 18),
       fishing: finite(object(raw["miniBest"])["fishing"], 0, 5),
     },
+    arcadeBest: normalizeArcadeBest(raw["arcadeBest"]),
     settledMinis: Array.isArray(raw["settledMinis"])
       ? raw["settledMinis"]
           .filter((id): id is string => typeof id === "string" && id.length > 0 && id.length < 160)
@@ -395,6 +405,7 @@ export type WorldAction =
       game: "treasure" | "stars" | "fishing" | "constellation" | "peanuts";
       score: number;
     }
+  | { type: "settle-arcade"; id: string; game: ArcadeKey; score: number }
   | { type: "plant"; index: number; crop: CropId }
   | { type: "water" | "harvest"; index: number }
   | { type: "settle-run"; id: string; score: number; coins: number; clear: boolean }
@@ -638,6 +649,28 @@ export function reduceWorld(state: GameState, action: WorldAction): GameState {
           (score === limits[action.game] ? REWARDS.miniCompletion : 0),
       ),
       miniBest: { ...state.miniBest, [action.game]: Math.max(state.miniBest[action.game], score) },
+      settledMinis: [...state.settledMinis, action.id].slice(-50),
+    };
+  }
+  if (action.type === "settle-arcade") {
+    if (
+      !isArcadeKey(action.game) ||
+      typeof action.id !== "string" ||
+      !action.id ||
+      action.id.length >= 160 ||
+      state.settledMinis.includes(action.id) ||
+      !Number.isFinite(action.score) ||
+      action.score < 0
+    )
+      return state;
+    const score = Math.min(arcadeInfo(action.game).goal, Math.floor(action.score));
+    return {
+      ...state,
+      money: Math.min(1e12, state.money + arcadeReward(action.game, score)),
+      arcadeBest: {
+        ...state.arcadeBest,
+        [action.game]: Math.max(state.arcadeBest[action.game], score),
+      },
       settledMinis: [...state.settledMinis, action.id].slice(-50),
     };
   }

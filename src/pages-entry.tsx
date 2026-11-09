@@ -20,6 +20,7 @@ import { Runner } from "./components/hyunjun/Runner";
 import { Farm } from "./components/hyunjun/Farm";
 import { RoomEscape } from "./components/hyunjun/RoomEscape";
 import { PeanutGame } from "./components/hyunjun/PeanutGame";
+import { ArcadeGame } from "./components/hyunjun/arcade/ArcadeGame";
 import { KartHub } from "./components/hyunjun/KartHub";
 import { House } from "./components/hyunjun/House";
 import "./styles.css";
@@ -93,6 +94,12 @@ const kartRoute = createRoute({
   component: KartHub,
 });
 
+const miniRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/mini/$game",
+  component: ArcadeGame,
+});
+
 const router = createRouter({
   routeTree: rootRoute.addChildren([
     indexRoute,
@@ -102,6 +109,7 @@ const router = createRouter({
     kartRoute,
     peanutRoute,
     roomsRoute,
+    miniRoute,
   ]),
   history: createHashHistory(),
   defaultPreloadStaleTime: 0,

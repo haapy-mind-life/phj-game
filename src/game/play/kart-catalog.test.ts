@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { KART_GAMES, type KartEntry } from "./kart-catalog.ts";
+import { ARCADE } from "./arcade.ts";
 
 test("kart has 20 large and 20 mini candidates with unique stable identities", () => {
   assert.equal(KART_GAMES.length, 40);
@@ -14,9 +15,18 @@ test("kart has 20 large and 20 mini candidates with unique stable identities", (
 test("only verified existing entry points can launch; planned games cannot navigate", () => {
   const games: readonly KartEntry[] = KART_GAMES;
   assert.deepEqual(
-    games.filter((g) => g.status === "playable").map((g) => g.route),
+    games.filter((g) => g.status === "playable" && !("game" in g)).map((g) => g.route),
     ["/", "/race", "/greenhouse", "/rooms", "/peanuts"],
   );
+  // Arcade minigames all launch through /mini/$game, one per row of arcade.ts.
+  assert.deepEqual(
+    games
+      .filter((g) => "game" in g)
+      .map((g) => ("game" in g ? g.game : ""))
+      .sort(),
+    ARCADE.map((a) => a.key).sort(),
+  );
+  assert.ok(games.filter((g) => "game" in g).every((g) => g.route === "/mini/$game"));
   assert.deepEqual(
     games.filter((g) => g.status === "existing").map((g) => g.route),
     ["/house"],
