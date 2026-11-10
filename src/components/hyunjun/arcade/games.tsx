@@ -113,6 +113,51 @@ import {
   type AssembleGame,
   type Slot,
 } from "@/game/play/minis/assemble";
+import {
+  LOOKALIKES,
+  ROUND_SECONDS,
+  SPOT_CELLS,
+  SPOT_GOAL,
+  SPOT_MISSES,
+  createSpot,
+  tapSpot,
+  tickSpot,
+  type SpotGame,
+} from "@/game/play/minis/spot";
+import {
+  HINT_GOAL,
+  HINT_MISSES,
+  LANDS,
+  LAND_NAME,
+  LINE_NAME,
+  createHint,
+  guess,
+  tickHint,
+  type HintGame,
+} from "@/game/play/minis/hint";
+import {
+  E,
+  N,
+  RESCUE_GOAL,
+  S,
+  SIZE,
+  W,
+  createRescue,
+  tickRescue,
+  turnTile,
+  type RescueGame,
+} from "@/game/play/minis/rescue";
+import {
+  COLS,
+  PARK_BUMPS,
+  PARK_GOAL,
+  ROWS,
+  createPark,
+  drive,
+  tickPark,
+  type Dir,
+  type ParkGame,
+} from "@/game/play/minis/park";
 import type { ArcadeDef } from "./ArcadeShell";
 
 const pct = (v: number) => `${(v * 100).toFixed(1)}%`;
@@ -731,6 +776,215 @@ const assemble: ArcadeDef<AssembleGame> = {
   ),
 };
 
+// ── mn-03 숨은 로봇 찾기 ──
+const spot: ArcadeDef<SpotGame> = {
+  key: "spot",
+  subtitle: "닮은 것들 사이에서 다른 하나를 찾아요.",
+  icon: "🔍",
+  intro: (
+    <>
+      <h2>다른 하나를 찾아라!</h2>
+      <p>
+        비슷한 그림 {SPOT_CELLS}개 중 하나만 달라요. 빛이 꺼지기 전에 찾아서 눌러요.
+        <br />
+        {SPOT_GOAL}라운드! 틀리거나 시간이 지나면 실수, {SPOT_MISSES}번이면 끝.
+      </p>
+    </>
+  ),
+  create: createSpot,
+  tick: tickSpot,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [`실수 ${g.misses}/${SPOT_MISSES}`],
+  View: ({ g, act, active }) => {
+    const [crowd, odd] = LOOKALIKES[g.pair]!;
+    return (
+      <div className="arcade-board spot-board" data-odd={g.odd}>
+        <div className="jump-timer spot-timer" aria-hidden="true">
+          <i style={{ width: pct(g.remaining / ROUND_SECONDS) }} />
+        </div>
+        <div className="spot-grid">
+          {Array.from({ length: SPOT_CELLS }, (_, i) => (
+            <button
+              key={`${g.score}-${g.misses}-${i}`}
+              disabled={!active}
+              data-cell={i}
+              aria-label={`${i + 1}번 그림`}
+              onClick={() => act((x) => tapSpot(x, i))}
+            >
+              {i === g.odd ? odd : crowd}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  },
+};
+
+// ── mn-10 전설 힌트 찾기 ──
+const hint: ArcadeDef<HintGame> = {
+  key: "hint",
+  subtitle: "두 힌트가 가리키는 칸을 찾아요.",
+  icon: "🗺️",
+  intro: (
+    <>
+      <h2>전설은 어디에 숨었을까?</h2>
+      <p>
+        힌트 두 개를 봐요: 어느 줄(북쪽·남쪽·서쪽·동쪽·가운데)과 어떤 땅(숲·물가·산).
+        <br />두 힌트에 맞는 칸은 딱 하나! {HINT_GOAL}번 찾으면 성공, 틀리기 {HINT_MISSES}번이면 끝.
+      </p>
+    </>
+  ),
+  create: createHint,
+  tick: tickHint,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [`실수 ${g.misses}/${HINT_MISSES}`, `⏳ ${Math.ceil(g.remaining)}초`],
+  View: ({ g, act, active }) => (
+    <div className="arcade-board hint-board" data-answer={g.answer}>
+      <p className="hint-clue" role="status">
+        📍 {LINE_NAME[g.line.axis][g.line.index]} · {LANDS[g.land]} {LAND_NAME[g.land]}
+      </p>
+      <div className="hint-map">
+        {g.map.map((land, i) => (
+          <button
+            key={i}
+            disabled={!active}
+            data-cell={i}
+            aria-label={`${LAND_NAME[land]} 칸`}
+            onClick={() => act((x) => guess(x, i))}
+          >
+            {LANDS[land]}
+          </button>
+        ))}
+      </div>
+      <p className="hint-compass" aria-hidden="true">
+        ⬆ 북쪽 · ⬅ 서쪽 · 동쪽 ➡ · ⬇ 남쪽
+      </p>
+    </div>
+  ),
+};
+
+// ── mn-16 친구 구하기 ──
+const road = (m: number) => (
+  <svg viewBox="0 0 60 60" aria-hidden="true">
+    <circle cx="30" cy="30" r="9" fill="#8a7a5a" />
+    {m & N ? <rect x="21" y="0" width="18" height="34" fill="#8a7a5a" /> : null}
+    {m & S ? <rect x="21" y="26" width="18" height="34" fill="#8a7a5a" /> : null}
+    {m & E ? <rect x="26" y="21" width="34" height="18" fill="#8a7a5a" /> : null}
+    {m & W ? <rect x="0" y="21" width="34" height="18" fill="#8a7a5a" /> : null}
+  </svg>
+);
+const rescue: ArcadeDef<RescueGame> = {
+  key: "rescue",
+  subtitle: "길을 돌려서 친구에게 가는 길을 만들어요.",
+  icon: "🛟",
+  intro: (
+    <>
+      <h2>친구에게 가는 길</h2>
+      <p>
+        길 조각을 누르면 한 번씩 돌아가요. 왼쪽 위 현준이부터 오른쪽 아래 친구까지 길을 하나로
+        이어요.
+        <br />
+        {RESCUE_GOAL}판을 150초 안에!
+      </p>
+    </>
+  ),
+  create: createRescue,
+  tick: tickRescue,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [`⏳ ${Math.ceil(g.remaining)}초`],
+  View: ({ g, act, active }) => (
+    <div className="arcade-board rescue-board">
+      <div className="rescue-row">
+        <span className="rescue-end" aria-hidden="true">
+          🧒➡
+        </span>
+        <div className="rescue-grid" style={{ gridTemplateColumns: `repeat(${SIZE}, 1fr)` }}>
+          {g.tiles.map((m, i) => (
+            <button
+              key={i}
+              disabled={!active}
+              data-tile={i}
+              data-mask={m}
+              aria-label={`${i + 1}번 길 조각 돌리기`}
+              onClick={() => act((x) => turnTile(x, i))}
+            >
+              {road(m)}
+            </button>
+          ))}
+        </div>
+      </div>
+      <span className="rescue-end friend" aria-hidden="true">
+        ➡🐶
+      </span>
+    </div>
+  ),
+};
+
+// ── mn-19 자동차 주차 ──
+const ARROWS: [Dir, string][] = [
+  ["up", "⬆"],
+  ["left", "⬅"],
+  ["right", "➡"],
+  ["down", "⬇"],
+];
+const park: ArcadeDef<ParkGame> = {
+  key: "park",
+  subtitle: "콘을 피해 P칸에 주차해요.",
+  icon: "🅿️",
+  intro: (
+    <>
+      <h2>주차 선수!</h2>
+      <p>
+        화살표를 누르면 차가 한 칸씩 움직여요. 콘 🔶에 부딪히지 않게 P칸까지!
+        <br />
+        주차장 {PARK_GOAL}곳, 부딪힘 {PARK_BUMPS}번이면 끝.
+      </p>
+    </>
+  ),
+  create: createPark,
+  tick: tickPark,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [`부딪힘 ${g.bumps}/${PARK_BUMPS}`, `⏳ ${Math.ceil(g.remaining)}초`],
+  View: ({ g, act, active }) => (
+    <div
+      className="arcade-board park-board"
+      data-car={g.lot.car}
+      data-spot={g.lot.spot}
+      data-cones={g.lot.cones.join(",")}
+    >
+      <div
+        className="park-lot"
+        style={{ gridTemplateColumns: `repeat(${COLS}, 1fr)` }}
+        aria-label="주차장"
+      >
+        {Array.from({ length: COLS * ROWS }, (_, i) => (
+          <span key={i} className={i === g.lot.spot ? "spot" : ""}>
+            {i === g.lot.car ? "🚙" : g.lot.cones.includes(i) ? "🔶" : i === g.lot.spot ? "P" : ""}
+          </span>
+        ))}
+      </div>
+      <div className="park-pad">
+        {ARROWS.map(([d, icon]) => (
+          <button
+            key={d}
+            className={`park-${d}`}
+            disabled={!active}
+            data-dir={d}
+            aria-label={`${icon} 움직이기`}
+            onClick={() => act((x) => drive(x, d))}
+          >
+            {icon}
+          </button>
+        ))}
+      </div>
+    </div>
+  ),
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const ARCADE_GAMES: Record<ArcadeKey, ArcadeDef<any>> = {
   balloons,
@@ -745,4 +999,8 @@ export const ARCADE_GAMES: Record<ArcadeKey, ArcadeDef<any>> = {
   tidy,
   box,
   assemble,
+  spot,
+  hint,
+  rescue,
+  park,
 };

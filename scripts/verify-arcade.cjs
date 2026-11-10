@@ -81,6 +81,47 @@ const PLAYERS = {
       if (!b.dataset.picked) document.querySelector('.assemble-tray button')?.click();
       else document.querySelector('[data-slot="' + b.dataset.picked + '"]')?.click(); })()`,
   },
+  spot: {
+    ms: 120,
+    win: `(() => { const b = document.querySelector('.spot-board'); if (!b) return;
+      document.querySelector('.spot-grid [data-cell="' + b.dataset.odd + '"]')?.click(); })()`,
+  },
+  hint: {
+    ms: 100,
+    win: `(() => { const b = document.querySelector('.hint-board'); if (!b) return;
+      document.querySelector('.hint-map [data-cell="' + b.dataset.answer + '"]')?.click(); })()`,
+  },
+  rescue: {
+    ms: 60,
+    win: `(() => { const tiles = [...document.querySelectorAll('[data-tile]')]; if (!tiles.length) return;
+      const m = tiles.map((t) => Number(t.dataset.mask)), S = 4;
+      const rot = (x) => ((x << 1) | (x >> 3)) & 15, opp = (d) => rot(rot(d));
+      const need = new Map();
+      const walk = (x, y, from) => { const i = y * S + x; if (need.has(i)) return false;
+        let t = m[i];
+        for (let k = 0; k < 4; k++, t = rot(t)) { if (!(t & from)) continue; const out = t & ~from; need.set(i, t);
+          if (x === 3 && y === 3 && out === 2) return true;
+          const nx = x + (out === 2 ? 1 : out === 8 ? -1 : 0), ny = y + (out === 4 ? 1 : out === 1 ? -1 : 0);
+          if (nx >= 0 && ny >= 0 && nx < S && ny < S && walk(nx, ny, opp(out))) return true;
+          need.delete(i); }
+        return false; };
+      if (!walk(0, 0, 8)) return;
+      for (const [i, t] of need) if (m[i] !== t) { tiles[i].click(); return; } })()`,
+  },
+  park: {
+    ms: 90,
+    win: `(() => { const b = document.querySelector('.park-board'); if (!b) return;
+      const C = 5, R = 6, car = Number(b.dataset.car), spot = Number(b.dataset.spot);
+      const cones = b.dataset.cones.split(',').filter(Boolean).map(Number);
+      const steps = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+      const prev = new Map([[car, null]]), q = [car];
+      while (q.length) { const at = q.shift(); if (at === spot) break;
+        for (const [d, [dx, dy]] of Object.entries(steps)) { const x = (at % C) + dx, y = Math.floor(at / C) + dy, n = y * C + x;
+          if (x < 0 || y < 0 || x >= C || y >= R || prev.has(n) || cones.includes(n)) continue;
+          prev.set(n, [at, d]); q.push(n); } }
+      let c = spot, first = null; while (prev.get(c)) { first = prev.get(c)[1]; c = prev.get(c)[0]; }
+      if (first) document.querySelector('[data-dir="' + first + '"]').click(); })()`,
+  },
 };
 /** How to lose each game quickly. */
 const LOSE = {
@@ -141,6 +182,60 @@ const LOSE = {
       const part = await page.locator(".assemble-tray button").first().getAttribute("data-part");
       await page.locator(".assemble-tray button").first().click();
       await page.locator(`.assemble-slot:not(.done):not([data-slot="${part}"])`).first().click();
+    }
+  },
+  spot: async (page) => {
+    for (let i = 0; i < 3; i++) {
+      const odd = await page.locator(".spot-board").getAttribute("data-odd");
+      await page.locator(`.spot-grid [data-cell]:not([data-cell="${odd}"])`).first().click();
+    }
+  },
+  hint: async (page) => {
+    for (let i = 0; i < 3; i++) {
+      const answer = await page.locator(".hint-board").getAttribute("data-answer");
+      await page.locator(`.hint-map [data-cell]:not([data-cell="${answer}"])`).first().click();
+    }
+  },
+  // 친구 구하기 has no mistakes: it is lost only when its 150 s run out.
+  rescue: async () => {},
+  park: async (page) => {
+    // Drive toward the nearest cone; once next to it, every push is a bump.
+    for (let n = 0; n < 60; n++) {
+      if ((await page.locator(".arcade").getAttribute("data-phase")) !== "playing") return;
+      await page.evaluate(() => {
+        const b = document.querySelector(".park-board");
+        const C = 5,
+          R = 6,
+          car = Number(b.dataset.car);
+        const cones = b.dataset.cones.split(",").filter(Boolean).map(Number);
+        const steps = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+        const prev = new Map([[car, null]]),
+          q = [car];
+        let hit = null;
+        while (q.length && hit === null) {
+          const at = q.shift();
+          for (const [d, [dx, dy]] of Object.entries(steps)) {
+            const x = (at % C) + dx,
+              y = Math.floor(at / C) + dy,
+              c = y * C + x;
+            if (x < 0 || y < 0 || x >= C || y >= R || prev.has(c)) continue;
+            prev.set(c, [at, d]);
+            if (cones.includes(c)) {
+              hit = c;
+              break;
+            }
+            if (c !== Number(b.dataset.spot)) q.push(c);
+          }
+        }
+        let c = hit,
+          first = null;
+        while (prev.get(c)) {
+          first = prev.get(c)[1];
+          c = prev.get(c)[0];
+        }
+        if (first) document.querySelector(`[data-dir="${first}"]`).click();
+      });
+      await page.waitForTimeout(80);
     }
   },
   range: async (page) => {
@@ -219,7 +314,9 @@ async function runGame(browser, viewport, name, game, errors) {
   // Lose.
   const beforeLoss = (await saved()).money;
   await LOSE[key](page);
-  await page.locator('.arcade[data-phase="lost"]').waitFor({ timeout: 60000 });
+  await page
+    .locator('.arcade[data-phase="lost"]')
+    .waitFor({ timeout: key === "rescue" ? 175000 : 60000 });
   const lostScore = Number(await page.locator(".arcade").getAttribute("data-score"));
   await page.waitForTimeout(300);
   assert.equal((await saved()).money, beforeLoss + arcadeReward(key, lostScore));

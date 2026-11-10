@@ -424,3 +424,114 @@
   border-color: #f29a3a;
   box-shadow: 0 0 0 3px #ffd9a8;
 }
+/* 숨은 로봇 찾기 */
+.spot-board {
+  position: relative;
+  padding-top: 34px;
+}
+.spot-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+.spot-grid button {
+  height: 64px;
+  font-size: 34px;
+}
+/* 전설 힌트 찾기 */
+.hint-clue {
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: #fff3c4;
+  font-size: 20px;
+  font-weight: 800;
+}
+.hint-map {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+.hint-map button {
+  height: 84px;
+  font-size: 42px;
+  background: #eaf5df;
+}
+.hint-compass {
+  margin: 0;
+  font-size: 13px;
+  color: #6b5a3a;
+}
+/* 친구 구하기 */
+.rescue-board {
+  justify-items: stretch;
+}
+.rescue-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+}
+.rescue-end {
+  font-size: 22px;
+  white-space: nowrap;
+}
+.rescue-end.friend {
+  justify-self: end;
+}
+.rescue-grid {
+  display: grid;
+  gap: 4px;
+  flex: 1;
+}
+.arcade-board .rescue-grid button {
+  min-width: 0;
+  aspect-ratio: 1;
+  padding: 2px;
+  background: #cfe8b8;
+  border-radius: 8px;
+}
+.rescue-grid svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+/* 자동차 주차 */
+.park-lot {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  max-width: min(240px, 30vh);
+}
+.park-lot span {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  background: #5d636c;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 900;
+}
+.park-lot span.spot {
+  background: #3f7fd0;
+}
+.park-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 64px);
+  grid-template-areas: ". up ." "left down right";
+  gap: 8px;
+}
+.park-up {
+  grid-area: up;
+}
+.park-left {
+  grid-area: left;
+}
+.park-right {
+  grid-area: right;
+}
+.park-down {
+  grid-area: down;
+}
