@@ -282,3 +282,145 @@
     transition: none;
   }
 }
+/* 판 위에 버튼을 늘어놓는 게임(요리·정리·상자·조립) */
+.arcade-board {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  width: min(100%, 420px);
+  padding: 14px;
+  border-radius: 18px;
+  background: #fffaf0;
+  border: 3px solid #e8c773;
+}
+.arcade-board button {
+  min-width: 56px;
+  min-height: 56px;
+  border-radius: 14px;
+  border: 3px solid #d9c38f;
+  background: #fff;
+  font-size: 30px;
+  touch-action: manipulation;
+}
+.cook-card {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 8px 12px;
+  list-style: none;
+  border-radius: 12px;
+  background: #fff;
+  border: 2px dashed #e0a91b;
+  font-size: 32px;
+}
+.cook-card .now {
+  outline: 3px solid #f29a3a;
+  border-radius: 8px;
+}
+.cook-card .done {
+  color: #3c9b4a;
+}
+.cook-pantry {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+.cook-pantry button {
+  height: 72px;
+  font-size: 40px;
+}
+.tidy-thing {
+  display: grid;
+  justify-items: center;
+  font-size: 72px;
+}
+.tidy-thing b {
+  font-size: 18px;
+}
+.tidy-zones {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+}
+.tidy-zones button {
+  font-size: 22px;
+  font-weight: 800;
+}
+.box-code {
+  display: flex;
+  gap: 10px;
+  font-size: 44px;
+  min-height: 60px;
+}
+.box-dials {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+.box-dials button {
+  height: 84px;
+  font-size: 44px;
+}
+.arcade-board .box-open {
+  width: 100%;
+  background: #6f9f73;
+  border-color: #4f7d54;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 800;
+}
+.arcade-board .box-open:disabled {
+  opacity: 0.5;
+}
+.assemble-robot {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-areas: ". head ." "armL body armR" ". legs .";
+  gap: 8px;
+  width: 100%;
+}
+.assemble-slot {
+  min-height: 64px;
+  border-style: dashed !important;
+  font-size: 16px !important;
+  font-weight: 800;
+}
+.assemble-slot.done {
+  border-style: solid !important;
+  font-size: 36px !important;
+}
+.slot-head {
+  grid-area: head;
+}
+.slot-body {
+  grid-area: body;
+}
+.slot-armL {
+  grid-area: armL;
+}
+.slot-armR {
+  grid-area: armR;
+}
+.slot-legs {
+  grid-area: legs;
+}
+.assemble-tray {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.assemble-tray button {
+  display: grid;
+  justify-items: center;
+  font-size: 30px;
+}
+.assemble-tray button small {
+  font-size: 12px;
+}
+.assemble-tray button.picked {
+  border-color: #f29a3a;
+  box-shadow: 0 0 0 3px #ffd9a8;
+}

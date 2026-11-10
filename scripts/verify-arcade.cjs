@@ -57,6 +57,30 @@ const PLAYERS = {
       (dry === aim ? pour : dry > aim ? r : l).click(); })()`,
   },
   range: { ms: 60, win: `document.querySelector('.range-pop[data-kind="target"]')?.click()` },
+  cook: {
+    ms: 80,
+    win: `(() => { const b = document.querySelector('.cook-board'); if (!b) return;
+      document.querySelector('.cook-pantry [data-item="' + b.dataset.next + '"]')?.click(); })()`,
+  },
+  tidy: {
+    ms: 80,
+    win: `(() => { const b = document.querySelector('.tidy-board'); if (!b) return;
+      document.querySelector('[data-zone="' + b.dataset.answer + '"]')?.click(); })()`,
+  },
+  box: {
+    ms: 80,
+    win: `(() => { const b = document.querySelector('.box-board'); if (!b || b.dataset.showing === 'true') return;
+      const code = b.dataset.code.split(','), dials = b.dataset.dials.split(',');
+      const i = dials.findIndex((d, k) => d !== code[k]);
+      if (i >= 0) document.querySelector('[data-dial="' + i + '"]').click();
+      else document.querySelector('.box-open').click(); })()`,
+  },
+  assemble: {
+    ms: 80,
+    win: `(() => { const b = document.querySelector('.assemble-board'); if (!b) return;
+      if (!b.dataset.picked) document.querySelector('.assemble-tray button')?.click();
+      else document.querySelector('[data-slot="' + b.dataset.picked + '"]')?.click(); })()`,
+  },
 };
 /** How to lose each game quickly. */
 const LOSE = {
@@ -89,6 +113,35 @@ const LOSE = {
   surf: async () => {},
   water: async (page) => {
     for (let i = 0; i < 12; i++) await page.getByRole("button", { name: "💧 물 주기" }).click();
+  },
+  cook: async (page) => {
+    for (let i = 0; i < 3; i++) {
+      const next = await page.locator(".cook-board").getAttribute("data-next");
+      await page.locator(`.cook-pantry [data-item]:not([data-item="${next}"])`).first().click();
+    }
+  },
+  tidy: async (page) => {
+    for (let i = 0; i < 3; i++) {
+      const answer = await page.locator(".tidy-board").getAttribute("data-answer");
+      await page.locator(`[data-zone]:not([data-zone="${answer}"])`).first().click();
+    }
+  },
+  box: async (page) => {
+    for (let i = 0; i < 3; i++) {
+      const board = page.locator('.box-board[data-showing="false"]');
+      await board.waitFor();
+      const code = (await board.getAttribute("data-code")).split(",");
+      const dials = (await board.getAttribute("data-dials")).split(",");
+      if (dials.every((d, k) => d === code[k])) await page.locator('[data-dial="0"]').click();
+      await page.locator(".box-open").click();
+    }
+  },
+  assemble: async (page) => {
+    for (let i = 0; i < 3; i++) {
+      const part = await page.locator(".assemble-tray button").first().getAttribute("data-part");
+      await page.locator(".assemble-tray button").first().click();
+      await page.locator(`.assemble-slot:not(.done):not([data-slot="${part}"])`).first().click();
+    }
   },
   range: async (page) => {
     for (let i = 0; i < 3; i++) {

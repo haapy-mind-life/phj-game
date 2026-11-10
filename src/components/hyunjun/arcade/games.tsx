@@ -71,6 +71,48 @@ import {
   tickRange,
   type RangeGame,
 } from "@/game/play/minis/range";
+import {
+  COOK_GOAL,
+  COOK_MISSES,
+  PANTRY,
+  addIngredient,
+  createCook,
+  tickCook,
+  type CookGame,
+  type Ingredient,
+} from "@/game/play/minis/cook";
+import {
+  THINGS,
+  TIDY_GOAL,
+  TIDY_MISSES,
+  createTidy,
+  putAway,
+  tickTidy,
+  type TidyGame,
+  type Zone,
+} from "@/game/play/minis/tidy";
+import {
+  BOX_GOAL,
+  BOX_MISSES,
+  SYMBOLS,
+  createBox,
+  openBox,
+  tickBox,
+  turnDial,
+  type BoxGame,
+} from "@/game/play/minis/box";
+import {
+  ASSEMBLE_GOAL,
+  ASSEMBLE_MISSES,
+  SLOT_NAME,
+  createAssemble,
+  outline,
+  pickPart,
+  placePart,
+  tickAssemble,
+  type AssembleGame,
+  type Slot,
+} from "@/game/play/minis/assemble";
 import type { ArcadeDef } from "./ArcadeShell";
 
 const pct = (v: number) => `${(v * 100).toFixed(1)}%`;
@@ -465,6 +507,230 @@ const range: ArcadeDef<RangeGame> = {
   ),
 };
 
+// ── mn-14 음식 만들기 ──
+const cook: ArcadeDef<CookGame> = {
+  key: "cook",
+  subtitle: "레시피 카드 순서대로 재료를 톡!",
+  icon: "🍳",
+  intro: (
+    <>
+      <h2>레시피대로 요리해요</h2>
+      <p>
+        카드에 나온 재료를 왼쪽부터 차례로 눌러요.
+        <br />
+        60초 안에 요리 {COOK_GOAL}개! 틀린 재료 {COOK_MISSES}번이면 끝.
+      </p>
+    </>
+  ),
+  create: createCook,
+  tick: tickCook,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [`실수 ${g.misses}/${COOK_MISSES}`, `⏳ ${Math.ceil(g.remaining)}초`],
+  View: ({ g, act, active }) => (
+    <div className="arcade-board cook-board" data-next={g.recipe[g.step]}>
+      <ol className="cook-card" aria-label="레시피 카드">
+        {g.recipe.map((item, i) => (
+          <li key={i} className={i < g.step ? "done" : i === g.step ? "now" : ""}>
+            {i < g.step ? "✓" : PANTRY[item]}
+          </li>
+        ))}
+      </ol>
+      <div className="cook-pantry">
+        {PANTRY.map((icon, i) => (
+          <button
+            key={icon}
+            disabled={!active}
+            data-item={i}
+            aria-label={`재료 ${icon}`}
+            onClick={() => act((x) => addIngredient(x, i as Ingredient))}
+          >
+            {icon}
+          </button>
+        ))}
+      </div>
+    </div>
+  ),
+};
+
+// ── mn-15 방 정리 ──
+const ZONE_LABEL: Record<Zone, string> = {
+  toys: "🧺 장난감 상자",
+  books: "📚 책장",
+  clothes: "🚪 옷장",
+};
+const tidy: ArcadeDef<TidyGame> = {
+  key: "tidy",
+  subtitle: "물건을 제자리에 넣어요.",
+  icon: "🧹",
+  intro: (
+    <>
+      <h2>방을 정리해요</h2>
+      <p>
+        바닥에 나온 물건을 장난감 상자·책장·옷장 중 맞는 곳에 넣어요.
+        <br />
+        60초 안에 {TIDY_GOAL}개! 틀린 곳 {TIDY_MISSES}번이면 끝.
+      </p>
+    </>
+  ),
+  create: createTidy,
+  tick: tickTidy,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [`실수 ${g.misses}/${TIDY_MISSES}`, `⏳ ${Math.ceil(g.remaining)}초`],
+  View: ({ g, act, active }) => {
+    const thing = THINGS[g.thing]!;
+    return (
+      <div className="arcade-board tidy-board" data-answer={thing.zone}>
+        <div className="tidy-thing" role="img" aria-label={thing.name}>
+          {thing.icon}
+          <b>{thing.name}</b>
+        </div>
+        <div className="tidy-zones">
+          {(Object.keys(ZONE_LABEL) as Zone[]).map((z) => (
+            <button
+              key={z}
+              disabled={!active}
+              data-zone={z}
+              onClick={() => act((x) => putAway(x, z))}
+            >
+              {ZONE_LABEL[z]}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  },
+};
+
+// ── mn-18 박스 열기 ──
+const box: ArcadeDef<BoxGame> = {
+  key: "box",
+  subtitle: "그림 암호를 기억해서 상자를 열어요.",
+  icon: "🎁",
+  intro: (
+    <>
+      <h2>그림 암호 상자</h2>
+      <p>
+        상자 위에 그림 암호가 잠깐 보였다가 숨어요. 다이얼을 눌러 같은 그림으로 맞추고 「열기」!
+        <br />
+        상자 {BOX_GOAL}개, 틀리면 암호가 다시 보여요. {BOX_MISSES}번 틀리면 끝. 상자마다 보상은
+        같아요.
+      </p>
+    </>
+  ),
+  create: createBox,
+  tick: tickBox,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [`실수 ${g.misses}/${BOX_MISSES}`, `⏳ ${Math.ceil(g.remaining)}초`],
+  View: ({ g, act, active }) => {
+    const showing = g.showing > 0;
+    return (
+      <div
+        className="arcade-board box-board"
+        data-showing={showing}
+        data-code={g.code.join(",")}
+        data-dials={g.dials.join(",")}
+      >
+        <div className="box-code" aria-label={showing ? "암호를 기억해요" : "암호가 숨었어요"}>
+          {showing ? (
+            g.code.map((c, i) => <span key={i}>{SYMBOLS[c]}</span>)
+          ) : (
+            <span>🔒 ? ? ?</span>
+          )}
+        </div>
+        <div className="box-dials">
+          {([0, 1, 2] as const).map((i) => (
+            <button
+              key={i}
+              disabled={!active || showing}
+              data-dial={i}
+              aria-label={`${i + 1}번 다이얼 ${SYMBOLS[g.dials[i]]}`}
+              onClick={() => act((x) => turnDial(x, i))}
+            >
+              {SYMBOLS[g.dials[i]]}
+            </button>
+          ))}
+        </div>
+        <button
+          className="hj-big box-open"
+          disabled={!active || showing}
+          onClick={() => act(openBox)}
+        >
+          🎁 열기
+        </button>
+      </div>
+    );
+  },
+};
+
+// ── mn-09 로봇 조립 ──
+const PART_ICON: Record<Slot, string> = {
+  head: "🤖",
+  body: "🟦",
+  armL: "🦾",
+  armR: "🦾",
+  legs: "🦿",
+};
+const assemble: ArcadeDef<AssembleGame> = {
+  key: "assemble",
+  subtitle: "부품을 골라 로봇 빈자리에 넣어요.",
+  icon: "🔧",
+  intro: (
+    <>
+      <h2>로봇을 조립해요</h2>
+      <p>
+        아래 부품을 누르고, 로봇 그림에서 그 부품이 들어갈 빈자리를 눌러요.
+        <br />
+        로봇 {ASSEMBLE_GOAL}대! 틀린 자리 {ASSEMBLE_MISSES}번이면 끝. 시계 속 로봇 카드는 바뀌지
+        않아요.
+      </p>
+    </>
+  ),
+  create: createAssemble,
+  tick: tickAssemble,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [`실수 ${g.misses}/${ASSEMBLE_MISSES}`, `⏳ ${Math.ceil(g.remaining)}초`],
+  View: ({ g, act, active }) => (
+    <div className="arcade-board assemble-board" data-picked={g.picked ?? ""}>
+      <div className="assemble-robot">
+        {outline(g).map((slot) => {
+          const done = g.placed.includes(slot);
+          return (
+            <button
+              key={slot}
+              className={`assemble-slot slot-${slot}${done ? " done" : ""}`}
+              disabled={!active || done}
+              data-slot={slot}
+              aria-label={`${SLOT_NAME[slot]} 자리${done ? " · 끼움" : ""}`}
+              onClick={() => act((x) => placePart(x, slot))}
+            >
+              {done ? PART_ICON[slot] : SLOT_NAME[slot]}
+            </button>
+          );
+        })}
+      </div>
+      <div className="assemble-tray" aria-label="부품 상자">
+        {g.tray.map((part) => (
+          <button
+            key={part}
+            className={g.picked === part ? "picked" : ""}
+            disabled={!active}
+            data-part={part}
+            aria-pressed={g.picked === part}
+            onClick={() => act((x) => pickPart(x, part))}
+          >
+            {PART_ICON[part]}
+            <small>{SLOT_NAME[part]}</small>
+          </button>
+        ))}
+      </div>
+    </div>
+  ),
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const ARCADE_GAMES: Record<ArcadeKey, ArcadeDef<any>> = {
   balloons,
@@ -475,4 +741,8 @@ export const ARCADE_GAMES: Record<ArcadeKey, ArcadeDef<any>> = {
   surf,
   water,
   range,
+  cook,
+  tidy,
+  box,
+  assemble,
 };
