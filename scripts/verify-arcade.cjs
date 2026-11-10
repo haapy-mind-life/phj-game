@@ -122,6 +122,19 @@ const PLAYERS = {
       let c = spot, first = null; while (prev.get(c)) { first = prev.get(c)[1]; c = prev.get(c)[0]; }
       if (first) document.querySelector('[data-dir="' + first + '"]').click(); })()`,
   },
+  starhop: { ms: 80, win: `document.querySelector('.star-sky [data-star="true"]')?.click()` },
+  fishking: {
+    ms: 20,
+    win: `(() => { const b = document.querySelector('.fish-board'); if (!b || b.dataset.phaseFish !== 'bite') return;
+      const n = Number(b.dataset.needle), g = Number(b.dataset.green);
+      if (n > g + 0.06 && n < g + 0.14) document.querySelector('.arcade-action').click(); })()`,
+  },
+  dig: {
+    ms: 120,
+    win: `(() => { const b = document.querySelector('.dig-board'); if (!b) return;
+      const t = b.dataset.treasures.split(',').find((c) => !document.querySelector('[data-cell="' + c + '"]').dataset.clue);
+      if (t !== undefined) document.querySelector('.dig-beach [data-cell="' + t + '"]').click(); })()`,
+  },
 };
 /** How to lose each game quickly. */
 const LOSE = {
@@ -236,6 +249,26 @@ const LOSE = {
         if (first) document.querySelector(`[data-dir="${first}"]`).click();
       });
       await page.waitForTimeout(80);
+    }
+  },
+  starhop: async (page) => {
+    for (let i = 0; i < 3; i++) await page.locator('.star-sky [data-star="false"]').first().click();
+  },
+  fishking: async (page) => {
+    // Pulling before any bite snaps the line.
+    for (let i = 0; i < 3; i++) {
+      await page.waitForFunction(
+        () => document.querySelector(".fish-board")?.dataset.phaseFish === "waiting",
+      );
+      await page.locator(".arcade-action").click();
+    }
+  },
+  dig: async (page) => {
+    const treasures = (await page.locator(".dig-board").getAttribute("data-treasures")).split(",");
+    for (let i = 0; i < 25; i++) {
+      if ((await page.locator(".arcade").getAttribute("data-phase")) !== "playing") return;
+      if (treasures.includes(String(i))) continue;
+      await page.locator(`.dig-beach [data-cell="${i}"]`).click();
     }
   },
   range: async (page) => {

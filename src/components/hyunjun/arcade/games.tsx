@@ -158,6 +158,34 @@ import {
   type Dir,
   type ParkGame,
 } from "@/game/play/minis/park";
+import {
+  SKY,
+  STAR_GOAL,
+  STAR_MISSES,
+  createStars,
+  tapSky,
+  tickStars,
+  type StarGame,
+} from "@/game/play/minis/starhop";
+import {
+  FISH_GOAL,
+  FISH_SNAPS,
+  GREEN,
+  createFish,
+  pull,
+  tickFish,
+  type FishGame,
+} from "@/game/play/minis/fishking";
+import {
+  BEACH,
+  DIG_GOAL,
+  DIG_TRIES,
+  createDig,
+  digAt,
+  tickDig,
+  type Clue,
+  type DigGame,
+} from "@/game/play/minis/dig";
 import type { ArcadeDef } from "./ArcadeShell";
 
 const pct = (v: number) => `${(v * 100).toFixed(1)}%`;
@@ -985,6 +1013,146 @@ const park: ArcadeDef<ParkGame> = {
   ),
 };
 
+// ── mn-01 별빛 모으기 ──
+const starhop: ArcadeDef<StarGame> = {
+  key: "starhop",
+  subtitle: "순간 이동하는 별을 잡아요.",
+  icon: "🌟",
+  intro: (
+    <>
+      <h2>깜짝 별 잡기</h2>
+      <p>
+        별이 밤하늘에서 이리저리 순간 이동해요. 사라지기 전에 눌러요!
+        <br />
+        40초에 {STAR_GOAL}개. 빈 하늘을 누르면 실수, {STAR_MISSES}번이면 끝.
+      </p>
+    </>
+  ),
+  create: createStars,
+  tick: tickStars,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [`실수 ${g.misses}/${STAR_MISSES}`, `⏳ ${Math.ceil(g.remaining)}초`],
+  View: ({ g, act, active }) => (
+    <div className="arcade-board star-board" data-at={g.at}>
+      <div className="star-sky">
+        {Array.from({ length: SKY }, (_, i) => (
+          <button
+            key={i}
+            disabled={!active}
+            data-cell={i}
+            data-star={i === g.at}
+            aria-label={i === g.at ? "별" : "빈 하늘"}
+            onClick={() => act((x) => tapSky(x, i))}
+          >
+            {i === g.at ? "🌟" : ""}
+          </button>
+        ))}
+      </div>
+    </div>
+  ),
+};
+
+// ── mn-06 낚시왕 ──
+const fishking: ArcadeDef<FishGame> = {
+  key: "fishking",
+  subtitle: "입질이 오면 초록에서 당겨요.",
+  icon: "🎣",
+  intro: (
+    <>
+      <h2>낚시왕 도전</h2>
+      <p>
+        찌가 흔들리면 입질! 바늘이 초록 칸에 있을 때 「당기기」를 눌러요.
+        <br />
+        너무 일찍 당기거나 초록 밖에서 당기면 줄이 끊어져요. 물고기 {FISH_GOAL}마리, 줄 {FISH_SNAPS}
+        번 끊기면 끝.
+      </p>
+    </>
+  ),
+  create: createFish,
+  tick: tickFish,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [`줄 ${FISH_SNAPS - g.snaps}`, `⏳ ${Math.ceil(g.remaining)}초`],
+  View: ({ g, act, active }) => (
+    <>
+      <div
+        className="arcade-board fish-board"
+        data-phase-fish={g.phase}
+        data-needle={g.needle.toFixed(3)}
+        data-green={g.green.toFixed(3)}
+      >
+        <div className={`fish-float${g.phase === "bite" ? " bite" : ""}`} aria-hidden="true">
+          {g.phase === "bite" ? "🐟💦" : "🎈"}
+        </div>
+        <p className="fish-say" role="status">
+          {g.phase === "bite" ? "입질이다! 초록에서 당겨!" : "기다려요…"}
+        </p>
+        <div className="surf-bar fish-gauge" aria-hidden="true">
+          {g.phase === "bite" && (
+            <i className="surf-zone" style={{ left: pct(g.green), width: pct(GREEN) }} />
+          )}
+          {g.phase === "bite" && <b className="fish-needle" style={{ left: pct(g.needle) }} />}
+        </div>
+      </div>
+      <button className="hj-big arcade-action" disabled={!active} onClick={() => act(pull)}>
+        🎣 당기기
+      </button>
+    </>
+  ),
+};
+
+// ── mn-07 보물찾기 ──
+const CLUE: Record<Clue, string> = { found: "💰", hot: "🔥", warm: "🌤️", cold: "❄️" };
+const CLUE_WORD: Record<Clue, string> = {
+  found: "보물!",
+  hot: "뜨거워",
+  warm: "따뜻해",
+  cold: "차가워",
+};
+const dig: ArcadeDef<DigGame> = {
+  key: "dig",
+  subtitle: "힌트를 보고 모래 속 보물을 찾아요.",
+  icon: "🏝️",
+  intro: (
+    <>
+      <h2>모래 속 보물 3개</h2>
+      <p>
+        모래를 파면 가장 가까운 보물까지 거리를 알려 줘요: 🔥 뜨거워(바로 옆), 🌤️ 따뜻해(두 칸), ❄️
+        차가워.
+        <br />
+        삽질 {DIG_TRIES}번 안에 보물 {DIG_GOAL}개!
+      </p>
+    </>
+  ),
+  create: createDig,
+  tick: tickDig,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [`🪏 ${g.tries}`],
+  View: ({ g, act, active }) => (
+    <div className="arcade-board dig-board" data-treasures={g.treasures.join(",")}>
+      <div className="dig-beach" style={{ gridTemplateColumns: `repeat(${BEACH}, 1fr)` }}>
+        {Array.from({ length: BEACH * BEACH }, (_, i) => {
+          const clue = g.dug[i];
+          return (
+            <button
+              key={i}
+              disabled={!active || !!clue}
+              data-cell={i}
+              data-clue={clue ?? ""}
+              aria-label={clue ? CLUE_WORD[clue] : `${i + 1}번 모래 파기`}
+              onClick={() => act((x) => digAt(x, i))}
+            >
+              {clue ? CLUE[clue] : ""}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  ),
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const ARCADE_GAMES: Record<ArcadeKey, ArcadeDef<any>> = {
   balloons,
@@ -1003,4 +1171,7 @@ export const ARCADE_GAMES: Record<ArcadeKey, ArcadeDef<any>> = {
   hint,
   rescue,
   park,
+  starhop,
+  fishking,
+  dig,
 };

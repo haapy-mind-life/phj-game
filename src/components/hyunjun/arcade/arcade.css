@@ -535,3 +535,78 @@
 .park-down {
   grid-area: down;
 }
+/* 별빛 모으기 */
+.star-board {
+  background: linear-gradient(#1d2a55, #3a4f8f);
+  border-color: #6b7fc2;
+}
+.star-sky {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+.arcade-board .star-sky button {
+  height: 72px;
+  background: #ffffff14;
+  border-color: #ffffff33;
+  font-size: 40px;
+}
+/* 낚시왕 */
+.fish-board {
+  background: linear-gradient(#cdeeff, #6fb7e0);
+  border-color: #4a92c2;
+}
+.fish-float {
+  font-size: 56px;
+}
+.fish-float.bite {
+  animation: hj-fish-bob 0.3s ease-in-out infinite alternate;
+}
+.fish-say {
+  margin: 0;
+  font-weight: 800;
+}
+.fish-gauge {
+  position: relative;
+  width: 100%;
+}
+.fish-needle {
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  width: 6px;
+  border-radius: 3px;
+  background: #1d222b;
+  transform: translateX(-50%);
+}
+@keyframes hj-fish-bob {
+  from {
+    transform: translateY(-4px);
+  }
+  to {
+    transform: translateY(4px);
+  }
+}
+/* 보물찾기 */
+.dig-board {
+  background: #f7e3b5;
+  border-color: #d8b56e;
+}
+.dig-beach {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+}
+.arcade-board .dig-beach button {
+  min-width: 0;
+  aspect-ratio: 1;
+  background: #eccf8f;
+  border-color: #c9a35a;
+  font-size: 28px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fish-float.bite {
+    animation: none;
+  }
+}
