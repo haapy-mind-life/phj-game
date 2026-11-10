@@ -16,6 +16,7 @@ import { Route as KartRouteImport } from './routes/kart'
 import { Route as PeanutsRouteImport } from './routes/peanuts'
 import { Route as RaceRouteImport } from './routes/race'
 import { Route as RoomsRouteImport } from './routes/rooms'
+import { Route as MiniGameRouteImport } from './routes/mini.$game'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -52,6 +53,11 @@ const RoomsRoute = RoomsRouteImport.update({
   path: '/rooms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MiniGameRoute = MiniGameRouteImport.update({
+  id: '/mini/$game',
+  path: '/mini/$game',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -61,6 +67,7 @@ export interface FileRoutesByFullPath {
   '/peanuts': typeof PeanutsRoute
   '/race': typeof RaceRoute
   '/rooms': typeof RoomsRoute
+  '/mini/$game': typeof MiniGameRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -70,6 +77,7 @@ export interface FileRoutesByTo {
   '/peanuts': typeof PeanutsRoute
   '/race': typeof RaceRoute
   '/rooms': typeof RoomsRoute
+  '/mini/$game': typeof MiniGameRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -80,13 +88,29 @@ export interface FileRoutesById {
   '/peanuts': typeof PeanutsRoute
   '/race': typeof RaceRoute
   '/rooms': typeof RoomsRoute
+  '/mini/$game': typeof MiniGameRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/greenhouse' | '/house' | '/kart' | '/peanuts' | '/race' | '/rooms'
+    | '/'
+    | '/greenhouse'
+    | '/house'
+    | '/kart'
+    | '/peanuts'
+    | '/race'
+    | '/rooms'
+    | '/mini/$game'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/greenhouse' | '/house' | '/kart' | '/peanuts' | '/race' | '/rooms'
+  to:
+    | '/'
+    | '/greenhouse'
+    | '/house'
+    | '/kart'
+    | '/peanuts'
+    | '/race'
+    | '/rooms'
+    | '/mini/$game'
   id:
     | '__root__'
     | '/'
@@ -96,6 +120,7 @@ export interface FileRouteTypes {
     | '/peanuts'
     | '/race'
     | '/rooms'
+    | '/mini/$game'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -106,6 +131,7 @@ export interface RootRouteChildren {
   PeanutsRoute: typeof PeanutsRoute
   RaceRoute: typeof RaceRoute
   RoomsRoute: typeof RoomsRoute
+  MiniGameRoute: typeof MiniGameRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -159,6 +185,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RoomsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mini/$game': {
+      id: '/mini/$game'
+      path: '/mini/$game'
+      fullPath: '/mini/$game'
+      preLoaderRoute: typeof MiniGameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -170,6 +203,7 @@ const rootRouteChildren: RootRouteChildren = {
   PeanutsRoute: PeanutsRoute,
   RaceRoute: RaceRoute,
   RoomsRoute: RoomsRoute,
+  MiniGameRoute: MiniGameRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

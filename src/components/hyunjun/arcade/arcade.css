@@ -1,0 +1,612 @@
+/* Shared arcade minigames (/mini/$game): touch-first, big targets, no sideways scroll. */
+.arcade {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  padding: 8px 0 16px;
+}
+.arcade-hud {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 800;
+}
+.arcade-hud span {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #fffaf0;
+  border: 2px solid #e8c773;
+}
+.arcade-record {
+  margin: 0;
+  color: #6b5a3a;
+  font-size: 14px;
+}
+.arcade-intro,
+.arcade-result {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  text-align: center;
+  max-width: 420px;
+}
+.arcade-picture {
+  font-size: 64px;
+}
+.arcade-return {
+  margin-top: 6px;
+  font-weight: 700;
+}
+.arcade-field {
+  position: relative;
+  width: min(100%, 420px);
+  height: min(58vh, 460px);
+  min-height: 300px;
+  overflow: hidden;
+  border-radius: 18px;
+  background: linear-gradient(#cfeaff, #f4fbff);
+  border: 3px solid #9cc7e8;
+  touch-action: manipulation;
+}
+.arcade-field button {
+  position: absolute;
+  min-width: 56px;
+  min-height: 56px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 40px;
+  line-height: 1;
+  transform: translate(-50%, 0);
+  cursor: pointer;
+}
+/* 풍선 */
+.balloon-ring {
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  border: 4px solid #f4c542;
+  border-radius: 14px;
+  background: #fff3c466;
+}
+.balloon {
+  transform: translate(-50%, 50%) !important;
+}
+.balloon.ready {
+  filter: drop-shadow(0 0 8px #f4c542);
+}
+/* 코인 */
+.coin-field {
+  background: linear-gradient(#fff6d8, #fffdf5);
+  border-color: #e8c773;
+}
+.falling {
+  transform: translate(0, -50%) !important;
+}
+/* 점프 */
+.jump-field {
+  display: grid;
+  align-content: end;
+  padding: 16px;
+  background: linear-gradient(#d9f3d1, #f5fff0);
+  border-color: #9fd18c;
+}
+.jump-timer {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  height: 12px;
+  border-radius: 6px;
+  background: #ffffffaa;
+}
+.jump-timer i {
+  display: block;
+  height: 100%;
+  border-radius: 6px;
+  background: #f29a3a;
+}
+.jump-pads {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.jump-field .jump-pad {
+  position: static;
+  transform: none;
+  height: 96px;
+  border-radius: 16px;
+  background: #b9d7a8;
+  border: 3px solid #7fae6a;
+  font-size: 44px;
+}
+.jump-field .jump-pad.lit {
+  background: #ffe27a;
+  border-color: #e0a91b;
+  box-shadow: 0 0 16px #ffd23f;
+}
+/* 장애물 */
+.dodge-field {
+  background: #6d7480;
+  border-color: #4a5059;
+}
+.dodge-lines {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, transparent 32.5%, #ffffffaa 33%, transparent 33.5%),
+    linear-gradient(90deg, transparent 66%, #ffffffaa 66.5%, transparent 67%);
+}
+.rock,
+.dodge-car {
+  position: absolute;
+  font-size: 40px;
+  transform: translate(-50%, -50%);
+}
+.rock.hit {
+  opacity: 0.4;
+}
+.dodge-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: min(100%, 420px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .balloon.ready,
+  .jump-field .jump-pad.lit {
+    filter: none;
+    box-shadow: none;
+  }
+}
+/* 큰 동작 버튼 */
+.arcade-action {
+  width: min(100%, 420px);
+}
+/* 구름 */
+.cloud-field {
+  background: linear-gradient(#8fd0ff, #e6f6ff);
+}
+.cloud-mark {
+  position: absolute;
+  top: 18%;
+  height: 52%;
+  border: 3px dashed #ffffffcc;
+  border-radius: 12px;
+  display: grid;
+  place-items: start center;
+  font-size: 36px;
+}
+.cloud-pad {
+  position: absolute;
+  top: 62%;
+  font-size: 64px;
+  transform: translate(-50%, -50%);
+}
+.cloud-pad.under {
+  filter: drop-shadow(0 0 8px #fff);
+}
+/* 파도 */
+.surf-field {
+  display: grid;
+  align-content: center;
+  gap: 24px;
+  padding: 16px;
+  background: linear-gradient(#bfe8ff, #4aa3d8);
+}
+.surf-bar {
+  position: relative;
+  height: 48px;
+  border-radius: 24px;
+  background: #ffe0d8;
+  border: 3px solid #e07a5f;
+}
+.surf-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: #9be58a;
+}
+.surf-needle {
+  position: absolute;
+  top: 50%;
+  font-size: 40px;
+  transform: translate(-50%, -50%);
+}
+.surf-sea {
+  text-align: center;
+  font-size: 48px;
+}
+/* 물주기 */
+.water-field {
+  background: linear-gradient(#e9f7ff, #f6efe1);
+}
+.water-can {
+  position: absolute;
+  top: 18%;
+  font-size: 44px;
+  transform: translateX(-50%);
+  transition: left 0.15s ease;
+}
+.water-plots {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 14%;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  text-align: center;
+  font-size: 28px;
+}
+.water-plot.aimed {
+  outline: 3px solid #3a8fd8;
+  border-radius: 8px;
+}
+.water-controls {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 8px;
+  width: min(100%, 420px);
+}
+/* 사격장 */
+.range-field {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(#f3efe6, #e3dccb);
+  border-color: #c9b994;
+}
+.range-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 92%;
+  aspect-ratio: 1;
+}
+.range-field .range-pop {
+  position: static;
+  transform: none;
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  background: #fff8e6;
+  border: 3px solid #d9c38f;
+  font-size: 44px;
+}
+.range-hole {
+  border-radius: 16px;
+  background: #00000014;
+}
+@media (prefers-reduced-motion: reduce) {
+  .water-can {
+    transition: none;
+  }
+}
+/* 판 위에 버튼을 늘어놓는 게임(요리·정리·상자·조립) */
+.arcade-board {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  width: min(100%, 420px);
+  padding: 14px;
+  border-radius: 18px;
+  background: #fffaf0;
+  border: 3px solid #e8c773;
+}
+.arcade-board button {
+  min-width: 56px;
+  min-height: 56px;
+  border-radius: 14px;
+  border: 3px solid #d9c38f;
+  background: #fff;
+  font-size: 30px;
+  touch-action: manipulation;
+}
+.cook-card {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 8px 12px;
+  list-style: none;
+  border-radius: 12px;
+  background: #fff;
+  border: 2px dashed #e0a91b;
+  font-size: 32px;
+}
+.cook-card .now {
+  outline: 3px solid #f29a3a;
+  border-radius: 8px;
+}
+.cook-card .done {
+  color: #3c9b4a;
+}
+.cook-pantry {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+.cook-pantry button {
+  height: 72px;
+  font-size: 40px;
+}
+.tidy-thing {
+  display: grid;
+  justify-items: center;
+  font-size: 72px;
+}
+.tidy-thing b {
+  font-size: 18px;
+}
+.tidy-zones {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+}
+.tidy-zones button {
+  font-size: 22px;
+  font-weight: 800;
+}
+.box-code {
+  display: flex;
+  gap: 10px;
+  font-size: 44px;
+  min-height: 60px;
+}
+.box-dials {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+.box-dials button {
+  height: 84px;
+  font-size: 44px;
+}
+.arcade-board .box-open {
+  width: 100%;
+  background: #6f9f73;
+  border-color: #4f7d54;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 800;
+}
+.arcade-board .box-open:disabled {
+  opacity: 0.5;
+}
+.assemble-robot {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-areas: ". head ." "armL body armR" ". legs .";
+  gap: 8px;
+  width: 100%;
+}
+.assemble-slot {
+  min-height: 64px;
+  border-style: dashed !important;
+  font-size: 16px !important;
+  font-weight: 800;
+}
+.assemble-slot.done {
+  border-style: solid !important;
+  font-size: 36px !important;
+}
+.slot-head {
+  grid-area: head;
+}
+.slot-body {
+  grid-area: body;
+}
+.slot-armL {
+  grid-area: armL;
+}
+.slot-armR {
+  grid-area: armR;
+}
+.slot-legs {
+  grid-area: legs;
+}
+.assemble-tray {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.assemble-tray button {
+  display: grid;
+  justify-items: center;
+  font-size: 30px;
+}
+.assemble-tray button small {
+  font-size: 12px;
+}
+.assemble-tray button.picked {
+  border-color: #f29a3a;
+  box-shadow: 0 0 0 3px #ffd9a8;
+}
+/* 숨은 로봇 찾기 */
+.spot-board {
+  position: relative;
+  padding-top: 34px;
+}
+.spot-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+.spot-grid button {
+  height: 64px;
+  font-size: 34px;
+}
+/* 전설 힌트 찾기 */
+.hint-clue {
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: #fff3c4;
+  font-size: 20px;
+  font-weight: 800;
+}
+.hint-map {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+.hint-map button {
+  height: 84px;
+  font-size: 42px;
+  background: #eaf5df;
+}
+.hint-compass {
+  margin: 0;
+  font-size: 13px;
+  color: #6b5a3a;
+}
+/* 친구 구하기 */
+.rescue-board {
+  justify-items: stretch;
+}
+.rescue-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+}
+.rescue-end {
+  font-size: 22px;
+  white-space: nowrap;
+}
+.rescue-end.friend {
+  justify-self: end;
+}
+.rescue-grid {
+  display: grid;
+  gap: 4px;
+  flex: 1;
+}
+.arcade-board .rescue-grid button {
+  min-width: 0;
+  aspect-ratio: 1;
+  padding: 2px;
+  background: #cfe8b8;
+  border-radius: 8px;
+}
+.rescue-grid svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+/* 자동차 주차 */
+.park-lot {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  max-width: min(240px, 30vh);
+}
+.park-lot span {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  background: #5d636c;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 900;
+}
+.park-lot span.spot {
+  background: #3f7fd0;
+}
+.park-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 64px);
+  grid-template-areas: ". up ." "left down right";
+  gap: 8px;
+}
+.park-up {
+  grid-area: up;
+}
+.park-left {
+  grid-area: left;
+}
+.park-right {
+  grid-area: right;
+}
+.park-down {
+  grid-area: down;
+}
+/* 별빛 모으기 */
+.star-board {
+  background: linear-gradient(#1d2a55, #3a4f8f);
+  border-color: #6b7fc2;
+}
+.star-sky {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+.arcade-board .star-sky button {
+  height: 72px;
+  background: #ffffff14;
+  border-color: #ffffff33;
+  font-size: 40px;
+}
+/* 낚시왕 */
+.fish-board {
+  background: linear-gradient(#cdeeff, #6fb7e0);
+  border-color: #4a92c2;
+}
+.fish-float {
+  font-size: 56px;
+}
+.fish-float.bite {
+  animation: hj-fish-bob 0.3s ease-in-out infinite alternate;
+}
+.fish-say {
+  margin: 0;
+  font-weight: 800;
+}
+.fish-gauge {
+  position: relative;
+  width: 100%;
+}
+.fish-needle {
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  width: 6px;
+  border-radius: 3px;
+  background: #1d222b;
+  transform: translateX(-50%);
+}
+@keyframes hj-fish-bob {
+  from {
+    transform: translateY(-4px);
+  }
+  to {
+    transform: translateY(4px);
+  }
+}
+/* 보물찾기 */
+.dig-board {
+  background: #f7e3b5;
+  border-color: #d8b56e;
+}
+.dig-beach {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+}
+.arcade-board .dig-beach button {
+  min-width: 0;
+  aspect-ratio: 1;
+  background: #eccf8f;
+  border-color: #c9a35a;
+  font-size: 28px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fish-float.bite {
+    animation: none;
+  }
+}
