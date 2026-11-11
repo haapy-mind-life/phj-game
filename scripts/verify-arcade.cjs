@@ -241,6 +241,28 @@ const PLAYERS = {
       const d = a.includes('⬆') ? 'up' : a.includes('⬇') ? 'down' : a.includes('⬅') ? 'left' : 'right';
       document.querySelector('.gold-board [data-dir="' + d + '"]').click(); })()`,
   },
+  night: {
+    ms: 150,
+    win: `(() => { const b = document.querySelector('.night-board'); if (!b) return;
+      const lit = b.dataset.lit ? b.dataset.lit.split(',') : [];
+      const f = b.dataset.fireflies.split(',')[0];
+      if (f === undefined || f === '') return;
+      document.querySelector('.night-forest [data-cell="' + f + '"]').click(); })()`,
+  },
+  feast: {
+    ms: 80,
+    win: `(() => { const b = document.querySelector('.feast-board'); if (!b) return;
+      const order = b.dataset.order.split(','), plate = b.dataset.plate ? b.dataset.plate.split(',') : [];
+      const d = [...document.querySelectorAll('[data-dish]')].find((e) => order.includes(e.dataset.food) &&
+        !plate.includes(e.dataset.food) && Number(e.dataset.x) < 0.9 && Number(e.dataset.x) > 0.05);
+      d?.click(); })()`,
+  },
+  dino: {
+    ms: 30,
+    win: `(() => { const f = document.querySelector('.dino-field'); if (!f) return;
+      if (f.dataset.inFrame === 'true' && f.dataset.startled === 'false' && f.dataset.new === 'true' &&
+        Math.abs(Number(f.dataset.x) - 0.5) < 0.06) document.querySelector('.arcade-action').click(); })()`,
+  },
 };
 /** How to lose each game quickly. */
 const LOSE = {
@@ -422,6 +444,40 @@ const LOSE = {
     for (let i = 0; i < 40; i++) {
       if ((await page.locator(".arcade").getAttribute("data-phase")) !== "playing") return;
       await page.locator(`.gold-board [data-dir="${i % 2 ? away : back}"]`).click();
+    }
+  },
+  night: async (page) => {
+    // Shine on an owl's square and tap it while lit, three times.
+    for (let i = 0; i < 3; i++) {
+      const owl = (await page.locator(".night-board").getAttribute("data-owls")).split(",")[0];
+      const cell = page.locator(`.night-forest [data-cell="${owl}"]`);
+      if (!(await cell.getAttribute("class"))?.includes("lit")) await cell.click();
+      await cell.click();
+    }
+  },
+  feast: async (page) => {
+    for (let i = 0; i < 3; i++) {
+      const order = (await page.locator(".feast-board").getAttribute("data-order")).split(",");
+      await page.waitForFunction(
+        (o) =>
+          [...document.querySelectorAll("[data-dish]")].some((e) => !o.includes(e.dataset.food)),
+        order,
+      );
+      await page.evaluate((o) => {
+        [...document.querySelectorAll("[data-dish]")]
+          .find((e) => !o.includes(e.dataset.food))
+          .click();
+      }, order);
+    }
+  },
+  dino: async (page) => {
+    // Shoot the empty meadow until the film runs out.
+    for (let i = 0; i < 25; i++) {
+      if ((await page.locator(".arcade").getAttribute("data-phase")) !== "playing") return;
+      await page.waitForFunction(
+        () => document.querySelector(".dino-field")?.dataset.inFrame === "false",
+      );
+      await page.locator(".arcade-action").click();
     }
   },
   range: async (page) => {

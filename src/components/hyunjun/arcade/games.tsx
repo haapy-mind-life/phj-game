@@ -312,6 +312,33 @@ import {
   type Dir as GoldDir,
   type GoldGame,
 } from "@/game/play/large/goldking";
+import {
+  NIGHT_MISSES,
+  SIZE as NIGHT_SIZE,
+  createNight,
+  tapForest,
+  tickNight,
+  type NightGame,
+} from "@/game/play/large/night";
+import {
+  FEAST_MISSES,
+  FOODS,
+  balanced,
+  createFeast,
+  pickDish,
+  tickFeast,
+  type FeastGame,
+} from "@/game/play/large/feast";
+import {
+  DINOS,
+  DINO_WARNINGS,
+  FRAME,
+  createDino,
+  inFrame,
+  snap,
+  tickDino,
+  type DinoGame,
+} from "@/game/play/large/dino";
 import type { ArcadeDef } from "./ArcadeShell";
 
 const pct = (v: number) => `${(v * 100).toFixed(1)}%`;
@@ -2083,6 +2110,196 @@ const goldking: ArcadeDef<GoldGame> = {
   },
 };
 
+// ── lg-09 밤 게임 ──
+const night: ArcadeDef<NightGame> = {
+  key: "night",
+  subtitle: "손전등으로 비추고 반딧불이를 잡아요.",
+  icon: "🔦",
+  intro: (
+    <>
+      <h2>깜깜한 숲의 반딧불이</h2>
+      <p>
+        어두운 칸을 누르면 손전등이 그 둘레를 잠깐 비춰요. 빛 속의 ✨ 반딧불이를 눌러 잡아요!
+        <br />
+        🦉 부엉이는 깨우면 안 돼요({NIGHT_MISSES}번이면 끝). 밤마다 반딧불이 3마리, 손전등은 15번.
+        밤이 깊을수록 빛이 짧아져요.
+      </p>
+    </>
+  ),
+  create: createNight,
+  tick: tickNight,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [stageHud(g.stage), `🔋 ${g.shines}`, `🦉 ${g.misses}/${NIGHT_MISSES}`],
+  View: ({ g, act, active }) => (
+    <div
+      className="arcade-board night-board"
+      data-stage={g.stage}
+      data-lit={g.lit.join(",")}
+      data-fireflies={g.fireflies.join(",")}
+      data-owls={g.owls.join(",")}
+    >
+      <div className="night-forest" style={{ gridTemplateColumns: `repeat(${NIGHT_SIZE}, 1fr)` }}>
+        {Array.from({ length: NIGHT_SIZE * NIGHT_SIZE }, (_, i) => {
+          const lit = g.lit.includes(i);
+          return (
+            <button
+              key={i}
+              className={lit ? "lit" : ""}
+              disabled={!active}
+              data-cell={i}
+              aria-label={
+                lit
+                  ? g.fireflies.includes(i)
+                    ? "반딧불이"
+                    : g.owls.includes(i)
+                      ? "부엉이"
+                      : "빈 풀숲"
+                  : "어두운 칸 비추기"
+              }
+              onClick={() => act((x) => tapForest(x, i))}
+            >
+              {lit ? (g.fireflies.includes(i) ? "✨" : g.owls.includes(i) ? "🦉" : "🌿") : ""}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  ),
+};
+
+// ── lg-12 먹방 대모험 ──
+const feast: ArcadeDef<FeastGame> = {
+  key: "feast",
+  subtitle: "손님 주문대로 음식을 담아요.",
+  icon: "🍱",
+  intro: (
+    <>
+      <h2>먹방 대모험 식당</h2>
+      <p>
+        손님 주문 카드의 음식 3개를 지나가는 줄에서 눌러 접시에 담아요. 채소·과일이 있으면
+        「골고루!」
+        <br />
+        코스 3번, 접시 6개, 120초. 주문에 없는 음식을 누르면 실수, {FEAST_MISSES}번이면 끝.
+      </p>
+    </>
+  ),
+  create: createFeast,
+  tick: tickFeast,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [
+    stageHud(g.stage),
+    `실수 ${g.misses}/${FEAST_MISSES}`,
+    `⏳ ${Math.ceil(g.remaining)}초`,
+  ],
+  View: ({ g, act, active }) => (
+    <div
+      className="arcade-board feast-board"
+      data-stage={g.stage}
+      data-order={g.order.join(",")}
+      data-plate={g.plate.join(",")}
+    >
+      <div className="feast-order">
+        <ol className="cook-card" aria-label="주문 카드">
+          {g.order.map((f) => (
+            <li key={f} className={g.plate.includes(f) ? "done" : ""}>
+              {g.plate.includes(f) ? "✓" : FOODS[f]}
+            </li>
+          ))}
+        </ol>
+        {balanced(g.order) && <b className="feast-cheer">골고루!</b>}
+      </div>
+      <div className="feast-belt" aria-label="음식이 지나가는 줄">
+        {g.belt.map((d) => (
+          <button
+            key={d.id}
+            style={{ left: pct(d.x) }}
+            disabled={!active}
+            data-dish={d.id}
+            data-food={d.food}
+            data-x={d.x.toFixed(3)}
+            aria-label={`음식 ${FOODS[d.food]}`}
+            onClick={() => act((x) => pickDish(x, d.id))}
+          >
+            {FOODS[d.food]}
+          </button>
+        ))}
+      </div>
+    </div>
+  ),
+};
+
+// ── lg-20 공룡 월드 ──
+const dino: ArcadeDef<DinoGame> = {
+  key: "dino",
+  subtitle: "공룡이 틀 안에서 편안할 때 찰칵!",
+  icon: "🦕",
+  intro: (
+    <>
+      <h2>공룡 사진 도감</h2>
+      <p>
+        공룡이 사진 틀 안에 들어와 편안할 때 「찰칵」! 새 공룡이면 도감에 들어가요.
+        <br />
+        💢 놀란 공룡은 가까이 가면 위험해요 — 찍으면 안전 경고({DINO_WARNINGS}번이면 끝). 필름은
+        20장, 도감 8마리를 채워요.
+      </p>
+    </>
+  ),
+  create: createDino,
+  tick: tickDino,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [stageHud(g.stage), `🎞️ ${g.film}`, `⚠️ ${g.warnings}/${DINO_WARNINGS}`],
+  View: ({ g, act, active }) => {
+    const w = g.walker;
+    return (
+      <>
+        <div
+          className="arcade-field dino-field"
+          data-stage={g.stage}
+          data-x={w.x.toFixed(3)}
+          data-in-frame={inFrame(w)}
+          data-startled={w.startled > 0}
+          data-new={!g.book.includes(w.species)}
+        >
+          <div
+            className="dino-frame"
+            style={{ left: pct(FRAME.from), width: pct(FRAME.to - FRAME.from) }}
+            aria-hidden="true"
+          />
+          <span
+            className="dino-walker"
+            style={{
+              left: pct(w.x),
+              transform: `translate(-50%, -50%)${w.dir > 0 ? " scaleX(-1)" : ""}`,
+            }}
+            role="img"
+            aria-label={w.startled > 0 ? "놀란 공룡" : "공룡"}
+          >
+            {DINOS[w.species]}
+          </span>
+          {w.startled > 0 && (
+            <span className="dino-mad" style={{ left: pct(w.x) }} aria-hidden="true">
+              💢
+            </span>
+          )}
+          <p className="dino-book" aria-label={`도감 ${g.book.length}마리`}>
+            {DINOS.map((d, i) => (
+              <span key={d} className={g.book.includes(i) ? "got" : ""}>
+                {g.book.includes(i) ? d : "?"}
+              </span>
+            ))}
+          </p>
+        </div>
+        <button className="hj-big arcade-action" disabled={!active} onClick={() => act(snap)}>
+          📷 찰칵
+        </button>
+      </>
+    );
+  },
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const ARCADE_GAMES: Record<ArcadeKey, ArcadeDef<any>> = {
   balloons,
@@ -2116,4 +2333,7 @@ export const ARCADE_GAMES: Record<ArcadeKey, ArcadeDef<any>> = {
   thai,
   island,
   goldking,
+  night,
+  feast,
+  dino,
 };

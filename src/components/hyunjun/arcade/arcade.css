@@ -907,3 +907,87 @@
   background: #e8d39a;
   font-size: 16px;
 }
+/* 밤 게임 */
+.night-board {
+  background: #18203a;
+  border-color: #3d4a7a;
+}
+.night-forest {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+}
+.arcade-board .night-forest button {
+  min-width: 0;
+  aspect-ratio: 1;
+  background: #0d1226;
+  border-color: #26305a;
+  font-size: 26px;
+}
+.arcade-board .night-forest button.lit {
+  background: #fff3b0;
+  border-color: #e0c45a;
+}
+/* 먹방 대모험 */
+.feast-order {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.feast-cheer {
+  color: #3c9b4a;
+}
+.feast-belt {
+  position: relative;
+  width: 100%;
+  height: 92px;
+  border-radius: 14px;
+  background: repeating-linear-gradient(90deg, #d9d2c3 0 24px, #cbc3b2 24px 48px);
+  overflow: hidden;
+}
+.arcade-board .feast-belt button {
+  position: absolute;
+  top: 12px;
+  transform: translateX(-50%);
+  height: 64px;
+  font-size: 36px;
+}
+/* 공룡 월드 */
+.dino-field {
+  background: linear-gradient(#bfe8ff 0 45%, #a8d98a 45% 100%);
+}
+.dino-frame {
+  position: absolute;
+  top: 30%;
+  height: 40%;
+  border: 4px dashed #ffffff;
+  border-radius: 12px;
+}
+.dino-walker {
+  position: absolute;
+  top: 50%;
+  font-size: 56px;
+}
+.dino-mad {
+  position: absolute;
+  top: 26%;
+  font-size: 28px;
+  transform: translateX(-50%);
+}
+.dino-book {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 6px;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  font-size: 20px;
+}
+.dino-book span {
+  opacity: 0.5;
+}
+.dino-book span.got {
+  opacity: 1;
+}
