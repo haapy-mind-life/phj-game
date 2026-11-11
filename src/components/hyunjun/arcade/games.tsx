@@ -186,6 +186,45 @@ import {
   type Clue,
   type DigGame,
 } from "@/game/play/minis/dig";
+import {
+  CAR_ZONE as CHAMP_ZONE,
+  CHAMP_GOAL,
+  CHAMP_HEARTS,
+  COURSE,
+  createChampion,
+  steerCar,
+  tickChampion,
+  type ChampionGame,
+} from "@/game/play/large/champion";
+import {
+  PLANE_X,
+  SKY_HEARTS,
+  createSky,
+  setClimb,
+  tickSky,
+  type SkyGame,
+} from "@/game/play/large/sky";
+import {
+  AIR_SECONDS,
+  SEA_HEARTS,
+  SWIMMER_X,
+  createSea,
+  setDepth,
+  tickSea,
+  type SeaGame,
+} from "@/game/play/large/sea";
+import {
+  NEEDS,
+  RUNNER_X,
+  RUN_HEARTS,
+  changeForm,
+  createRobotRun,
+  nextBlock,
+  tickRobotRun,
+  type Block,
+  type Form,
+  type RobotRunGame,
+} from "@/game/play/large/robotrun";
 import type { ArcadeDef } from "./ArcadeShell";
 
 const pct = (v: number) => `${(v * 100).toFixed(1)}%`;
@@ -1153,6 +1192,323 @@ const dig: ArcadeDef<DigGame> = {
   ),
 };
 
+// ── 큰 게임: 3단계 ──
+const stageHud = (stage: number) => `단계 ${stage}/3`;
+const hold = <G,>(act: (fn: (g: G) => G) => void, on: (g: G) => G, off: (g: G) => G) => ({
+  onPointerDown: () => act(on),
+  onPointerUp: () => act(off),
+  onPointerLeave: () => act(off),
+  onPointerCancel: () => act(off),
+});
+
+// ── lg-14 자동차 챔피언 ──
+const champion: ArcadeDef<ChampionGame> = {
+  key: "champion",
+  subtitle: "바위를 피하고 부스트를 밟아 라이벌을 이겨요.",
+  icon: "🏎️",
+  intro: (
+    <>
+      <h2>3코스 자동차 경주</h2>
+      <p>
+        ◀ ▶로 차선을 바꿔요. 🪨 바위는 피하고 ⚡ 부스트는 밟아요!
+        <br />
+        라이벌 🚙은 부스트 없는 차보다 조금 빨라요. 결승선에 먼저 들어가면 코스 승리, {CHAMP_GOAL}
+        코스를 모두 이기면 챔피언! 부딪힘 {CHAMP_HEARTS}번이면 끝.
+      </p>
+    </>
+  ),
+  create: createChampion,
+  tick: tickChampion,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [stageHud(g.stage), `❤ ${g.hearts}`],
+  View: ({ g, act, active }) => (
+    <>
+      <div
+        className="race-meter"
+        aria-label={`나 ${Math.round((g.distance / COURSE) * 100)}% · 라이벌 ${Math.round((g.rival / COURSE) * 100)}%`}
+      >
+        <span>
+          🏎️
+          <i style={{ width: pct(Math.min(1, g.distance / COURSE)) }} />
+        </span>
+        <span className="rival">
+          🚙
+          <i style={{ width: pct(Math.min(1, g.rival / COURSE)) }} />
+        </span>
+      </div>
+      <div
+        className="arcade-field dodge-field"
+        data-stage={g.stage}
+        data-lane={g.lane}
+        data-boost={g.boost > 0}
+      >
+        <div className="dodge-lines" aria-hidden="true" />
+        {g.items
+          .filter((i) => !i.used)
+          .map((i) => (
+            <span
+              key={i.id}
+              className="rock"
+              style={{ top: pct(i.y), left: `${16 + i.lane * 34}%` }}
+              data-item-kind={i.kind}
+              data-item-lane={i.lane}
+              data-item-y={i.y.toFixed(2)}
+              aria-hidden="true"
+            >
+              {i.kind === "rock" ? "🪨" : "⚡"}
+            </span>
+          ))}
+        <span
+          className={`dodge-car${g.boost > 0 ? " boosting" : ""}`}
+          style={{ top: pct(CHAMP_ZONE.from), left: `${16 + g.lane * 34}%` }}
+          role="img"
+          aria-label={`내 차 · ${LANES3[g.lane]} 차선`}
+        >
+          🏎️
+        </span>
+      </div>
+      <div className="dodge-controls">
+        <button className="hj-big" disabled={!active} onClick={() => act((x) => steerCar(x, -1))}>
+          ◀ 왼쪽
+        </button>
+        <button className="hj-big" disabled={!active} onClick={() => act((x) => steerCar(x, 1))}>
+          오른쪽 ▶
+        </button>
+      </div>
+    </>
+  ),
+};
+
+// ── lg-15 하늘 러너 ──
+const sky: ArcadeDef<SkyGame> = {
+  key: "sky",
+  subtitle: "꾹 누르면 위로, 떼면 아래로!",
+  icon: "✈️",
+  intro: (
+    <>
+      <h2>하늘 고리 통과</h2>
+      <p>
+        「위로」를 꾹 누르면 올라가고, 떼면 내려가요. ⭕ 고리를 통과하고, 🌀 상승기류를 타요.
+        <br />
+        2단계부터 🐦 새를 피해요. 땅에 닿거나 새에 부딪히면 하트가 줄어요(하트 {SKY_HEARTS}개).
+        단계마다 고리 5개!
+      </p>
+    </>
+  ),
+  create: createSky,
+  tick: tickSky,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [stageHud(g.stage), `❤ ${g.hearts}`],
+  View: ({ g, act, active }) => (
+    <>
+      <div
+        className="arcade-field sky-field"
+        data-stage={g.stage}
+        data-height={g.height.toFixed(3)}
+      >
+        {g.things
+          .filter((t) => !t.done)
+          .map((t) => (
+            <span
+              key={t.id}
+              className={`sky-thing ${t.kind}`}
+              style={{ left: pct(t.x), bottom: pct(t.h) }}
+              data-thing={t.kind}
+              data-x={t.x.toFixed(3)}
+              data-h={t.h.toFixed(3)}
+              aria-hidden="true"
+            >
+              {t.kind === "ring" ? "⭕" : t.kind === "bird" ? "🐦" : "🌀"}
+            </span>
+          ))}
+        <span
+          className="sky-plane"
+          style={{ left: pct(PLANE_X), bottom: pct(g.height) }}
+          role="img"
+          aria-label="내 비행기"
+        >
+          ✈️
+        </span>
+        <div className="sky-ground" aria-hidden="true" />
+      </div>
+      <button
+        className="hj-big arcade-action"
+        disabled={!active}
+        {...hold<SkyGame>(
+          act,
+          (x) => setClimb(x, true),
+          (x) => setClimb(x, false),
+        )}
+      >
+        ⬆ 위로 (꾹)
+      </button>
+    </>
+  ),
+};
+
+// ── lg-16 바다 러너 ──
+const sea: ArcadeDef<SeaGame> = {
+  key: "sea",
+  subtitle: "물 위와 물속을 오가며 진주를 모아요.",
+  icon: "🤿",
+  intro: (
+    <>
+      <h2>바다 위아래 달리기</h2>
+      <p>
+        🛟 부표·🚤 배는 물 위에, 🪸 바위·🪼 해파리는 물속에 있어요. 🦪 진주는 물속에만!
+        <br />
+        「잠수」와 「떠오르기」로 길을 바꿔요. 물속에서는 숨이 줄어요. 단계마다 진주 5개, 하트{" "}
+        {SEA_HEARTS}개.
+      </p>
+    </>
+  ),
+  create: createSea,
+  tick: tickSea,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [stageHud(g.stage), `❤ ${g.hearts}`, `🫧 ${Math.ceil(g.air)}`],
+  View: ({ g, act, active }) => (
+    <>
+      <div
+        className="arcade-field sea-field"
+        data-stage={g.stage}
+        data-depth={g.depth}
+        data-air={g.air.toFixed(2)}
+      >
+        <div className="sea-water" aria-hidden="true" />
+        {g.things
+          .filter((t) => !t.done)
+          .map((t) => (
+            <span
+              key={t.id}
+              className="sea-thing"
+              style={{ left: pct(t.x), top: t.depth === "top" ? "22%" : "68%" }}
+              data-thing={t.kind}
+              data-depth={t.depth}
+              data-x={t.x.toFixed(3)}
+              aria-hidden="true"
+            >
+              {t.kind === "pearl"
+                ? "🦪"
+                : t.depth === "top"
+                  ? t.id % 2
+                    ? "🛟"
+                    : "🚤"
+                  : t.id % 2
+                    ? "🪸"
+                    : "🪼"}
+            </span>
+          ))}
+        <span
+          className="sea-swimmer"
+          style={{ left: pct(SWIMMER_X), top: g.depth === "top" ? "22%" : "68%" }}
+          role="img"
+          aria-label={g.depth === "top" ? "물 위" : "물속"}
+        >
+          🏊
+        </span>
+        <div className="sea-air" aria-hidden="true">
+          <i style={{ width: pct(g.air / AIR_SECONDS) }} />
+        </div>
+      </div>
+      <div className="dodge-controls">
+        <button
+          className="hj-big"
+          disabled={!active || g.depth === "top"}
+          onClick={() => act((x) => setDepth(x, "top"))}
+        >
+          🌊 떠오르기
+        </button>
+        <button
+          className="hj-big"
+          disabled={!active || g.depth === "deep"}
+          onClick={() => act((x) => setDepth(x, "deep"))}
+        >
+          🤿 잠수
+        </button>
+      </div>
+    </>
+  ),
+};
+
+// ── lg-17 로봇 러너 ──
+const FORM_ICON: Record<Form, string> = { robot: "🤖", plane: "✈️", car: "🚗" };
+const FORM_LABEL: Record<Form, string> = { robot: "로봇", plane: "비행기", car: "자동차" };
+const BLOCK_ICON: Record<Block, string> = { wall: "🧱", gap: "🕳️", tunnel: "🚇" };
+const robotrun: ArcadeDef<RobotRunGame> = {
+  key: "robotrun",
+  subtitle: "앞에 오는 길에 맞춰 변신해요.",
+  icon: "🤖",
+  intro: (
+    <>
+      <h2>변신하며 달리기</h2>
+      <p>
+        🧱 벽은 로봇으로 부수고, 🕳️ 구멍은 비행기로 날아 넘고, 🚇 낮은 터널은 자동차로 지나가요.
+        <br />
+        단계마다 5개, 점점 빨라져요. 틀린 모습이면 하트가 줄어요(하트 {RUN_HEARTS}개). 시계 속 로봇
+        카드는 바뀌지 않아요.
+      </p>
+    </>
+  ),
+  create: createRobotRun,
+  tick: tickRobotRun,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [stageHud(g.stage), `❤ ${g.hearts}`],
+  View: ({ g, act, active }) => {
+    const next = nextBlock(g);
+    return (
+      <>
+        <div
+          className="arcade-field run-field"
+          data-stage={g.stage}
+          data-form={g.form}
+          data-next={next?.kind ?? ""}
+          data-next-x={next ? next.x.toFixed(3) : ""}
+        >
+          <div className="run-ground" aria-hidden="true" />
+          {g.things
+            .filter((t) => !t.done)
+            .map((t) => (
+              <span key={t.id} className="run-block" style={{ left: pct(t.x) }} aria-hidden="true">
+                {BLOCK_ICON[t.kind]}
+              </span>
+            ))}
+          <span
+            className="run-me"
+            style={{ left: pct(RUNNER_X) }}
+            role="img"
+            aria-label={`지금 ${FORM_LABEL[g.form]}`}
+          >
+            {FORM_ICON[g.form]}
+          </span>
+          {next && (
+            <p className="run-tip" role="status">
+              다음: {BLOCK_ICON[next.kind]} → {FORM_ICON[NEEDS[next.kind]]}
+            </p>
+          )}
+        </div>
+        <div className="run-forms">
+          {(Object.keys(FORM_ICON) as Form[]).map((f) => (
+            <button
+              key={f}
+              className={`hj-big${g.form === f ? " picked" : ""}`}
+              disabled={!active}
+              data-form-button={f}
+              aria-pressed={g.form === f}
+              onClick={() => act((x) => changeForm(x, f))}
+            >
+              {FORM_ICON[f]} {FORM_LABEL[f]}
+            </button>
+          ))}
+        </div>
+      </>
+    );
+  },
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const ARCADE_GAMES: Record<ArcadeKey, ArcadeDef<any>> = {
   balloons,
@@ -1174,4 +1530,8 @@ export const ARCADE_GAMES: Record<ArcadeKey, ArcadeDef<any>> = {
   starhop,
   fishking,
   dig,
+  champion,
+  sky,
+  sea,
+  robotrun,
 };

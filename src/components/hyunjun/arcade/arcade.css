@@ -41,8 +41,9 @@
 .arcade-field {
   position: relative;
   width: min(100%, 420px);
-  height: min(58vh, 460px);
-  min-height: 300px;
+  /* Leaves room on a 360×740 phone for the title, HUD and the big buttons below. */
+  height: min(44vh, 440px);
+  min-height: 240px;
   overflow: hidden;
   border-radius: 18px;
   background: linear-gradient(#cfeaff, #f4fbff);
@@ -608,5 +609,128 @@
 @media (prefers-reduced-motion: reduce) {
   .fish-float.bite {
     animation: none;
+  }
+}
+/* ── 큰 게임 ── */
+/* 자동차 챔피언 */
+.race-meter {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: min(100%, 420px);
+}
+.race-meter span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 18px;
+}
+.race-meter i {
+  flex: none;
+}
+.race-meter i {
+  display: block;
+  height: 10px;
+  border-radius: 5px;
+  background: #e0443e;
+}
+.race-meter .rival i {
+  background: #3b82f6;
+}
+.dodge-car.boosting {
+  filter: drop-shadow(0 0 8px #ffd23f);
+}
+/* 하늘 러너 */
+.sky-field {
+  background: linear-gradient(#7cc3ff, #e8f6ff);
+}
+.sky-thing,
+.sky-plane {
+  position: absolute;
+  font-size: 36px;
+  transform: translate(-50%, 50%);
+}
+.sky-thing.updraft {
+  opacity: 0.7;
+}
+.sky-ground {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 6%;
+  background: #7fae6a;
+}
+/* 바다 러너 */
+.sea-field {
+  background: linear-gradient(#bfe8ff 0 40%, #2e7fb8 40% 100%);
+}
+.sea-thing,
+.sea-swimmer {
+  position: absolute;
+  font-size: 36px;
+  transform: translate(-50%, -50%);
+}
+.sea-air {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  height: 10px;
+  border-radius: 5px;
+  background: #ffffffaa;
+}
+.sea-air i {
+  display: block;
+  height: 100%;
+  border-radius: 5px;
+  background: #22d3ee;
+}
+/* 로봇 러너 */
+.run-field {
+  background: linear-gradient(#ffe9c7, #fff7ea);
+  border-color: #e0b77a;
+}
+.run-ground {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 62%;
+  height: 4px;
+  background: #b98a4a;
+}
+.run-block,
+.run-me {
+  position: absolute;
+  top: 52%;
+  font-size: 44px;
+  transform: translate(-50%, -50%);
+}
+.run-tip {
+  position: absolute;
+  top: 10px;
+  left: 0;
+  right: 0;
+  margin: 0;
+  text-align: center;
+  font-weight: 800;
+  font-size: 20px;
+}
+.run-forms {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: min(100%, 420px);
+}
+.run-forms button {
+  padding: 10px 4px;
+  font-size: 16px;
+}
+.run-forms button.picked {
+  outline: 4px solid #f29a3a;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dodge-car.boosting {
+    filter: none;
   }
 }

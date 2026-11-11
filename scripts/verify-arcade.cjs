@@ -135,6 +135,51 @@ const PLAYERS = {
       const t = b.dataset.treasures.split(',').find((c) => !document.querySelector('[data-cell="' + c + '"]').dataset.clue);
       if (t !== undefined) document.querySelector('.dig-beach [data-cell="' + t + '"]').click(); })()`,
   },
+  champion: {
+    ms: 40,
+    win: `(() => { const f = document.querySelector('.dodge-field[data-stage]'); if (!f) return;
+      const lane = Number(f.dataset.lane);
+      const items = [...f.querySelectorAll('[data-item-kind]')].map((i) => ({ kind: i.dataset.itemKind,
+        lane: Number(i.dataset.itemLane), y: Number(i.dataset.itemY) }));
+      const near = (l, k) => items.some((i) => i.kind === k && i.lane === l && i.y > 0.45 && i.y < 0.94);
+      const safe = [0, 1, 2].filter((l) => !near(l, 'rock'));
+      const want = safe.find((l) => near(l, 'boost')) ?? (safe.includes(lane) ? lane : safe[0]);
+      if (want === undefined || want === lane) return;
+      const step = want < lane ? -1 : 1;
+      if (items.some((i) => i.kind === 'rock' && i.lane === lane + step && i.y > 0.72 && i.y < 0.94)) return;
+      const [left, right] = document.querySelectorAll('.dodge-controls button');
+      (step < 0 ? left : right).click(); })()`,
+  },
+  sky: {
+    ms: 30,
+    win: `(() => { const f = document.querySelector('.sky-field'); if (!f) return;
+      const h = Number(f.dataset.height);
+      const next = [...f.querySelectorAll('[data-thing]')].map((t) => ({ kind: t.dataset.thing, x: Number(t.dataset.x), h: Number(t.dataset.h) }))
+        .filter((t) => t.x > 0.15 && t.kind !== 'updraft').sort((a, b) => a.x - b.x)[0];
+      let target = next && next.kind === 'ring' ? next.h : 0.5;
+      if (next && next.kind === 'bird') target = next.h > 0.5 ? next.h - 0.25 : next.h + 0.25;
+      const b = document.querySelector('.arcade-action');
+      b.dispatchEvent(new PointerEvent(h < target ? 'pointerdown' : 'pointerup', { bubbles: true })); })()`,
+  },
+  sea: {
+    ms: 30,
+    win: `(() => { const f = document.querySelector('.sea-field'); if (!f) return;
+      const depth = f.dataset.depth, air = Number(f.dataset.air);
+      const ahead = [...f.querySelectorAll('[data-thing]')].map((t) => ({ kind: t.dataset.thing, depth: t.dataset.depth, x: Number(t.dataset.x) }))
+        .filter((t) => t.x > 0.15 && t.x < 0.45);
+      const blockTop = ahead.some((t) => t.depth === 'top' && t.kind === 'block');
+      const blockDeep = ahead.some((t) => t.depth === 'deep' && t.kind === 'block');
+      const pearl = ahead.some((t) => t.depth === 'deep' && t.kind === 'pearl');
+      const [up, down] = document.querySelectorAll('.dodge-controls button');
+      if (depth === 'deep' && (blockDeep || (air < 1.2 && !blockTop))) up.click();
+      else if (depth === 'top' && !blockDeep && ((blockTop && air > 0.6) || (pearl && air > 1.5))) down.click(); })()`,
+  },
+  robotrun: {
+    ms: 60,
+    win: `(() => { const f = document.querySelector('.run-field'); if (!f || !f.dataset.next) return;
+      const need = { wall: 'robot', gap: 'plane', tunnel: 'car' }[f.dataset.next];
+      if (f.dataset.form !== need) document.querySelector('[data-form-button="' + need + '"]').click(); })()`,
+  },
 };
 /** How to lose each game quickly. */
 const LOSE = {
@@ -271,6 +316,12 @@ const LOSE = {
       await page.locator(`.dig-beach [data-cell="${i}"]`).click();
     }
   },
+  // These large games are lost by leaving the controls alone: the rival wins, the plane sinks,
+  // the swimmer bumps into boats, the runner keeps the wrong form.
+  champion: async () => {},
+  sky: async () => {},
+  sea: async () => {},
+  robotrun: async () => {},
   range: async (page) => {
     for (let i = 0; i < 3; i++) {
       const friend = page.locator('.range-pop[data-kind="friend"]').first();

@@ -22,6 +22,11 @@ export const ARCADE = [
   { key: "starhop", catalogId: "mn-01", name: "박현준 별빛 모으기", goal: 15, coinsPerPoint: 2 },
   { key: "fishking", catalogId: "mn-06", name: "박현준 낚시왕", goal: 5, coinsPerPoint: 6 },
   { key: "dig", catalogId: "mn-07", name: "박현준 보물찾기", goal: 3, coinsPerPoint: 10 },
+  // Large games (lg-*): three stages each.
+  { key: "champion", catalogId: "lg-14", name: "박현준 자동차 챔피언", goal: 3, coinsPerPoint: 10 },
+  { key: "sky", catalogId: "lg-15", name: "박현준 하늘 러너", goal: 15, coinsPerPoint: 2 },
+  { key: "sea", catalogId: "lg-16", name: "박현준 바다 러너", goal: 15, coinsPerPoint: 2 },
+  { key: "robotrun", catalogId: "lg-17", name: "박현준 로봇 러너", goal: 15, coinsPerPoint: 2 },
 ] as const;
 
 export type ArcadeKey = (typeof ARCADE)[number]["key"];
