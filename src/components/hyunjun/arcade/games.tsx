@@ -225,6 +225,51 @@ import {
   type Form,
   type RobotRunGame,
 } from "@/game/play/large/robotrun";
+import {
+  ANSWER,
+  DUEL_GOAL,
+  DUEL_HEARTS,
+  RIVAL_HP,
+  answer,
+  createDuel,
+  tickDuel,
+  windowFor,
+  type Answer,
+  type DuelGame,
+  type Signal,
+} from "@/game/play/large/duel";
+import {
+  FUSE_GOAL,
+  FUSE_MISSES,
+  PARTS,
+  createFuse,
+  litPart,
+  pressPart,
+  tickFuse,
+  type FuseGame,
+  type Part,
+} from "@/game/play/large/legendfuse";
+import {
+  SHIP_Y,
+  SPACE_HEARTS,
+  createSpace,
+  fire,
+  moveShip,
+  raiseShield,
+  tickSpace,
+  type SpaceGame,
+} from "@/game/play/large/space";
+import {
+  CRACK_GOAL,
+  CRACK_MISSES,
+  GREEN_START,
+  PEANUT_SECONDS,
+  createCrack,
+  greenWidth,
+  tapCrack,
+  tickCrack,
+  type CrackGame,
+} from "@/game/play/large/crack";
 import type { ArcadeDef } from "./ArcadeShell";
 
 const pct = (v: number) => `${(v * 100).toFixed(1)}%`;
@@ -1509,6 +1554,254 @@ const robotrun: ArcadeDef<RobotRunGame> = {
   },
 };
 
+// ── lg-03 로봇 대결 ──
+const SIGNAL_ICON: Record<Signal, string> = { punch: "👊", shield: "🛡️", open: "😵" };
+const SIGNAL_WORD: Record<Signal, string> = {
+  punch: "주먹이 와요!",
+  shield: "방패를 들었어요",
+  open: "빈틈이에요!",
+};
+const ANSWER_LABEL: Record<Answer, string> = {
+  dodge: "💨 피하기",
+  charge: "🔋 모으기",
+  attack: "⚔️ 공격",
+};
+const duel: ArcadeDef<DuelGame> = {
+  key: "duel",
+  subtitle: "상대 신호를 보고 알맞게 움직여요.",
+  icon: "🥊",
+  intro: (
+    <>
+      <h2>로봇 3대와 대결</h2>
+      <p>
+        상대가 👊 주먹이면 💨 피하기, 🛡️ 방패면 🔋 모으기, 😵 빈틈이면 ⚔️ 공격!
+        <br />
+        틀리거나 늦으면 하트가 줄어요(하트 {DUEL_HEARTS}개). 상대 {DUEL_GOAL}대를 이기면 우승. 시계
+        속 로봇 카드는 바뀌지 않아요.
+      </p>
+    </>
+  ),
+  create: createDuel,
+  tick: tickDuel,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [stageHud(g.stage), `❤ ${g.hearts}`],
+  View: ({ g, act, active }) => (
+    <div className="arcade-board duel-board" data-stage={g.stage} data-signal={g.signal}>
+      <div className="duel-rival" aria-label={`상대 로봇 힘 ${g.rivalHp}/${RIVAL_HP[g.stage - 1]}`}>
+        <span className="duel-bot" aria-hidden="true">
+          🤖
+        </span>
+        <span className="duel-hp" aria-hidden="true">
+          {"🟥".repeat(g.rivalHp)}
+        </span>
+      </div>
+      <p className="duel-signal" role="status">
+        {SIGNAL_ICON[g.signal]} {SIGNAL_WORD[g.signal]}
+      </p>
+      <div className="jump-timer duel-timer" aria-hidden="true">
+        <i style={{ width: pct(g.left / windowFor(g.stage)) }} />
+      </div>
+      <div className="duel-answers">
+        {(Object.keys(ANSWER_LABEL) as Answer[]).map((a) => (
+          <button
+            key={a}
+            disabled={!active}
+            data-answer={a}
+            onClick={() => act((x) => answer(x, a))}
+          >
+            {ANSWER_LABEL[a]}
+          </button>
+        ))}
+      </div>
+    </div>
+  ),
+};
+
+// ── lg-04 전설 합체 ──
+const PART_ICON2: Record<Part, string> = { head: "👑", arm: "🦾", leg: "🦿", wing: "🪽" };
+const PART_NAME: Record<Part, string> = { head: "머리", arm: "팔", leg: "다리", wing: "날개" };
+const legendfuse: ArcadeDef<FuseGame> = {
+  key: "legendfuse",
+  subtitle: "빛나는 순서를 기억해서 합체해요.",
+  icon: "✨",
+  intro: (
+    <>
+      <h2>전설 합체 순서 기억하기</h2>
+      <p>
+        부품이 하나씩 빛나요. 다 빛난 뒤 같은 순서로 눌러요. 단계마다 순서가 길어져요.
+        <br />
+        합체 {FUSE_GOAL}번! 틀리거나 6초 넘게 기다리면 실수, {FUSE_MISSES}번이면 끝. 시계 속 전설
+        카드는 바뀌지 않아요.
+      </p>
+    </>
+  ),
+  create: createFuse,
+  tick: tickFuse,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [stageHud(g.stage), `실수 ${g.misses}/${FUSE_MISSES}`],
+  View: ({ g, act, active }) => {
+    const lit = litPart(g);
+    const showing = g.showing > 0;
+    return (
+      <div
+        className="arcade-board fuse-board"
+        data-stage={g.stage}
+        data-showing={showing}
+        data-order={g.order.join(",")}
+        data-step={g.step}
+      >
+        <p className="fuse-say" role="status">
+          {showing ? "잘 봐요! 순서를 기억해요" : `이제 눌러요 (${g.step}/${g.order.length})`}
+        </p>
+        <div className="fuse-parts">
+          {PARTS.map((p) => (
+            <button
+              key={p}
+              className={lit === p ? "lit" : ""}
+              disabled={!active || showing}
+              data-part={p}
+              aria-label={PART_NAME[p]}
+              onClick={() => act((x) => pressPart(x, p))}
+            >
+              {PART_ICON2[p]}
+              <small>{PART_NAME[p]}</small>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  },
+};
+
+// ── lg-19 우주 대전쟁 ──
+const space: ArcadeDef<SpaceGame> = {
+  key: "space",
+  subtitle: "드론은 쏘고, 운석은 피하거나 실드로 막아요.",
+  icon: "🚀",
+  intro: (
+    <>
+      <h2>우주 방어 작전</h2>
+      <p>
+        👾 기계 드론은 「발사」로 안전한 에너지탄을 쏴서 막아요. 🪨 운석은 쏠 수 없어요 — 옆으로
+        피하거나 「실드」!
+        <br />
+        웨이브 3번, 드론 15대. 내 줄에 닿으면 하트가 줄어요(하트 {SPACE_HEARTS}개).
+      </p>
+    </>
+  ),
+  create: createSpace,
+  tick: tickSpace,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [stageHud(g.stage), `❤ ${g.hearts}`],
+  View: ({ g, act, active }) => (
+    <>
+      <div
+        className="arcade-field space-field"
+        data-stage={g.stage}
+        data-lane={g.lane}
+        data-shield={g.shield > 0}
+        data-recharge={g.recharge > 0}
+      >
+        <div className="dodge-lines" aria-hidden="true" />
+        {g.things.map((t) => (
+          <span
+            key={t.id}
+            className="rock"
+            style={{ top: pct(t.y), left: `${16 + t.lane * 34}%` }}
+            data-space={t.kind}
+            data-space-lane={t.lane}
+            data-space-y={t.y.toFixed(3)}
+            aria-hidden="true"
+          >
+            {t.kind === "drone" ? "👾" : "🪨"}
+          </span>
+        ))}
+        <span
+          className={`dodge-car${g.shield > 0 ? " shielded" : ""}`}
+          style={{ top: pct(SHIP_Y), left: `${16 + g.lane * 34}%` }}
+          role="img"
+          aria-label="내 우주선"
+        >
+          🚀
+        </span>
+      </div>
+      <div className="space-controls">
+        <button className="hj-big" disabled={!active} onClick={() => act((x) => moveShip(x, -1))}>
+          ◀
+        </button>
+        <button className="hj-big" disabled={!active} data-fire onClick={() => act(fire)}>
+          ⚡ 발사
+        </button>
+        <button
+          className="hj-big"
+          disabled={!active || g.recharge > 0}
+          data-shield-button
+          onClick={() => act(raiseShield)}
+        >
+          🛡️
+        </button>
+        <button className="hj-big" disabled={!active} onClick={() => act((x) => moveShip(x, 1))}>
+          ▶
+        </button>
+      </div>
+    </>
+  ),
+};
+
+// ── lg-10 땅콩까기 ──
+const crack: ArcadeDef<CrackGame> = {
+  key: "crack",
+  subtitle: "힘 막대가 초록일 때 톡!",
+  icon: "🥜",
+  intro: (
+    <>
+      <h2>땅콩까기 달인</h2>
+      <p>
+        힘 막대가 좌우로 움직여요. 초록 칸에 왔을 때 「톡」을 누르면 껍질이 깨져요.
+        <br />
+        단계마다 빨라지고 초록이 좁아져요. 땅콩 {CRACK_GOAL}개! 밖에서 누르거나 4초를 넘기면 실수,{" "}
+        {CRACK_MISSES}번이면 끝.
+      </p>
+    </>
+  ),
+  create: createCrack,
+  tick: tickCrack,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [stageHud(g.stage), `실수 ${g.misses}/${CRACK_MISSES}`],
+  View: ({ g, act, active }) => (
+    <>
+      <div
+        className="arcade-board crack-board"
+        data-stage={g.stage}
+        data-bar={g.bar.toFixed(3)}
+        data-green-from={GREEN_START}
+        data-green-to={(GREEN_START + greenWidth(g.stage)).toFixed(3)}
+      >
+        <div className="crack-peanut" aria-hidden="true">
+          🥜
+        </div>
+        <div className="surf-bar fish-gauge" aria-hidden="true">
+          <i
+            className="surf-zone"
+            style={{ left: pct(GREEN_START), width: pct(greenWidth(g.stage)) }}
+          />
+          <b className="fish-needle" style={{ left: pct(g.bar) }} />
+        </div>
+        <div className="jump-timer crack-timer" aria-hidden="true">
+          <i style={{ width: pct(g.left / PEANUT_SECONDS) }} />
+        </div>
+      </div>
+      <button className="hj-big arcade-action" disabled={!active} onClick={() => act(tapCrack)}>
+        👆 톡!
+      </button>
+    </>
+  ),
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const ARCADE_GAMES: Record<ArcadeKey, ArcadeDef<any>> = {
   balloons,
@@ -1534,4 +1827,8 @@ export const ARCADE_GAMES: Record<ArcadeKey, ArcadeDef<any>> = {
   sky,
   sea,
   robotrun,
+  duel,
+  legendfuse,
+  space,
+  crack,
 };

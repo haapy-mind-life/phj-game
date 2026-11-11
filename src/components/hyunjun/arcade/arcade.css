@@ -734,3 +734,98 @@
     filter: none;
   }
 }
+/* 로봇 대결 */
+.duel-board {
+  position: relative;
+}
+.duel-rival {
+  display: grid;
+  justify-items: center;
+}
+.duel-bot {
+  font-size: 72px;
+}
+.duel-hp {
+  font-size: 18px;
+}
+.duel-signal {
+  margin: 0;
+  padding: 6px 12px;
+  border-radius: 12px;
+  background: #fff3c4;
+  font-size: 22px;
+  font-weight: 800;
+}
+.duel-timer {
+  position: static;
+  width: 100%;
+}
+.duel-answers {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+.arcade-board .duel-answers button {
+  font-size: 18px;
+  font-weight: 800;
+  padding: 8px 2px;
+}
+/* 전설 합체 */
+.fuse-say {
+  margin: 0;
+  font-weight: 800;
+  font-size: 18px;
+}
+.fuse-parts {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+.arcade-board .fuse-parts button {
+  display: grid;
+  justify-items: center;
+  height: 92px;
+  font-size: 40px;
+}
+.fuse-parts small {
+  font-size: 14px;
+}
+.arcade-board .fuse-parts button.lit {
+  background: #ffe27a;
+  border-color: #e0a91b;
+  box-shadow: 0 0 16px #ffd23f;
+}
+/* 우주 대전쟁 */
+.space-field {
+  background: radial-gradient(#2a2f5a, #0f1229);
+  border-color: #3d4380;
+}
+.dodge-car.shielded {
+  filter: drop-shadow(0 0 10px #22d3ee);
+}
+.space-controls {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr 1fr;
+  gap: 6px;
+  width: min(100%, 420px);
+}
+.space-controls button {
+  padding: 10px 2px;
+}
+/* 땅콩까기 */
+.crack-peanut {
+  font-size: 72px;
+}
+.crack-timer {
+  position: static;
+  width: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dodge-car.shielded,
+  .arcade-board .fuse-parts button.lit {
+    filter: none;
+    box-shadow: none;
+  }
+}

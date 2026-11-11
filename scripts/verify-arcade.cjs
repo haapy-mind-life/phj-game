@@ -180,6 +180,43 @@ const PLAYERS = {
       const need = { wall: 'robot', gap: 'plane', tunnel: 'car' }[f.dataset.next];
       if (f.dataset.form !== need) document.querySelector('[data-form-button="' + need + '"]').click(); })()`,
   },
+  duel: {
+    ms: 150,
+    win: `(() => { const b = document.querySelector('.duel-board'); if (!b) return;
+      const want = { punch: 'dodge', shield: 'charge', open: 'attack' }[b.dataset.signal];
+      document.querySelector('[data-answer="' + want + '"]')?.click(); })()`,
+  },
+  legendfuse: {
+    ms: 120,
+    win: `(() => { const b = document.querySelector('.fuse-board'); if (!b || b.dataset.showing === 'true') return;
+      const part = b.dataset.order.split(',')[Number(b.dataset.step)];
+      document.querySelector('.fuse-parts [data-part="' + part + '"]')?.click(); })()`,
+  },
+  space: {
+    ms: 40,
+    win: `(() => { const f = document.querySelector('.space-field'); if (!f) return;
+      const lane = Number(f.dataset.lane);
+      const things = [...f.querySelectorAll('[data-space]')].map((t) => ({ kind: t.dataset.space,
+        lane: Number(t.dataset.spaceLane), y: Number(t.dataset.spaceY) }));
+      const [left, , shield, right] = document.querySelectorAll('.space-controls button');
+      const fireBtn = document.querySelector('[data-fire]');
+      const mine = things.filter((t) => t.lane === lane).sort((a, b) => b.y - a.y)[0];
+      if (mine && mine.kind === 'drone') { fireBtn.click(); return; }
+      if (mine && mine.kind === 'rock' && mine.y > 0.55) {
+        const free = [0, 1, 2].find((l) => !things.some((t) => t.lane === l && t.y > 0.5));
+        if (free !== undefined) { (free > lane ? right : left).click(); return; }
+        if (mine.y > 0.8) { shield.click(); return; }
+      }
+      const drone = things.filter((t) => t.kind === 'drone').sort((a, b) => b.y - a.y)[0];
+      if (drone && drone.lane !== lane && !things.some((t) => t.kind === 'rock' && t.lane === drone.lane && t.y > 0.5))
+        (drone.lane > lane ? right : left).click(); })()`,
+  },
+  crack: {
+    ms: 15,
+    win: `(() => { const b = document.querySelector('.crack-board'); if (!b) return;
+      const bar = Number(b.dataset.bar), from = Number(b.dataset.greenFrom), to = Number(b.dataset.greenTo);
+      if (bar > from + 0.02 && bar < to - 0.02) document.querySelector('.arcade-action').click(); })()`,
+  },
 };
 /** How to lose each game quickly. */
 const LOSE = {
@@ -322,6 +359,12 @@ const LOSE = {
   sky: async () => {},
   sea: async () => {},
   robotrun: async () => {},
+  // Left alone: the rival's signals run out, the fusion order waits too long, drones reach the
+  // ship, and peanuts roll away.
+  duel: async () => {},
+  legendfuse: async () => {},
+  space: async () => {},
+  crack: async () => {},
   range: async (page) => {
     for (let i = 0; i < 3; i++) {
       const friend = page.locator('.range-pop[data-kind="friend"]').first();
