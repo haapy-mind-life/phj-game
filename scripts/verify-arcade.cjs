@@ -217,6 +217,30 @@ const PLAYERS = {
       const bar = Number(b.dataset.bar), from = Number(b.dataset.greenFrom), to = Number(b.dataset.greenTo);
       if (bar > from + 0.02 && bar < to - 0.02) document.querySelector('.arcade-action').click(); })()`,
   },
+  earth: {
+    ms: 150,
+    win: `(() => { const b = document.querySelector('.earth-board'); if (!b) return;
+      document.querySelector('[data-continent="' + b.dataset.answer + '"]')?.click(); })()`,
+  },
+  thai: {
+    ms: 120,
+    win: `(() => { const b = document.querySelector('.thai-board'); if (!b) return;
+      const bought = b.dataset.bought.split(',');
+      const want = b.dataset.list.split(',').find((i) => !bought.includes(i));
+      if (want !== undefined) document.querySelector('[data-good="' + want + '"]')?.click(); })()`,
+  },
+  island: {
+    ms: 150,
+    win: `(() => { const b = document.querySelector('.island-board'); if (!b) return;
+      document.querySelector('[data-cell="' + b.dataset.row + '-' + b.dataset.col + '"]')?.click(); })()`,
+  },
+  goldking: {
+    ms: 90,
+    win: `(() => { const b = document.querySelector('.gold-board'); if (!b || !b.dataset.arrow) return;
+      const a = b.dataset.arrow;
+      const d = a.includes('⬆') ? 'up' : a.includes('⬇') ? 'down' : a.includes('⬅') ? 'left' : 'right';
+      document.querySelector('.gold-board [data-dir="' + d + '"]').click(); })()`,
+  },
 };
 /** How to lose each game quickly. */
 const LOSE = {
@@ -365,6 +389,41 @@ const LOSE = {
   legendfuse: async () => {},
   space: async () => {},
   crack: async () => {},
+  earth: async () => {},
+  thai: async (page) => {
+    for (let i = 0; i < 3; i++) {
+      const list = (await page.locator(".thai-board").getAttribute("data-list")).split(",");
+      const goods = await page
+        .locator("[data-good]")
+        .evaluateAll((els) => els.map((e) => e.dataset.good));
+      await page.locator(`[data-good="${goods.find((g) => !list.includes(g))}"]`).click();
+    }
+  },
+  island: async (page) => {
+    for (let i = 0; i < 3; i++) {
+      const row = await page.locator(".island-board").getAttribute("data-row");
+      const col = Number(await page.locator(".island-board").getAttribute("data-col"));
+      await page.locator(`[data-cell="${row}-${(col + 1) % 3}"]`).click();
+    }
+  },
+  goldking: async (page) => {
+    // Step once away from the nearest coin, then go back and forth between two squares already
+    // stood on (so neither holds a coin) until the 30 steps run out.
+    const a = await page.locator(".gold-board").getAttribute("data-arrow");
+    const away = a.includes("⬆")
+      ? "down"
+      : a.includes("⬇")
+        ? "up"
+        : a.includes("⬅")
+          ? "right"
+          : "left";
+    const back = { up: "down", down: "up", left: "right", right: "left" }[away];
+    await page.locator(`.gold-board [data-dir="${away}"]`).click();
+    for (let i = 0; i < 40; i++) {
+      if ((await page.locator(".arcade").getAttribute("data-phase")) !== "playing") return;
+      await page.locator(`.gold-board [data-dir="${i % 2 ? away : back}"]`).click();
+    }
+  },
   range: async (page) => {
     for (let i = 0; i < 3; i++) {
       const friend = page.locator('.range-pop[data-kind="friend"]').first();

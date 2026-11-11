@@ -270,6 +270,48 @@ import {
   tickCrack,
   type CrackGame,
 } from "@/game/play/large/crack";
+import {
+  CLUES,
+  CONTINENTS,
+  EARTH_GOAL,
+  EARTH_MISSES,
+  clueSeconds,
+  createEarth,
+  flyTo,
+  tickEarth,
+  topic,
+  type Continent,
+  type EarthGame,
+} from "@/game/play/large/earth";
+import {
+  GOODS,
+  THAI_GOAL,
+  THAI_MISSES,
+  buy,
+  createThai,
+  tickThai,
+  type ThaiGame,
+} from "@/game/play/large/thai";
+import {
+  ISLAND_GOAL,
+  ISLAND_MISSES,
+  ROW_MARKS,
+  createIsland,
+  digIsland,
+  sizeFor,
+  tickIsland,
+  type IslandGame,
+} from "@/game/play/large/island";
+import {
+  GOLD_GOAL,
+  compass,
+  createGold,
+  sideFor,
+  tickGold,
+  walk,
+  type Dir as GoldDir,
+  type GoldGame,
+} from "@/game/play/large/goldking";
 import type { ArcadeDef } from "./ArcadeShell";
 
 const pct = (v: number) => `${(v * 100).toFixed(1)}%`;
@@ -1802,6 +1844,245 @@ const crack: ArcadeDef<CrackGame> = {
   ),
 };
 
+// ── lg-05 지구 탐험 ──
+const CONTINENT_ICON: Record<Continent, string> = {
+  아시아: "🌏",
+  유럽: "🏰",
+  아프리카: "🌍",
+  북아메리카: "🌎",
+  남아메리카: "🌿",
+  오세아니아: "🏝️",
+};
+const earth: ArcadeDef<EarthGame> = {
+  key: "earth",
+  subtitle: "그림 단서를 보고 대륙을 찾아가요.",
+  icon: "🌍",
+  intro: (
+    <>
+      <h2>지구 한 바퀴 여권 도장</h2>
+      <p>
+        단서 그림(동물·건물·음식)이 사는 대륙을 눌러요. 맞으면 여권 도장!
+        <br />
+        도장 {EARTH_GOAL}개. 단계마다 생각할 시간이 줄어요. 틀리거나 시간이 지나면 실수,{" "}
+        {EARTH_MISSES}번이면 끝.
+      </p>
+    </>
+  ),
+  create: createEarth,
+  tick: tickEarth,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [stageHud(g.stage), `실수 ${g.misses}/${EARTH_MISSES}`],
+  View: ({ g, act, active }) => {
+    const clue = CLUES[g.clue]!;
+    return (
+      <div className="arcade-board earth-board" data-stage={g.stage} data-answer={clue.at}>
+        <p className="earth-clue" role="status">
+          <span aria-hidden="true">{clue.icon}</span> {topic(clue.name)} 어디에 있을까?
+        </p>
+        <div className="jump-timer duel-timer" aria-hidden="true">
+          <i style={{ width: pct(g.left / clueSeconds(g.stage)) }} />
+        </div>
+        <div className="earth-map">
+          {CONTINENTS.map((c) => (
+            <button
+              key={c}
+              disabled={!active}
+              data-continent={c}
+              onClick={() => act((x) => flyTo(x, c))}
+            >
+              <span aria-hidden="true">{CONTINENT_ICON[c]}</span>
+              {c}
+            </button>
+          ))}
+        </div>
+        <p className="earth-stamps" aria-label={`도장 ${g.score}개`}>
+          {"🛂".repeat(g.score) || "도장을 모아요"}
+        </p>
+      </div>
+    );
+  },
+};
+
+// ── lg-06 태국 여행 ──
+const thai: ArcadeDef<ThaiGame> = {
+  key: "thai",
+  subtitle: "장보기 목록의 물건을 시장에서 골라요.",
+  icon: "🛺",
+  intro: (
+    <>
+      <h2>태국 시장 장보기</h2>
+      <p>
+        태국 시장에는 맛있는 과일과 예쁜 물건이 가득해요. 목록에 있는 물건만 골라요!
+        <br />
+        시장 3곳, 물건 {THAI_GOAL}개, 150초. 목록에 없는 물건을 고르면 실수, {THAI_MISSES}번이면 끝.
+      </p>
+    </>
+  ),
+  create: createThai,
+  tick: tickThai,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [
+    stageHud(g.stage),
+    `실수 ${g.misses}/${THAI_MISSES}`,
+    `⏳ ${Math.ceil(g.remaining)}초`,
+  ],
+  View: ({ g, act, active }) => (
+    <div
+      className="arcade-board thai-board"
+      data-stage={g.stage}
+      data-list={g.list.join(",")}
+      data-bought={g.bought.join(",")}
+    >
+      <ol className="cook-card thai-list" aria-label="장보기 목록">
+        {g.list.map((i) => (
+          <li key={i} className={g.bought.includes(i) ? "done" : ""}>
+            {g.bought.includes(i) ? "✓" : GOODS[i]!.icon}
+          </li>
+        ))}
+      </ol>
+      <div className="cook-pantry">
+        {g.stall.map((i) => (
+          <button
+            key={i}
+            disabled={!active || g.bought.includes(i)}
+            data-good={i}
+            aria-label={GOODS[i]!.name}
+            onClick={() => act((x) => buy(x, i))}
+          >
+            {GOODS[i]!.icon}
+            <small className="thai-name">{GOODS[i]!.name}</small>
+          </button>
+        ))}
+      </div>
+    </div>
+  ),
+};
+
+// ── lg-18 보물섬 ──
+const island: ArcadeDef<IslandGame> = {
+  key: "island",
+  subtitle: "그림 줄과 번호로 보물을 찾아요.",
+  icon: "🏴‍☠️",
+  intro: (
+    <>
+      <h2>보물섬 지도 읽기</h2>
+      <p>
+        단서 카드는 줄 그림(🌴 🪨 🐚 …)과 번호를 알려 줘요. 그 줄의 그 번호 칸을 파요!
+        <br />
+        지도가 단계마다 커져요. 보물 {ISLAND_GOAL}개, 틀린 칸 {ISLAND_MISSES}번이면 끝.
+      </p>
+    </>
+  ),
+  create: createIsland,
+  tick: tickIsland,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [
+    stageHud(g.stage),
+    `실수 ${g.misses}/${ISLAND_MISSES}`,
+    `⏳ ${Math.ceil(g.remaining)}초`,
+  ],
+  View: ({ g, act, active }) => {
+    const n = sizeFor(g.stage);
+    return (
+      <div
+        className="arcade-board island-board"
+        data-stage={g.stage}
+        data-row={g.row}
+        data-col={g.col}
+      >
+        <p className="hint-clue" role="status">
+          🗺️ {ROW_MARKS[g.row]} 줄 · {g.col + 1}번 칸
+        </p>
+        <div className="island-map" style={{ gridTemplateColumns: `auto repeat(${n}, 1fr)` }}>
+          <span />
+          {Array.from({ length: n }, (_, c) => (
+            <b key={`h${c}`}>{c + 1}</b>
+          ))}
+          {Array.from({ length: n }, (_, r) => (
+            <div key={r} className="island-row" style={{ display: "contents" }}>
+              <b>{ROW_MARKS[r]}</b>
+              {Array.from({ length: n }, (_, c) => (
+                <button
+                  key={c}
+                  disabled={!active}
+                  data-cell={`${r}-${c}`}
+                  aria-label={`${ROW_MARKS[r]} 줄 ${c + 1}번`}
+                  onClick={() => act((x) => digIsland(x, r, c))}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  },
+};
+
+// ── lg-13 황금 코인왕 ──
+const GOLD_ARROWS: [GoldDir, string][] = [
+  ["up", "⬆"],
+  ["left", "⬅"],
+  ["right", "➡"],
+  ["down", "⬇"],
+];
+const goldking: ArcadeDef<GoldGame> = {
+  key: "goldking",
+  subtitle: "나침반을 따라 숨은 금화를 찾아요.",
+  icon: "🪙",
+  intro: (
+    <>
+      <h2>황금 코인왕</h2>
+      <p>
+        화살표로 한 칸씩 걸어요. 🧭 나침반이 가장 가까운 금화 쪽과 거리를 알려 줘요.
+        <br />
+        단계마다 땅이 넓어지고 금화 2개, 걸음은 30번. 금화 {GOLD_GOAL}개를 모으면 성공!
+      </p>
+    </>
+  ),
+  create: createGold,
+  tick: tickGold,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [stageHud(g.stage), `👣 ${g.steps}`],
+  View: ({ g, act, active }) => {
+    const n = sideFor(g.stage);
+    const c = compass(g);
+    return (
+      <div className="arcade-board gold-board" data-stage={g.stage} data-arrow={c?.arrow ?? ""}>
+        <p className="hint-clue" role="status">
+          🧭 {c ? `${c.arrow} ${c.far}` : "…"}
+        </p>
+        <div
+          className="gold-field"
+          style={{ gridTemplateColumns: `repeat(${n}, 1fr)` }}
+          aria-label="금화 들판"
+        >
+          {Array.from({ length: n * n }, (_, i) => (
+            <span key={i}>{i % n === g.x && Math.floor(i / n) === g.y ? "🧒" : ""}</span>
+          ))}
+        </div>
+        <div className="park-pad">
+          {GOLD_ARROWS.map(([d, icon]) => (
+            <button
+              key={d}
+              className={`park-${d}`}
+              disabled={!active}
+              data-dir={d}
+              aria-label={`${icon} 걷기`}
+              onClick={() => act((x) => walk(x, d))}
+            >
+              {icon}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  },
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const ARCADE_GAMES: Record<ArcadeKey, ArcadeDef<any>> = {
   balloons,
@@ -1831,4 +2112,8 @@ export const ARCADE_GAMES: Record<ArcadeKey, ArcadeDef<any>> = {
   legendfuse,
   space,
   crack,
+  earth,
+  thai,
+  island,
+  goldking,
 };

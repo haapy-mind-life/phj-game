@@ -10,7 +10,7 @@
 | 시작 화면 → 로딩 → 월드 | 배포됨 (PR #53) | [world-entry](../../world-expansion/2026-11-07-world-entry/README.md) |
 | 로켓 · 로켓 X · 듀얼 로켓 | 배포됨 (PR #54 · #56): 자동차 변신, 10초 4단계 합체, 듀얼 로켓 카, 분리 | [rocket-dual-v1](../../robot-fusion/2026-11-08-rocket-dual-v1/README.md) |
 | 카트 미니게임 | **20개 모두 플레이 가능** (PR #57 병합·배포) | [arcade 검증](../../verification/2026-11-10-arcade/README.md) |
-| 카트 큰 게임 | 20개 중 12개 플레이 가능(월드·러너·온실·방 깨기 + 6·7회차 8개, PR #58) + 1개 기존 연결(하우스), 7개 준비 중 | `src/game/play/kart-catalog.ts` |
+| 카트 큰 게임 | 20개 중 16개 플레이 가능(월드·러너·온실·방 깨기 + 6~8회차 12개, PR #58) + 1개 기존 연결(하우스), 3개 준비 중 | `src/game/play/kart-catalog.ts` |
 | 저장 | 키 `hyunjun-game-v2`, version 3 유지. 미니게임 최고 기록 `arcadeBest` 추가(옛 저장은 0) | `src/lib/world-model.ts` |
 | 실기기 UAT | NOT_RUN (삼성 브라우저·S Pen·iOS) | 모든 기능 공통 |
 

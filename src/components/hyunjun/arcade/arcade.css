@@ -829,3 +829,81 @@
     box-shadow: none;
   }
 }
+/* 지구 탐험 */
+.earth-clue {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  text-align: center;
+}
+.earth-clue span {
+  display: block;
+  font-size: 56px;
+}
+.earth-map {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+.arcade-board .earth-map button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 17px;
+  font-weight: 800;
+}
+.earth-map button span {
+  font-size: 24px;
+}
+.earth-stamps {
+  margin: 0;
+  font-size: 20px;
+}
+/* 태국 여행 */
+.arcade-board .thai-board .cook-pantry button,
+.thai-board .cook-pantry button {
+  display: grid;
+  justify-items: center;
+  height: 78px;
+}
+.thai-name {
+  font-size: 12px;
+}
+/* 보물섬 */
+.island-board {
+  background: #f7e8c4;
+}
+.island-map {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  align-items: center;
+  text-align: center;
+}
+.island-map b {
+  font-size: 18px;
+}
+.arcade-board .island-map button {
+  min-width: 0;
+  min-height: 44px;
+  aspect-ratio: 1;
+  background: #eed49a;
+  border-color: #c9a35a;
+}
+/* 황금 코인왕 */
+.gold-field {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  max-width: min(230px, 28vh);
+}
+.gold-field span {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 4px;
+  background: #e8d39a;
+  font-size: 16px;
+}
