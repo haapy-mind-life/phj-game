@@ -186,6 +186,159 @@ import {
   type Clue,
   type DigGame,
 } from "@/game/play/minis/dig";
+import {
+  CAR_ZONE as CHAMP_ZONE,
+  CHAMP_GOAL,
+  CHAMP_HEARTS,
+  COURSE,
+  createChampion,
+  steerCar,
+  tickChampion,
+  type ChampionGame,
+} from "@/game/play/large/champion";
+import {
+  PLANE_X,
+  SKY_HEARTS,
+  createSky,
+  setClimb,
+  tickSky,
+  type SkyGame,
+} from "@/game/play/large/sky";
+import {
+  AIR_SECONDS,
+  SEA_HEARTS,
+  SWIMMER_X,
+  createSea,
+  setDepth,
+  tickSea,
+  type SeaGame,
+} from "@/game/play/large/sea";
+import {
+  NEEDS,
+  RUNNER_X,
+  RUN_HEARTS,
+  changeForm,
+  createRobotRun,
+  nextBlock,
+  tickRobotRun,
+  type Block,
+  type Form,
+  type RobotRunGame,
+} from "@/game/play/large/robotrun";
+import {
+  ANSWER,
+  DUEL_GOAL,
+  DUEL_HEARTS,
+  RIVAL_HP,
+  answer,
+  createDuel,
+  tickDuel,
+  windowFor,
+  type Answer,
+  type DuelGame,
+  type Signal,
+} from "@/game/play/large/duel";
+import {
+  FUSE_GOAL,
+  FUSE_MISSES,
+  PARTS,
+  createFuse,
+  litPart,
+  pressPart,
+  tickFuse,
+  type FuseGame,
+  type Part,
+} from "@/game/play/large/legendfuse";
+import {
+  SHIP_Y,
+  SPACE_HEARTS,
+  createSpace,
+  fire,
+  moveShip,
+  raiseShield,
+  tickSpace,
+  type SpaceGame,
+} from "@/game/play/large/space";
+import {
+  CRACK_GOAL,
+  CRACK_MISSES,
+  GREEN_START,
+  PEANUT_SECONDS,
+  createCrack,
+  greenWidth,
+  tapCrack,
+  tickCrack,
+  type CrackGame,
+} from "@/game/play/large/crack";
+import {
+  CLUES,
+  CONTINENTS,
+  EARTH_GOAL,
+  EARTH_MISSES,
+  clueSeconds,
+  createEarth,
+  flyTo,
+  tickEarth,
+  topic,
+  type Continent,
+  type EarthGame,
+} from "@/game/play/large/earth";
+import {
+  GOODS,
+  THAI_GOAL,
+  THAI_MISSES,
+  buy,
+  createThai,
+  tickThai,
+  type ThaiGame,
+} from "@/game/play/large/thai";
+import {
+  ISLAND_GOAL,
+  ISLAND_MISSES,
+  ROW_MARKS,
+  createIsland,
+  digIsland,
+  sizeFor,
+  tickIsland,
+  type IslandGame,
+} from "@/game/play/large/island";
+import {
+  GOLD_GOAL,
+  compass,
+  createGold,
+  sideFor,
+  tickGold,
+  walk,
+  type Dir as GoldDir,
+  type GoldGame,
+} from "@/game/play/large/goldking";
+import {
+  NIGHT_MISSES,
+  SIZE as NIGHT_SIZE,
+  createNight,
+  tapForest,
+  tickNight,
+  type NightGame,
+} from "@/game/play/large/night";
+import {
+  FEAST_MISSES,
+  FOODS,
+  balanced,
+  createFeast,
+  pickDish,
+  tickFeast,
+  type FeastGame,
+} from "@/game/play/large/feast";
+import {
+  DINOS,
+  DINO_WARNINGS,
+  FRAME,
+  createDino,
+  inFrame,
+  snap,
+  tickDino,
+  type DinoGame,
+} from "@/game/play/large/dino";
 import type { ArcadeDef } from "./ArcadeShell";
 
 const pct = (v: number) => `${(v * 100).toFixed(1)}%`;
@@ -448,6 +601,7 @@ const surf: ArcadeDef<SurfGame> = {
   ),
   create: createSurf,
   tick: tickSurf,
+  release: (g) => setLean(g, 0),
   outcome: (g) => g.outcome,
   score: (g) => g.score,
   hud: (g) => [`넘어짐 ${g.falls}/${SURF_FALLS}`],
@@ -1153,6 +1307,1001 @@ const dig: ArcadeDef<DigGame> = {
   ),
 };
 
+// ── 큰 게임: 3단계 ──
+const stageHud = (stage: number) => `단계 ${stage}/3`;
+const hold = <G,>(act: (fn: (g: G) => G) => void, on: (g: G) => G, off: (g: G) => G) => ({
+  onPointerDown: () => act(on),
+  onPointerUp: () => act(off),
+  onPointerLeave: () => act(off),
+  onPointerCancel: () => act(off),
+});
+
+// ── lg-14 자동차 챔피언 ──
+const champion: ArcadeDef<ChampionGame> = {
+  key: "champion",
+  subtitle: "바위를 피하고 부스트를 밟아 라이벌을 이겨요.",
+  icon: "🏎️",
+  intro: (
+    <>
+      <h2>3코스 자동차 경주</h2>
+      <p>
+        ◀ ▶로 차선을 바꿔요. 🪨 바위는 피하고 ⚡ 부스트는 밟아요!
+        <br />
+        라이벌 🚙은 부스트 없는 차보다 조금 빨라요. 결승선에 먼저 들어가면 코스 승리, {CHAMP_GOAL}
+        코스를 모두 이기면 챔피언! 부딪힘 {CHAMP_HEARTS}번이면 끝.
+      </p>
+    </>
+  ),
+  create: createChampion,
+  tick: tickChampion,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [stageHud(g.stage), `❤ ${g.hearts}`],
+  View: ({ g, act, active }) => (
+    <>
+      <div
+        className="race-meter"
+        aria-label={`나 ${Math.round((g.distance / COURSE) * 100)}% · 라이벌 ${Math.round((g.rival / COURSE) * 100)}%`}
+      >
+        <span>
+          🏎️
+          <i style={{ width: pct(Math.min(1, g.distance / COURSE)) }} />
+        </span>
+        <span className="rival">
+          🚙
+          <i style={{ width: pct(Math.min(1, g.rival / COURSE)) }} />
+        </span>
+      </div>
+      <div
+        className="arcade-field dodge-field"
+        data-stage={g.stage}
+        data-lane={g.lane}
+        data-boost={g.boost > 0}
+      >
+        <div className="dodge-lines" aria-hidden="true" />
+        {g.items
+          .filter((i) => !i.used)
+          .map((i) => (
+            <span
+              key={i.id}
+              className="rock"
+              style={{ top: pct(i.y), left: `${16 + i.lane * 34}%` }}
+              data-item-kind={i.kind}
+              data-item-lane={i.lane}
+              data-item-y={i.y.toFixed(2)}
+              aria-hidden="true"
+            >
+              {i.kind === "rock" ? "🪨" : "⚡"}
+            </span>
+          ))}
+        <span
+          className={`dodge-car${g.boost > 0 ? " boosting" : ""}`}
+          style={{ top: pct(CHAMP_ZONE.from), left: `${16 + g.lane * 34}%` }}
+          role="img"
+          aria-label={`내 차 · ${LANES3[g.lane]} 차선`}
+        >
+          🏎️
+        </span>
+      </div>
+      <div className="dodge-controls">
+        <button className="hj-big" disabled={!active} onClick={() => act((x) => steerCar(x, -1))}>
+          ◀ 왼쪽
+        </button>
+        <button className="hj-big" disabled={!active} onClick={() => act((x) => steerCar(x, 1))}>
+          오른쪽 ▶
+        </button>
+      </div>
+    </>
+  ),
+};
+
+// ── lg-15 하늘 러너 ──
+const sky: ArcadeDef<SkyGame> = {
+  key: "sky",
+  subtitle: "꾹 누르면 위로, 떼면 아래로!",
+  icon: "✈️",
+  intro: (
+    <>
+      <h2>하늘 고리 통과</h2>
+      <p>
+        「위로」를 꾹 누르면 올라가고, 떼면 내려가요. ⭕ 고리를 통과하고, 🌀 상승기류를 타요.
+        <br />
+        2단계부터 🐦 새를 피해요. 땅에 닿거나 새에 부딪히면 하트가 줄어요(하트 {SKY_HEARTS}개).
+        단계마다 고리 5개!
+      </p>
+    </>
+  ),
+  create: createSky,
+  tick: tickSky,
+  release: (g) => setClimb(g, false),
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [stageHud(g.stage), `❤ ${g.hearts}`],
+  View: ({ g, act, active }) => (
+    <>
+      <div
+        className="arcade-field sky-field"
+        data-stage={g.stage}
+        data-height={g.height.toFixed(3)}
+      >
+        {g.things
+          .filter((t) => !t.done)
+          .map((t) => (
+            <span
+              key={t.id}
+              className={`sky-thing ${t.kind}`}
+              style={{ left: pct(t.x), bottom: pct(t.h) }}
+              data-thing={t.kind}
+              data-x={t.x.toFixed(3)}
+              data-h={t.h.toFixed(3)}
+              aria-hidden="true"
+            >
+              {t.kind === "ring" ? "⭕" : t.kind === "bird" ? "🐦" : "🌀"}
+            </span>
+          ))}
+        <span
+          className="sky-plane"
+          style={{ left: pct(PLANE_X), bottom: pct(g.height) }}
+          role="img"
+          aria-label="내 비행기"
+        >
+          ✈️
+        </span>
+        <div className="sky-ground" aria-hidden="true" />
+      </div>
+      <button
+        className="hj-big arcade-action"
+        disabled={!active}
+        {...hold<SkyGame>(
+          act,
+          (x) => setClimb(x, true),
+          (x) => setClimb(x, false),
+        )}
+      >
+        ⬆ 위로 (꾹)
+      </button>
+    </>
+  ),
+};
+
+// ── lg-16 바다 러너 ──
+const sea: ArcadeDef<SeaGame> = {
+  key: "sea",
+  subtitle: "물 위와 물속을 오가며 진주를 모아요.",
+  icon: "🤿",
+  intro: (
+    <>
+      <h2>바다 위아래 달리기</h2>
+      <p>
+        🛟 부표·🚤 배는 물 위에, 🪸 바위·🪼 해파리는 물속에 있어요. 🦪 진주는 물속에만!
+        <br />
+        「잠수」와 「떠오르기」로 길을 바꿔요. 물속에서는 숨이 줄어요. 단계마다 진주 5개, 하트{" "}
+        {SEA_HEARTS}개.
+      </p>
+    </>
+  ),
+  create: createSea,
+  tick: tickSea,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [stageHud(g.stage), `❤ ${g.hearts}`, `🫧 ${Math.ceil(g.air)}`],
+  View: ({ g, act, active }) => (
+    <>
+      <div
+        className="arcade-field sea-field"
+        data-stage={g.stage}
+        data-depth={g.depth}
+        data-air={g.air.toFixed(2)}
+      >
+        <div className="sea-water" aria-hidden="true" />
+        {g.things
+          .filter((t) => !t.done)
+          .map((t) => (
+            <span
+              key={t.id}
+              className="sea-thing"
+              style={{ left: pct(t.x), top: t.depth === "top" ? "22%" : "68%" }}
+              data-thing={t.kind}
+              data-depth={t.depth}
+              data-x={t.x.toFixed(3)}
+              aria-hidden="true"
+            >
+              {t.kind === "pearl"
+                ? "🦪"
+                : t.depth === "top"
+                  ? t.id % 2
+                    ? "🛟"
+                    : "🚤"
+                  : t.id % 2
+                    ? "🪸"
+                    : "🪼"}
+            </span>
+          ))}
+        <span
+          className="sea-swimmer"
+          style={{ left: pct(SWIMMER_X), top: g.depth === "top" ? "22%" : "68%" }}
+          role="img"
+          aria-label={g.depth === "top" ? "물 위" : "물속"}
+        >
+          🏊
+        </span>
+        <div className="sea-air" aria-hidden="true">
+          <i style={{ width: pct(g.air / AIR_SECONDS) }} />
+        </div>
+      </div>
+      <div className="dodge-controls">
+        <button
+          className="hj-big"
+          disabled={!active || g.depth === "top"}
+          onClick={() => act((x) => setDepth(x, "top"))}
+        >
+          🌊 떠오르기
+        </button>
+        <button
+          className="hj-big"
+          disabled={!active || g.depth === "deep"}
+          onClick={() => act((x) => setDepth(x, "deep"))}
+        >
+          🤿 잠수
+        </button>
+      </div>
+    </>
+  ),
+};
+
+// ── lg-17 로봇 러너 ──
+const FORM_ICON: Record<Form, string> = { robot: "🤖", plane: "✈️", car: "🚗" };
+const FORM_LABEL: Record<Form, string> = { robot: "로봇", plane: "비행기", car: "자동차" };
+const BLOCK_ICON: Record<Block, string> = { wall: "🧱", gap: "🕳️", tunnel: "🚇" };
+const robotrun: ArcadeDef<RobotRunGame> = {
+  key: "robotrun",
+  subtitle: "앞에 오는 길에 맞춰 변신해요.",
+  icon: "🤖",
+  intro: (
+    <>
+      <h2>변신하며 달리기</h2>
+      <p>
+        🧱 벽은 로봇으로 부수고, 🕳️ 구멍은 비행기로 날아 넘고, 🚇 낮은 터널은 자동차로 지나가요.
+        <br />
+        단계마다 5개, 점점 빨라져요. 틀린 모습이면 하트가 줄어요(하트 {RUN_HEARTS}개). 시계 속 로봇
+        카드는 바뀌지 않아요.
+      </p>
+    </>
+  ),
+  create: createRobotRun,
+  tick: tickRobotRun,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [stageHud(g.stage), `❤ ${g.hearts}`],
+  View: ({ g, act, active }) => {
+    const next = nextBlock(g);
+    return (
+      <>
+        <div
+          className="arcade-field run-field"
+          data-stage={g.stage}
+          data-form={g.form}
+          data-next={next?.kind ?? ""}
+          data-next-x={next ? next.x.toFixed(3) : ""}
+        >
+          <div className="run-ground" aria-hidden="true" />
+          {g.things
+            .filter((t) => !t.done)
+            .map((t) => (
+              <span key={t.id} className="run-block" style={{ left: pct(t.x) }} aria-hidden="true">
+                {BLOCK_ICON[t.kind]}
+              </span>
+            ))}
+          <span
+            className="run-me"
+            style={{ left: pct(RUNNER_X) }}
+            role="img"
+            aria-label={`지금 ${FORM_LABEL[g.form]}`}
+          >
+            {FORM_ICON[g.form]}
+          </span>
+          {next && (
+            <p className="run-tip" role="status">
+              다음: {BLOCK_ICON[next.kind]} → {FORM_ICON[NEEDS[next.kind]]}
+            </p>
+          )}
+        </div>
+        <div className="run-forms">
+          {(Object.keys(FORM_ICON) as Form[]).map((f) => (
+            <button
+              key={f}
+              className={`hj-big${g.form === f ? " picked" : ""}`}
+              disabled={!active}
+              data-form-button={f}
+              aria-pressed={g.form === f}
+              onClick={() => act((x) => changeForm(x, f))}
+            >
+              {FORM_ICON[f]} {FORM_LABEL[f]}
+            </button>
+          ))}
+        </div>
+      </>
+    );
+  },
+};
+
+// ── lg-03 로봇 대결 ──
+const SIGNAL_ICON: Record<Signal, string> = { punch: "👊", shield: "🛡️", open: "😵" };
+const SIGNAL_WORD: Record<Signal, string> = {
+  punch: "주먹이 와요!",
+  shield: "방패를 들었어요",
+  open: "빈틈이에요!",
+};
+const ANSWER_LABEL: Record<Answer, string> = {
+  dodge: "💨 피하기",
+  charge: "🔋 모으기",
+  attack: "⚔️ 공격",
+};
+const duel: ArcadeDef<DuelGame> = {
+  key: "duel",
+  subtitle: "상대 신호를 보고 알맞게 움직여요.",
+  icon: "🥊",
+  intro: (
+    <>
+      <h2>로봇 3대와 대결</h2>
+      <p>
+        상대가 👊 주먹이면 💨 피하기, 🛡️ 방패면 🔋 모으기, 😵 빈틈이면 ⚔️ 공격!
+        <br />
+        틀리거나 늦으면 하트가 줄어요(하트 {DUEL_HEARTS}개). 상대 {DUEL_GOAL}대를 이기면 우승. 시계
+        속 로봇 카드는 바뀌지 않아요.
+      </p>
+    </>
+  ),
+  create: createDuel,
+  tick: tickDuel,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [stageHud(g.stage), `❤ ${g.hearts}`],
+  View: ({ g, act, active }) => (
+    <div className="arcade-board duel-board" data-stage={g.stage} data-signal={g.signal}>
+      <div className="duel-rival" aria-label={`상대 로봇 힘 ${g.rivalHp}/${RIVAL_HP[g.stage - 1]}`}>
+        <span className="duel-bot" aria-hidden="true">
+          🤖
+        </span>
+        <span className="duel-hp" aria-hidden="true">
+          {"🟥".repeat(g.rivalHp)}
+        </span>
+      </div>
+      <p className="duel-signal" role="status">
+        {SIGNAL_ICON[g.signal]} {SIGNAL_WORD[g.signal]}
+      </p>
+      <div className="jump-timer duel-timer" aria-hidden="true">
+        <i style={{ width: pct(g.left / windowFor(g.stage)) }} />
+      </div>
+      <div className="duel-answers">
+        {(Object.keys(ANSWER_LABEL) as Answer[]).map((a) => (
+          <button
+            key={a}
+            disabled={!active}
+            data-answer={a}
+            onClick={() => act((x) => answer(x, a))}
+          >
+            {ANSWER_LABEL[a]}
+          </button>
+        ))}
+      </div>
+    </div>
+  ),
+};
+
+// ── lg-04 전설 합체 ──
+const PART_ICON2: Record<Part, string> = { head: "👑", arm: "🦾", leg: "🦿", wing: "🪽" };
+const PART_NAME: Record<Part, string> = { head: "머리", arm: "팔", leg: "다리", wing: "날개" };
+const legendfuse: ArcadeDef<FuseGame> = {
+  key: "legendfuse",
+  subtitle: "빛나는 순서를 기억해서 합체해요.",
+  icon: "✨",
+  intro: (
+    <>
+      <h2>전설 합체 순서 기억하기</h2>
+      <p>
+        부품이 하나씩 빛나요. 다 빛난 뒤 같은 순서로 눌러요. 단계마다 순서가 길어져요.
+        <br />
+        합체 {FUSE_GOAL}번! 틀리거나 6초 넘게 기다리면 실수, {FUSE_MISSES}번이면 끝. 시계 속 전설
+        카드는 바뀌지 않아요.
+      </p>
+    </>
+  ),
+  create: createFuse,
+  tick: tickFuse,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [stageHud(g.stage), `실수 ${g.misses}/${FUSE_MISSES}`],
+  View: ({ g, act, active }) => {
+    const lit = litPart(g);
+    const showing = g.showing > 0;
+    return (
+      <div
+        className="arcade-board fuse-board"
+        data-stage={g.stage}
+        data-showing={showing}
+        data-order={g.order.join(",")}
+        data-step={g.step}
+      >
+        <p className="fuse-say" role="status">
+          {showing ? "잘 봐요! 순서를 기억해요" : `이제 눌러요 (${g.step}/${g.order.length})`}
+        </p>
+        <div className="fuse-parts">
+          {PARTS.map((p) => (
+            <button
+              key={p}
+              className={lit === p ? "lit" : ""}
+              disabled={!active || showing}
+              data-part={p}
+              aria-label={PART_NAME[p]}
+              onClick={() => act((x) => pressPart(x, p))}
+            >
+              {PART_ICON2[p]}
+              <small>{PART_NAME[p]}</small>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  },
+};
+
+// ── lg-19 우주 대전쟁 ──
+const space: ArcadeDef<SpaceGame> = {
+  key: "space",
+  subtitle: "드론은 쏘고, 운석은 피하거나 실드로 막아요.",
+  icon: "🚀",
+  intro: (
+    <>
+      <h2>우주 방어 작전</h2>
+      <p>
+        👾 기계 드론은 「발사」로 안전한 에너지탄을 쏴서 막아요. 🪨 운석은 쏠 수 없어요 — 옆으로
+        피하거나 「실드」!
+        <br />
+        웨이브 3번, 드론 15대. 내 줄에 닿으면 하트가 줄어요(하트 {SPACE_HEARTS}개).
+      </p>
+    </>
+  ),
+  create: createSpace,
+  tick: tickSpace,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [stageHud(g.stage), `❤ ${g.hearts}`],
+  View: ({ g, act, active }) => (
+    <>
+      <div
+        className="arcade-field space-field"
+        data-stage={g.stage}
+        data-lane={g.lane}
+        data-shield={g.shield > 0}
+        data-recharge={g.recharge > 0}
+      >
+        <div className="dodge-lines" aria-hidden="true" />
+        {g.things.map((t) => (
+          <span
+            key={t.id}
+            className="rock"
+            style={{ top: pct(t.y), left: `${16 + t.lane * 34}%` }}
+            data-space={t.kind}
+            data-space-lane={t.lane}
+            data-space-y={t.y.toFixed(3)}
+            aria-hidden="true"
+          >
+            {t.kind === "drone" ? "👾" : "🪨"}
+          </span>
+        ))}
+        <span
+          className={`dodge-car${g.shield > 0 ? " shielded" : ""}`}
+          style={{ top: pct(SHIP_Y), left: `${16 + g.lane * 34}%` }}
+          role="img"
+          aria-label="내 우주선"
+        >
+          🚀
+        </span>
+      </div>
+      <div className="space-controls">
+        <button className="hj-big" disabled={!active} onClick={() => act((x) => moveShip(x, -1))}>
+          ◀
+        </button>
+        <button className="hj-big" disabled={!active} data-fire onClick={() => act(fire)}>
+          ⚡ 발사
+        </button>
+        <button
+          className="hj-big"
+          disabled={!active || g.recharge > 0}
+          data-shield-button
+          onClick={() => act(raiseShield)}
+        >
+          🛡️
+        </button>
+        <button className="hj-big" disabled={!active} onClick={() => act((x) => moveShip(x, 1))}>
+          ▶
+        </button>
+      </div>
+    </>
+  ),
+};
+
+// ── lg-10 땅콩까기 ──
+const crack: ArcadeDef<CrackGame> = {
+  key: "crack",
+  subtitle: "힘 막대가 초록일 때 톡!",
+  icon: "🥜",
+  intro: (
+    <>
+      <h2>땅콩까기 달인</h2>
+      <p>
+        힘 막대가 좌우로 움직여요. 초록 칸에 왔을 때 「톡」을 누르면 껍질이 깨져요.
+        <br />
+        단계마다 빨라지고 초록이 좁아져요. 땅콩 {CRACK_GOAL}개! 밖에서 누르거나 4초를 넘기면 실수,{" "}
+        {CRACK_MISSES}번이면 끝.
+      </p>
+    </>
+  ),
+  create: createCrack,
+  tick: tickCrack,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [stageHud(g.stage), `실수 ${g.misses}/${CRACK_MISSES}`],
+  View: ({ g, act, active }) => (
+    <>
+      <div
+        className="arcade-board crack-board"
+        data-stage={g.stage}
+        data-bar={g.bar.toFixed(3)}
+        data-green-from={GREEN_START}
+        data-green-to={(GREEN_START + greenWidth(g.stage)).toFixed(3)}
+      >
+        <div className="crack-peanut" aria-hidden="true">
+          🥜
+        </div>
+        <div className="surf-bar fish-gauge" aria-hidden="true">
+          <i
+            className="surf-zone"
+            style={{ left: pct(GREEN_START), width: pct(greenWidth(g.stage)) }}
+          />
+          <b className="fish-needle" style={{ left: pct(g.bar) }} />
+        </div>
+        <div className="jump-timer crack-timer" aria-hidden="true">
+          <i style={{ width: pct(g.left / PEANUT_SECONDS) }} />
+        </div>
+      </div>
+      <button className="hj-big arcade-action" disabled={!active} onClick={() => act(tapCrack)}>
+        👆 톡!
+      </button>
+    </>
+  ),
+};
+
+// ── lg-05 지구 탐험 ──
+const CONTINENT_ICON: Record<Continent, string> = {
+  아시아: "🌏",
+  유럽: "🏰",
+  아프리카: "🌍",
+  북아메리카: "🌎",
+  남아메리카: "🌿",
+  오세아니아: "🏝️",
+};
+const earth: ArcadeDef<EarthGame> = {
+  key: "earth",
+  subtitle: "그림 단서를 보고 대륙을 찾아가요.",
+  icon: "🌍",
+  intro: (
+    <>
+      <h2>지구 한 바퀴 여권 도장</h2>
+      <p>
+        단서 그림(동물·건물·음식)이 사는 대륙을 눌러요. 맞으면 여권 도장!
+        <br />
+        도장 {EARTH_GOAL}개. 단계마다 생각할 시간이 줄어요. 틀리거나 시간이 지나면 실수,{" "}
+        {EARTH_MISSES}번이면 끝.
+      </p>
+    </>
+  ),
+  create: createEarth,
+  tick: tickEarth,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [stageHud(g.stage), `실수 ${g.misses}/${EARTH_MISSES}`],
+  View: ({ g, act, active }) => {
+    const clue = CLUES[g.clue]!;
+    return (
+      <div className="arcade-board earth-board" data-stage={g.stage} data-answer={clue.at}>
+        <p className="earth-clue" role="status">
+          <span aria-hidden="true">{clue.icon}</span> {topic(clue.name)} 어디에 있을까?
+        </p>
+        <div className="jump-timer duel-timer" aria-hidden="true">
+          <i style={{ width: pct(g.left / clueSeconds(g.stage)) }} />
+        </div>
+        <div className="earth-map">
+          {CONTINENTS.map((c) => (
+            <button
+              key={c}
+              disabled={!active}
+              data-continent={c}
+              onClick={() => act((x) => flyTo(x, c))}
+            >
+              <span aria-hidden="true">{CONTINENT_ICON[c]}</span>
+              {c}
+            </button>
+          ))}
+        </div>
+        <p className="earth-stamps" aria-label={`도장 ${g.score}개`}>
+          {"🛂".repeat(g.score) || "도장을 모아요"}
+        </p>
+      </div>
+    );
+  },
+};
+
+// ── lg-06 태국 여행 ──
+const thai: ArcadeDef<ThaiGame> = {
+  key: "thai",
+  subtitle: "장보기 목록의 물건을 시장에서 골라요.",
+  icon: "🛺",
+  intro: (
+    <>
+      <h2>태국 시장 장보기</h2>
+      <p>
+        태국 시장에는 맛있는 과일과 예쁜 물건이 가득해요. 목록에 있는 물건만 골라요!
+        <br />
+        시장 3곳, 물건 {THAI_GOAL}개, 150초. 목록에 없는 물건을 고르면 실수, {THAI_MISSES}번이면 끝.
+      </p>
+    </>
+  ),
+  create: createThai,
+  tick: tickThai,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [
+    stageHud(g.stage),
+    `실수 ${g.misses}/${THAI_MISSES}`,
+    `⏳ ${Math.ceil(g.remaining)}초`,
+  ],
+  View: ({ g, act, active }) => (
+    <div
+      className="arcade-board thai-board"
+      data-stage={g.stage}
+      data-list={g.list.join(",")}
+      data-bought={g.bought.join(",")}
+    >
+      <ol className="cook-card thai-list" aria-label="장보기 목록">
+        {g.list.map((i) => (
+          <li key={i} className={g.bought.includes(i) ? "done" : ""}>
+            {g.bought.includes(i) ? "✓" : GOODS[i]!.icon}
+          </li>
+        ))}
+      </ol>
+      <div className="cook-pantry">
+        {g.stall.map((i) => (
+          <button
+            key={i}
+            disabled={!active || g.bought.includes(i)}
+            data-good={i}
+            aria-label={GOODS[i]!.name}
+            onClick={() => act((x) => buy(x, i))}
+          >
+            {GOODS[i]!.icon}
+            <small className="thai-name">{GOODS[i]!.name}</small>
+          </button>
+        ))}
+      </div>
+    </div>
+  ),
+};
+
+// ── lg-18 보물섬 ──
+const island: ArcadeDef<IslandGame> = {
+  key: "island",
+  subtitle: "그림 줄과 번호로 보물을 찾아요.",
+  icon: "🏴‍☠️",
+  intro: (
+    <>
+      <h2>보물섬 지도 읽기</h2>
+      <p>
+        단서 카드는 줄 그림(🌴 🪨 🐚 …)과 번호를 알려 줘요. 그 줄의 그 번호 칸을 파요!
+        <br />
+        지도가 단계마다 커져요. 보물 {ISLAND_GOAL}개, 틀린 칸 {ISLAND_MISSES}번이면 끝.
+      </p>
+    </>
+  ),
+  create: createIsland,
+  tick: tickIsland,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [
+    stageHud(g.stage),
+    `실수 ${g.misses}/${ISLAND_MISSES}`,
+    `⏳ ${Math.ceil(g.remaining)}초`,
+  ],
+  View: ({ g, act, active }) => {
+    const n = sizeFor(g.stage);
+    return (
+      <div
+        className="arcade-board island-board"
+        data-stage={g.stage}
+        data-row={g.row}
+        data-col={g.col}
+      >
+        <p className="hint-clue" role="status">
+          🗺️ {ROW_MARKS[g.row]} 줄 · {g.col + 1}번 칸
+        </p>
+        <div className="island-map" style={{ gridTemplateColumns: `auto repeat(${n}, 1fr)` }}>
+          <span />
+          {Array.from({ length: n }, (_, c) => (
+            <b key={`h${c}`}>{c + 1}</b>
+          ))}
+          {Array.from({ length: n }, (_, r) => (
+            <div key={r} className="island-row" style={{ display: "contents" }}>
+              <b>{ROW_MARKS[r]}</b>
+              {Array.from({ length: n }, (_, c) => (
+                <button
+                  key={c}
+                  disabled={!active}
+                  data-cell={`${r}-${c}`}
+                  aria-label={`${ROW_MARKS[r]} 줄 ${c + 1}번`}
+                  onClick={() => act((x) => digIsland(x, r, c))}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  },
+};
+
+// ── lg-13 황금 코인왕 ──
+const GOLD_ARROWS: [GoldDir, string][] = [
+  ["up", "⬆"],
+  ["left", "⬅"],
+  ["right", "➡"],
+  ["down", "⬇"],
+];
+const goldking: ArcadeDef<GoldGame> = {
+  key: "goldking",
+  subtitle: "나침반을 따라 숨은 금화를 찾아요.",
+  icon: "🪙",
+  intro: (
+    <>
+      <h2>황금 코인왕</h2>
+      <p>
+        화살표로 한 칸씩 걸어요. 🧭 나침반이 가장 가까운 금화 쪽과 거리를 알려 줘요.
+        <br />
+        단계마다 땅이 넓어지고 금화 2개, 걸음은 30번. 금화 {GOLD_GOAL}개를 모으면 성공!
+      </p>
+    </>
+  ),
+  create: createGold,
+  tick: tickGold,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [stageHud(g.stage), `👣 ${g.steps}`],
+  View: ({ g, act, active }) => {
+    const n = sideFor(g.stage);
+    const c = compass(g);
+    return (
+      <div className="arcade-board gold-board" data-stage={g.stage} data-arrow={c?.arrow ?? ""}>
+        <p className="hint-clue" role="status">
+          🧭 {c ? `${c.arrow} ${c.far}` : "…"}
+        </p>
+        <div
+          className="gold-field"
+          style={{ gridTemplateColumns: `repeat(${n}, 1fr)` }}
+          aria-label="금화 들판"
+        >
+          {Array.from({ length: n * n }, (_, i) => (
+            <span key={i}>{i % n === g.x && Math.floor(i / n) === g.y ? "🧒" : ""}</span>
+          ))}
+        </div>
+        <div className="park-pad">
+          {GOLD_ARROWS.map(([d, icon]) => (
+            <button
+              key={d}
+              className={`park-${d}`}
+              disabled={!active}
+              data-dir={d}
+              aria-label={`${icon} 걷기`}
+              onClick={() => act((x) => walk(x, d))}
+            >
+              {icon}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  },
+};
+
+// ── lg-09 밤 게임 ──
+const night: ArcadeDef<NightGame> = {
+  key: "night",
+  subtitle: "손전등으로 비추고 반딧불이를 잡아요.",
+  icon: "🔦",
+  intro: (
+    <>
+      <h2>깜깜한 숲의 반딧불이</h2>
+      <p>
+        어두운 칸을 누르면 손전등이 그 둘레를 잠깐 비춰요. 빛 속의 ✨ 반딧불이를 눌러 잡아요!
+        <br />
+        🦉 부엉이는 깨우면 안 돼요({NIGHT_MISSES}번이면 끝). 밤마다 반딧불이 3마리, 손전등은 15번.
+        밤이 깊을수록 빛이 짧아져요.
+      </p>
+    </>
+  ),
+  create: createNight,
+  tick: tickNight,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [stageHud(g.stage), `🔋 ${g.shines}`, `🦉 ${g.misses}/${NIGHT_MISSES}`],
+  View: ({ g, act, active }) => (
+    <div
+      className="arcade-board night-board"
+      data-stage={g.stage}
+      data-lit={g.lit.join(",")}
+      data-fireflies={g.fireflies.join(",")}
+      data-owls={g.owls.join(",")}
+    >
+      <div className="night-forest" style={{ gridTemplateColumns: `repeat(${NIGHT_SIZE}, 1fr)` }}>
+        {Array.from({ length: NIGHT_SIZE * NIGHT_SIZE }, (_, i) => {
+          const lit = g.lit.includes(i);
+          return (
+            <button
+              key={i}
+              className={lit ? "lit" : ""}
+              disabled={!active}
+              data-cell={i}
+              aria-label={
+                lit
+                  ? g.fireflies.includes(i)
+                    ? "반딧불이"
+                    : g.owls.includes(i)
+                      ? "부엉이"
+                      : "빈 풀숲"
+                  : "어두운 칸 비추기"
+              }
+              onClick={() => act((x) => tapForest(x, i))}
+            >
+              {lit ? (g.fireflies.includes(i) ? "✨" : g.owls.includes(i) ? "🦉" : "🌿") : ""}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  ),
+};
+
+// ── lg-12 먹방 대모험 ──
+const feast: ArcadeDef<FeastGame> = {
+  key: "feast",
+  subtitle: "손님 주문대로 음식을 담아요.",
+  icon: "🍱",
+  intro: (
+    <>
+      <h2>먹방 대모험 식당</h2>
+      <p>
+        손님 주문 카드의 음식 3개를 지나가는 줄에서 눌러 접시에 담아요. 채소·과일이 있으면
+        「골고루!」
+        <br />
+        코스 3번, 접시 6개, 120초. 주문에 없는 음식을 누르면 실수, {FEAST_MISSES}번이면 끝.
+      </p>
+    </>
+  ),
+  create: createFeast,
+  tick: tickFeast,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [
+    stageHud(g.stage),
+    `실수 ${g.misses}/${FEAST_MISSES}`,
+    `⏳ ${Math.ceil(g.remaining)}초`,
+  ],
+  View: ({ g, act, active }) => (
+    <div
+      className="arcade-board feast-board"
+      data-stage={g.stage}
+      data-order={g.order.join(",")}
+      data-plate={g.plate.join(",")}
+    >
+      <div className="feast-order">
+        <ol className="cook-card" aria-label="주문 카드">
+          {g.order.map((f) => (
+            <li key={f} className={g.plate.includes(f) ? "done" : ""}>
+              {g.plate.includes(f) ? "✓" : FOODS[f]}
+            </li>
+          ))}
+        </ol>
+        {balanced(g.order) && <b className="feast-cheer">골고루!</b>}
+      </div>
+      <div className="feast-belt" aria-label="음식이 지나가는 줄">
+        {g.belt.map((d) => (
+          <button
+            key={d.id}
+            style={{ left: pct(d.x) }}
+            disabled={!active}
+            data-dish={d.id}
+            data-food={d.food}
+            data-x={d.x.toFixed(3)}
+            aria-label={`음식 ${FOODS[d.food]}`}
+            onClick={() => act((x) => pickDish(x, d.id))}
+          >
+            {FOODS[d.food]}
+          </button>
+        ))}
+      </div>
+    </div>
+  ),
+};
+
+// ── lg-20 공룡 월드 ──
+const dino: ArcadeDef<DinoGame> = {
+  key: "dino",
+  subtitle: "공룡이 틀 안에서 편안할 때 찰칵!",
+  icon: "🦕",
+  intro: (
+    <>
+      <h2>공룡 사진 도감</h2>
+      <p>
+        공룡이 사진 틀 안에 들어와 편안할 때 「찰칵」! 새 공룡이면 도감에 들어가요.
+        <br />
+        💢 놀란 공룡은 가까이 가면 위험해요 — 찍으면 안전 경고({DINO_WARNINGS}번이면 끝). 필름은
+        20장, 도감 8마리를 채워요.
+      </p>
+    </>
+  ),
+  create: createDino,
+  tick: tickDino,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [stageHud(g.stage), `🎞️ ${g.film}`, `⚠️ ${g.warnings}/${DINO_WARNINGS}`],
+  View: ({ g, act, active }) => {
+    const w = g.walker;
+    return (
+      <>
+        <div
+          className="arcade-field dino-field"
+          data-stage={g.stage}
+          data-x={w.x.toFixed(3)}
+          data-in-frame={inFrame(w)}
+          data-startled={w.startled > 0}
+          data-new={!g.book.includes(w.species)}
+        >
+          <div
+            className="dino-frame"
+            style={{ left: pct(FRAME.from), width: pct(FRAME.to - FRAME.from) }}
+            aria-hidden="true"
+          />
+          <span
+            className="dino-walker"
+            style={{
+              left: pct(w.x),
+              transform: `translate(-50%, -50%)${w.dir > 0 ? " scaleX(-1)" : ""}`,
+            }}
+            role="img"
+            aria-label={w.startled > 0 ? "놀란 공룡" : "공룡"}
+          >
+            {DINOS[w.species]}
+          </span>
+          {w.startled > 0 && (
+            <span className="dino-mad" style={{ left: pct(w.x) }} aria-hidden="true">
+              💢
+            </span>
+          )}
+          <p className="dino-book" aria-label={`도감 ${g.book.length}마리`}>
+            {DINOS.map((d, i) => (
+              <span key={d} className={g.book.includes(i) ? "got" : ""}>
+                {g.book.includes(i) ? d : "?"}
+              </span>
+            ))}
+          </p>
+        </div>
+        <button className="hj-big arcade-action" disabled={!active} onClick={() => act(snap)}>
+          📷 찰칵
+        </button>
+      </>
+    );
+  },
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const ARCADE_GAMES: Record<ArcadeKey, ArcadeDef<any>> = {
   balloons,
@@ -1174,4 +2323,19 @@ export const ARCADE_GAMES: Record<ArcadeKey, ArcadeDef<any>> = {
   starhop,
   fishking,
   dig,
+  champion,
+  sky,
+  sea,
+  robotrun,
+  duel,
+  legendfuse,
+  space,
+  crack,
+  earth,
+  thai,
+  island,
+  goldking,
+  night,
+  feast,
+  dino,
 };

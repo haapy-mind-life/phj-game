@@ -18,6 +18,8 @@ export type ArcadeDef<G> = {
   /** Short HUD items, e.g. "❤ 2", "⏳ 12초". */
   hud: (g: G) => string[];
   View: (p: { g: G; act: (fn: (g: G) => G) => void; active: boolean }) => ReactNode;
+  /** Lets go of any held button. A release while paused is ignored, so resuming calls this. */
+  release?: (g: G) => G;
 };
 type Phase = "ready" | "playing" | "paused" | "done";
 
@@ -128,7 +130,13 @@ export function ArcadeShell<G>({ def }: { def: ArcadeDef<G> }) {
               <div className="arcade-result">
                 <h2>잠깐 쉬는 중</h2>
                 <p>시간도 함께 쉬어요.</p>
-                <button className="hj-big" onClick={() => setPhase("playing")}>
+                <button
+                  className="hj-big"
+                  onClick={() => {
+                    if (def.release) setGame(def.release);
+                    setPhase("playing");
+                  }}
+                >
                   이어서 하기
                 </button>
               </div>

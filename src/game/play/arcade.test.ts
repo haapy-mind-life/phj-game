@@ -10,11 +10,11 @@ import {
 } from "./arcade.ts";
 import { KART_GAMES } from "./kart-catalog.ts";
 
-test("every arcade game is a mini in the kart catalog, playable on /mini/$game", () => {
+test("every arcade game is in the kart catalog, playable on /mini/$game", () => {
   for (const g of ARCADE) {
     const entry = KART_GAMES.find((k) => k.id === g.catalogId);
     assert.ok(entry, g.catalogId);
-    assert.equal(entry.kind, "mini");
+    assert.ok(entry.kind === "mini" || entry.kind === "large", g.catalogId);
     assert.equal(entry.name, g.name);
     assert.equal(entry.status, "playable", g.catalogId);
     assert.equal("game" in entry && entry.game, g.key);

@@ -22,6 +22,22 @@ export const ARCADE = [
   { key: "starhop", catalogId: "mn-01", name: "박현준 별빛 모으기", goal: 15, coinsPerPoint: 2 },
   { key: "fishking", catalogId: "mn-06", name: "박현준 낚시왕", goal: 5, coinsPerPoint: 6 },
   { key: "dig", catalogId: "mn-07", name: "박현준 보물찾기", goal: 3, coinsPerPoint: 10 },
+  // Large games (lg-*): three stages each.
+  { key: "champion", catalogId: "lg-14", name: "박현준 자동차 챔피언", goal: 3, coinsPerPoint: 10 },
+  { key: "sky", catalogId: "lg-15", name: "박현준 하늘 러너", goal: 15, coinsPerPoint: 2 },
+  { key: "sea", catalogId: "lg-16", name: "박현준 바다 러너", goal: 15, coinsPerPoint: 2 },
+  { key: "robotrun", catalogId: "lg-17", name: "박현준 로봇 러너", goal: 15, coinsPerPoint: 2 },
+  { key: "duel", catalogId: "lg-03", name: "박현준 로봇 대결", goal: 3, coinsPerPoint: 10 },
+  { key: "legendfuse", catalogId: "lg-04", name: "박현준 전설 합체", goal: 6, coinsPerPoint: 5 },
+  { key: "space", catalogId: "lg-19", name: "박현준 우주 대전쟁", goal: 15, coinsPerPoint: 2 },
+  { key: "crack", catalogId: "lg-10", name: "박현준 땅콩까기", goal: 12, coinsPerPoint: 2 },
+  { key: "earth", catalogId: "lg-05", name: "박현준 지구 탐험", goal: 8, coinsPerPoint: 4 },
+  { key: "thai", catalogId: "lg-06", name: "박현준 태국 여행", goal: 12, coinsPerPoint: 2 },
+  { key: "island", catalogId: "lg-18", name: "박현준 보물섬", goal: 6, coinsPerPoint: 5 },
+  { key: "goldking", catalogId: "lg-13", name: "박현준 황금 코인왕", goal: 6, coinsPerPoint: 5 },
+  { key: "night", catalogId: "lg-09", name: "박현준 밤 게임", goal: 9, coinsPerPoint: 3 },
+  { key: "feast", catalogId: "lg-12", name: "박현준 먹방 대모험", goal: 6, coinsPerPoint: 5 },
+  { key: "dino", catalogId: "lg-20", name: "박현준 공룡 월드", goal: 8, coinsPerPoint: 4 },
 ] as const;
 
 export type ArcadeKey = (typeof ARCADE)[number]["key"];

@@ -41,8 +41,9 @@
 .arcade-field {
   position: relative;
   width: min(100%, 420px);
-  height: min(58vh, 460px);
-  min-height: 300px;
+  /* Leaves room on a 360×740 phone for the title, HUD and the big buttons below. */
+  height: min(44vh, 440px);
+  min-height: 240px;
   overflow: hidden;
   border-radius: 18px;
   background: linear-gradient(#cfeaff, #f4fbff);
@@ -609,4 +610,384 @@
   .fish-float.bite {
     animation: none;
   }
+}
+/* ── 큰 게임 ── */
+/* 자동차 챔피언 */
+.race-meter {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: min(100%, 420px);
+}
+.race-meter span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 18px;
+}
+.race-meter i {
+  flex: none;
+}
+.race-meter i {
+  display: block;
+  height: 10px;
+  border-radius: 5px;
+  background: #e0443e;
+}
+.race-meter .rival i {
+  background: #3b82f6;
+}
+.dodge-car.boosting {
+  filter: drop-shadow(0 0 8px #ffd23f);
+}
+/* 하늘 러너 */
+.sky-field {
+  background: linear-gradient(#7cc3ff, #e8f6ff);
+}
+.sky-thing,
+.sky-plane {
+  position: absolute;
+  font-size: 36px;
+  transform: translate(-50%, 50%);
+}
+.sky-thing.updraft {
+  opacity: 0.7;
+}
+.sky-ground {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 6%;
+  background: #7fae6a;
+}
+/* 바다 러너 */
+.sea-field {
+  background: linear-gradient(#bfe8ff 0 40%, #2e7fb8 40% 100%);
+}
+.sea-thing,
+.sea-swimmer {
+  position: absolute;
+  font-size: 36px;
+  transform: translate(-50%, -50%);
+}
+.sea-air {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  height: 10px;
+  border-radius: 5px;
+  background: #ffffffaa;
+}
+.sea-air i {
+  display: block;
+  height: 100%;
+  border-radius: 5px;
+  background: #22d3ee;
+}
+/* 로봇 러너 */
+.run-field {
+  background: linear-gradient(#ffe9c7, #fff7ea);
+  border-color: #e0b77a;
+}
+.run-ground {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 62%;
+  height: 4px;
+  background: #b98a4a;
+}
+.run-block,
+.run-me {
+  position: absolute;
+  top: 52%;
+  font-size: 44px;
+  transform: translate(-50%, -50%);
+}
+.run-tip {
+  position: absolute;
+  top: 10px;
+  left: 0;
+  right: 0;
+  margin: 0;
+  text-align: center;
+  font-weight: 800;
+  font-size: 20px;
+}
+.run-forms {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: min(100%, 420px);
+}
+.run-forms button {
+  padding: 10px 4px;
+  font-size: 16px;
+}
+.run-forms button.picked {
+  outline: 4px solid #f29a3a;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dodge-car.boosting {
+    filter: none;
+  }
+}
+/* 로봇 대결 */
+.duel-board {
+  position: relative;
+}
+.duel-rival {
+  display: grid;
+  justify-items: center;
+}
+.duel-bot {
+  font-size: 72px;
+}
+.duel-hp {
+  font-size: 18px;
+}
+.duel-signal {
+  margin: 0;
+  padding: 6px 12px;
+  border-radius: 12px;
+  background: #fff3c4;
+  font-size: 22px;
+  font-weight: 800;
+}
+.duel-timer {
+  position: static;
+  width: 100%;
+}
+.duel-answers {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+.arcade-board .duel-answers button {
+  font-size: 18px;
+  font-weight: 800;
+  padding: 8px 2px;
+}
+/* 전설 합체 */
+.fuse-say {
+  margin: 0;
+  font-weight: 800;
+  font-size: 18px;
+}
+.fuse-parts {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+.arcade-board .fuse-parts button {
+  display: grid;
+  justify-items: center;
+  height: 92px;
+  font-size: 40px;
+}
+.fuse-parts small {
+  font-size: 14px;
+}
+.arcade-board .fuse-parts button.lit {
+  background: #ffe27a;
+  border-color: #e0a91b;
+  box-shadow: 0 0 16px #ffd23f;
+}
+/* 우주 대전쟁 */
+.space-field {
+  background: radial-gradient(#2a2f5a, #0f1229);
+  border-color: #3d4380;
+}
+.dodge-car.shielded {
+  filter: drop-shadow(0 0 10px #22d3ee);
+}
+.space-controls {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr 1fr;
+  gap: 6px;
+  width: min(100%, 420px);
+}
+.space-controls button {
+  padding: 10px 2px;
+}
+/* 땅콩까기 */
+.crack-peanut {
+  font-size: 72px;
+}
+.crack-timer {
+  position: static;
+  width: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dodge-car.shielded,
+  .arcade-board .fuse-parts button.lit {
+    filter: none;
+    box-shadow: none;
+  }
+}
+/* 지구 탐험 */
+.earth-clue {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  text-align: center;
+}
+.earth-clue span {
+  display: block;
+  font-size: 56px;
+}
+.earth-map {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+.arcade-board .earth-map button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 17px;
+  font-weight: 800;
+}
+.earth-map button span {
+  font-size: 24px;
+}
+.earth-stamps {
+  margin: 0;
+  font-size: 20px;
+}
+/* 태국 여행 */
+.arcade-board .thai-board .cook-pantry button,
+.thai-board .cook-pantry button {
+  display: grid;
+  justify-items: center;
+  height: 78px;
+}
+.thai-name {
+  font-size: 12px;
+}
+/* 보물섬 */
+.island-board {
+  background: #f7e8c4;
+}
+.island-map {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  align-items: center;
+  text-align: center;
+}
+.island-map b {
+  font-size: 18px;
+}
+.arcade-board .island-map button {
+  min-width: 0;
+  min-height: 44px;
+  aspect-ratio: 1;
+  background: #eed49a;
+  border-color: #c9a35a;
+}
+/* 황금 코인왕 */
+.gold-field {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  max-width: min(230px, 28vh);
+}
+.gold-field span {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 4px;
+  background: #e8d39a;
+  font-size: 16px;
+}
+/* 밤 게임 */
+.night-board {
+  background: #18203a;
+  border-color: #3d4a7a;
+}
+.night-forest {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+}
+.arcade-board .night-forest button {
+  min-width: 0;
+  aspect-ratio: 1;
+  background: #0d1226;
+  border-color: #26305a;
+  font-size: 26px;
+}
+.arcade-board .night-forest button.lit {
+  background: #fff3b0;
+  border-color: #e0c45a;
+}
+/* 먹방 대모험 */
+.feast-order {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.feast-cheer {
+  color: #3c9b4a;
+}
+.feast-belt {
+  position: relative;
+  width: 100%;
+  height: 92px;
+  border-radius: 14px;
+  background: repeating-linear-gradient(90deg, #d9d2c3 0 24px, #cbc3b2 24px 48px);
+  overflow: hidden;
+}
+.arcade-board .feast-belt button {
+  position: absolute;
+  top: 12px;
+  transform: translateX(-50%);
+  height: 64px;
+  font-size: 36px;
+}
+/* 공룡 월드 */
+.dino-field {
+  background: linear-gradient(#bfe8ff 0 45%, #a8d98a 45% 100%);
+}
+.dino-frame {
+  position: absolute;
+  top: 30%;
+  height: 40%;
+  border: 4px dashed #ffffff;
+  border-radius: 12px;
+}
+.dino-walker {
+  position: absolute;
+  top: 50%;
+  font-size: 56px;
+}
+.dino-mad {
+  position: absolute;
+  top: 26%;
+  font-size: 28px;
+  transform: translateX(-50%);
+}
+.dino-book {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 6px;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  font-size: 20px;
+}
+.dino-book span {
+  opacity: 0.5;
+}
+.dino-book span.got {
+  opacity: 1;
 }
