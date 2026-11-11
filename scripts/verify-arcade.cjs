@@ -553,6 +553,21 @@ async function runGame(browser, viewport, name, game, errors) {
   await page.getByRole("button", { name: "이어서 하기" }).click();
   assert.equal(await phase(), "playing");
 
+  // A button held when the game pauses is let go on resume (sky's 위로 stays pressed otherwise).
+  if (key === "sky") {
+    await page.getByRole("button", { name: "잠깐 쉬기" }).click();
+    await page.getByRole("button", { name: "이어서 하기" }).click();
+    const hold = page.locator(".arcade-action");
+    await hold.dispatchEvent("pointerdown");
+    await page.getByRole("button", { name: "잠깐 쉬기" }).click();
+    await hold.dispatchEvent("pointerup").catch(() => {});
+    await page.getByRole("button", { name: "이어서 하기" }).click();
+    const h1 = Number(await page.locator(".sky-field").getAttribute("data-height"));
+    await page.waitForTimeout(600);
+    const h2 = Number(await page.locator(".sky-field").getAttribute("data-height"));
+    assert.ok(h2 < h1 || h2 === 0.5, `still climbing after resume: ${h1} → ${h2}`);
+  }
+
   // Lose.
   const beforeLoss = (await saved()).money;
   await LOSE[key](page);
