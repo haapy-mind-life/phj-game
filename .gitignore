@@ -48,3 +48,6 @@ supabase/.branches/
 
 # Bulk screenshot captures stay local; commit only shots a document links to
 docs/verification/*concept-audit/
+
+# Local Supabase config; Pages builds read repo Actions variables instead. Template: .env.example
+.env
