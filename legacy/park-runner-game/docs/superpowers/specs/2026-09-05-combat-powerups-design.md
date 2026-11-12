@@ -291,14 +291,14 @@ React state는 화면 표시가 필요한 값만 둔다.
 - `npm run build`
 - 기존 게임 시작/점프/우산/스프링/클리어 회귀 여부
 
-## 14. Git/Lovable 운영 계약
+## 14. Git 운영 계약
 
 `AGENTS.md` 계약을 준수한다.
 
 - 이미 push된 이력의 force-push 금지
 - rebase/amend/squash로 published history 재작성 금지
 - `main`에 새 커밋을 순방향으로 추가
-- 각 커밋은 Lovable에 동기화되어도 동작 가능한 상태 유지
+- 각 커밋은 푸시되어도 동작 가능한 상태 유지
 
 ## 15. 완료 기준
 
@@ -316,4 +316,4 @@ React state는 화면 표시가 필요한 값만 둔다.
 - 기존 스프링/구름길/우산/비구름 동작 유지
 - 1000점 클리어 유지
 - 자동 테스트, lint, build 검증 통과
-- Lovable 연동 Git 이력 재작성 없음
+- 푸시된 Git 이력 재작성 없음

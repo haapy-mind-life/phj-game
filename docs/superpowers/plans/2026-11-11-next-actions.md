@@ -100,4 +100,4 @@
 | C3 | 닫힌 PR #39 브랜치 `feat/robot-watch-fusion-20261101` 삭제 | 보호자 승인. 원격 삭제는 보호자가 직접 실행(자동 권한 검사가 막음). 커밋은 `refs/pull/39/head`에 남는다 |
 | C4 | `docs/superpowers/plans`의 9~10월 계획 4개는 끝난 계획이다. 이 문서를 최신으로 두고 남겨 둔다 | 유지 |
 | C5 | `verify-family-performance`의 15fps 기준은 이 PC에서 기준선도 미달한다. 기준이나 측정 환경을 다시 정한다 | 남음 |
-| C6 | `chore/untrack-env-20261108`: `.env` 추적 해제 | PR #59로 올림. 병합 뒤 Lovable 미리보기 한 번 확인 |
+| C6 | `chore/untrack-env-20261108`: `.env` 추적 해제 | 완료 (PR #59) |

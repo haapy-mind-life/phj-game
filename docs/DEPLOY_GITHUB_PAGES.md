@@ -5,8 +5,8 @@
 ## 목표와 구성
 
 - 원본 게임: `src/components/hyunjun/`의 마을/러너/농장/집/미니게임 컴포넌트를 그대로 사용.
-- Lovable/TanStack Start 개발용 빌드는 `npm run build`로 그대로 유지.
-- 독립 정적 빌드: `npm run build:pages`. `vite.pages.config.ts`는 Lovable 서버 설정을 사용하지 않음.
+- TanStack Start(SSR) 개발용 빌드는 `npm run build`로 그대로 유지.
+- 독립 정적 빌드: `npm run build:pages`. `vite.pages.config.ts`는 SSR 서버 설정을 사용하지 않음.
 - 주소: `https://haapy-mind-life.github.io/phj-game/` (실제 배포 성공 전까지 **예정 주소**).
 - 페이지 내 이동: `#/race`, `#/greenhouse`, `#/house` 해시 라우팅으로 새로고침과 정적 호스팅 경로 충돌을 회피.
 - 로컬 저장: 기존 `hyunjun-game-v2` 키 및 이전 저장 마이그레이션 규칙은 동일한 게임 코드에서 유지.
@@ -37,7 +37,7 @@ PAGES_BASE_PATH=/ npm run build:pages # 사이트 루트로 배포하는 대안
 ## 보안·데이터 주의
 
 - **비공개 저장소라 하더라도 GitHub Pages로 만든 사이트는 기본적으로 공개될 수 있습니다.** 게시할 코드/에셋에 비밀키, 개인정보, 실제 계정 식별자를 넣지 않습니다.
-- 게임 저장 데이터는 브라우저 origin별 localStorage에 저장됩니다. **Lovable 도메인의 기존 진행기록은 GitHub Pages 도메인으로 자동 이동하지 않습니다.** 추후 저장 내보내기/가져오기 작업이 필요합니다.
+- 게임 저장 데이터는 브라우저 origin별 localStorage에 저장됩니다. **다른 도메인(이전 미리보기 주소 등)의 진행기록은 GitHub Pages 도메인으로 자동 이동하지 않습니다.** 추후 저장 내보내기/가져오기 작업이 필요합니다.
 - Pages에 로그인, 서버 API, DB 기능이 추가되면 이 정적 배포 설계는 다시 검토해야 합니다.
 - 배포 검증과 실제 기기 검증은 별개입니다. 자동화 테스트/타입검사/번들 생성만으로 Samsung Browser와 S Pen 실동작을 단정하지 않습니다.
 

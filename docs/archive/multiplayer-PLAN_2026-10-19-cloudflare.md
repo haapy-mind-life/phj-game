@@ -1,12 +1,12 @@
 > **보관 문서 (2026-11-01):** 가족방은 이 문서의 추천안(Cloudflare Worker)이 아니라 Supabase로 구현했다. 현재 기준은 [PLAN_SUPABASE_2026-10-20.md](../multiplayer/PLAN_SUPABASE_2026-10-20.md)와 [SUPABASE_SETUP.md](../multiplayer/SUPABASE_SETUP.md).
 
-# 가족 멀티플레이 계획 (GitHub Pages 유지, Lovable 미사용)
+# 가족 멀티플레이 계획 (GitHub Pages 유지)
 
 상태: **계획 · Codex 검토 대기** (코드 미변경). 작성 2026-10-19.
 
 ## 1. 목표와 제약
 - 아빠·엄마·누나·현준이 각자 기기에서 같은 주소(GitHub Pages)에 접속해 방 코드로 모이고 서로의 캐릭터를 본다(1단계).
-- 호스팅은 GitHub Pages 그대로. Lovable은 쓰지 않는다. 저장 데이터는 각자 브라우저(localStorage)에 둔다.
+- 호스팅은 GitHub Pages 그대로. 저장 데이터는 각자 브라우저(localStorage)에 둔다.
 - 공개 저장소이므로 비밀 값(키·토큰)은 저장소에 넣지 않는다. 아이용이므로 자유 텍스트 채팅은 없다.
 - 이미 main에 있는 것: 방 코드·메시지 검증·전송 제한·보간(`src/game/family-room.ts`), 전송 추상화(`family-transport.ts`, 현재 같은 기기 BroadcastChannel), 원격 아바타·패널. **새로 만들 것은 "다른 기기로 가는 전송" 하나뿐이다.**
 

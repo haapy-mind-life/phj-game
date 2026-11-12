@@ -44,7 +44,7 @@ jobs:
         run: npm run lint
       - name: Doc links
         run: npm run check:docs
-      - name: App build (Lovable / TanStack Start)
+      - name: App build (TanStack Start)
         run: npm run build
       - name: Static game build
         run: npm run build:pages

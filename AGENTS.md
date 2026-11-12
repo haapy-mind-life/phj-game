@@ -1,17 +1,10 @@
-<!-- LOVABLE:BEGIN -->
 > [!IMPORTANT]
-> This project is connected to [Lovable](https://lovable.dev). Avoid rewriting
-> published git history — force pushing, or rebasing/amending/squashing commits
-> that are already pushed — as it rewrites history on Lovable's side and the
-> user will likely lose their project history.
->
-> Commits you push to the connected branch sync back to Lovable and show up in
-> the editor, so keep the branch in a working state.
-<!-- LOVABLE:END -->
+> Do not rewrite published git history: no force pushing, and no rebasing, amending
+> or squashing commits that are already pushed. Keep `main` in a working state.
 
 ## Rules
 - Family room cross-device sync uses Supabase Auth and private Realtime Broadcast + Presence with family membership RLS. Only family membership is stored on the server; game saves remain local. Same-device BroadcastChannel is an explicit preview mode when configuration is absent, never an online error fallback.
-- GitHub Pages build reads VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY from repo Actions variables (CI) or a local untracked `.env` copied from `.env.example`. Why: static build has no Lovable runtime env.
+- GitHub Pages build reads VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY from repo Actions variables (CI) or a local untracked `.env` copied from `.env.example`. Why: the static build has no server runtime env.
 - One agent per working tree. Before starting, run `git status --short` and `git branch --show-current`; if another agent's uncommitted changes are present, do not edit, stash, format or switch branches there. Create your own tree instead: `git worktree add ../phj-game-<topic> -b <branch> origin/main`. Why: two agents sharing one checkout overwrite each other's in-flight edits.
 - Run `npm run check` (unit tests + `tsc --noEmit` + lint) before every commit that touches `src/`. CI runs the same steps plus both builds.
 - Do not run repo-wide `npm run format` or `eslint --fix` while other work is uncommitted; format only the files you changed.

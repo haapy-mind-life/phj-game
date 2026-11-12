@@ -4,7 +4,7 @@
 마을 생활(집·식당·가족 동행), 로봇 소환·합체·군단, 러너, 온실 농장, 가족방, 카트 허브의 미니게임이 한 저장 파일을 공유합니다.
 
 - 플레이: GitHub Pages (`main` 병합 시 자동 배포, [배포 안내](docs/DEPLOY_GITHUB_PAGES.md))
-- 편집: [Lovable](https://lovable.dev)과 연결되어 있습니다. 이미 푸시된 기록은 다시 쓰지 않습니다(`AGENTS.md` 참고).
+- 편집: 기능 브랜치 → PR → CI → 병합. 이미 푸시된 기록은 다시 쓰지 않습니다(`AGENTS.md` 참고).
 
 ## 빠른 시작
 
@@ -23,7 +23,7 @@ npm run build:pages             # GitHub Pages용 정적 빌드 → dist-pages/
 | `src/game/` | 화면과 분리된 순수 규칙과 `*.test.ts` 단위 테스트. `world/`(월드·실내·입력), `robot/`(로봇), `play/`(미니게임·장사·러너·온실·카트 목록), `economy/`(차량·성장), `family/`(가족방) |
 | `src/lib/` | 공통 저장 상태 `world-model.ts`(reducer·저장 마이그레이션), 가족방 연결 |
 | `src/components/hyunjun/` | 게임 화면 UI와 그림(SVG) 컴포넌트 |
-| `src/components/ui/` | Lovable 기본 UI 키트 |
+| `src/components/ui/` | 기본 UI 키트(shadcn/ui) |
 | `scripts/verify-*.cjs` | 실제 브라우저로 동선을 확인하는 검증 스크립트 |
 | `supabase/` | 가족방 인증·멤버십 마이그레이션 |
 | `docs/` | 요구사항·설계·검증 기록. 시작은 [docs/README.md](docs/README.md) |
