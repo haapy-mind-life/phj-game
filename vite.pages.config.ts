@@ -1,5 +1,5 @@
 /**
- * Independent static Vite build: does not use Lovable's SSR/Nitro configuration.
+ * Independent static Vite build: does not use the SSR/Nitro configuration in vite.config.ts.
  * Output is a normal browser bundle that GitHub Pages can serve.
  *
  * PAGES_BASE_PATH=/ npm run build:pages  # host at another domain's root
