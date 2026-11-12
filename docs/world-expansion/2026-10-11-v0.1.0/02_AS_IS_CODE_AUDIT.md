@@ -24,7 +24,7 @@
 - [해당 SHA GitHub Actions](https://github.com/haapy-mind-life/carrot-racer-farm/actions/runs/38105386742): `build-and-verify` 및 `deploy` 성공.
 - 확인된 것은 **정적 번들 생성과 배포 작업 성공**이다. 실사용자의 화면/사운드/펜 터치 반응 또는 서버의 실질적인 응답 체감까지 자동으로 증명하지 않는다.
 - GitHub Pages는 정적 호스팅. **로그인·원격 DB·실시간 서비스 서버는 없다**는 것을 신규 기능 설계의 기본 제약으로 유지한다.
-- 저장은 도메인(origin)별로 독립적이다. Lovable의 기존 진행 기록은 GitHub Pages로 자동 이전되지 않는다.
+- 저장은 도메인(origin)별로 독립적이다. 이전 미리보기 도메인의 진행 기록은 GitHub Pages로 자동 이전되지 않는다.
 
 ## 재활용하면 좋은 것 (PROPOSED)
 

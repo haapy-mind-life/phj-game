@@ -4,7 +4,7 @@
 
 **Goal:** `carrot-racer-farm` 하나에서 마을, 박현준 러너, 반짝 농장, 우리 집 꾸미기가 공통 저장 데이터를 공유하며 동작하도록 한다.
 
-**Architecture:** 기존 TanStack Start 라우팅과 Lovable 연결은 유지하고, 게임 상태와 러너 엔진을 순수 TypeScript 모듈로 분리한다. UI는 `src/components/hyunjun/`에 모으고 모바일 터치 중심으로 구성한다. 기존 저장 데이터는 v2 모델로 마이그레이션한다.
+**Architecture:** 기존 TanStack Start 라우팅은 유지하고, 게임 상태와 러너 엔진을 순수 TypeScript 모듈로 분리한다. UI는 `src/components/hyunjun/`에 모으고 모바일 터치 중심으로 구성한다. 기존 저장 데이터는 v2 모델로 마이그레이션한다.
 
 **Tech Stack:** React 19, TanStack Router/Start, TypeScript, Canvas 2D, Tailwind CSS 4, node:test, GitHub Actions
 
@@ -12,7 +12,7 @@
 
 ## Global Constraints
 - 최종 통합 저장소는 `haapy-mind-life/carrot-racer-farm`이다.
-- Lovable 연결 저장소이므로 force push/rebase/amend로 게시 이력을 재작성하지 않는다.
+- force push/rebase/amend로 게시 이력을 재작성하지 않는다.
 - 모바일 터치가 기본이며 텍스트 입력 UI를 추가하지 않는다.
 - 러너 기본 모드는 어린이 친화적인 산책 모드다.
 - 공통 지갑은 실제 화폐가 아닌 `별코인`으로 표시한다.
