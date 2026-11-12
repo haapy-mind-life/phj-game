@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1440" height="900" viewBox="0 0 1440 900" role="img"><title>박현준 월드 로봇 오리지널 콘셉트 레퍼런스</title><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0b1e37"/><stop offset="1" stop-color="#163456"/></linearGradient><linearGradient id="bl" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#62e5ff"/><stop offset=".53" stop-color="#1d72ed"/><stop offset="1" stop-color="#152b80"/></linearGradient><linearGradient id="gd" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff6a6"/><stop offset=".48" stop-color="#ffc42e"/><stop offset="1" stop-color="#af6414"/></linearGradient><linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#eafaff"/><stop offset="1" stop-color="#64839e"/></linearGradient><filter id="glow"><feGaussianBlur stdDeviation="7"/></filter></defs><rect width="1440" height="900" rx="28" fill="url(#bg)"/><path d="M0 665Q300 605 580 690T1440 635V900H0" fill="#10284c" opacity=".8"/>
+ <circle cx="350" cy="440" r="285" fill="#2ba7ff" opacity=".12" filter="url(#glow)"/>
+ <text x="66" y="80" fill="#d5faff" font-size="40" font-family="Noto Sans CJK KR,Malgun Gothic,Arial,sans-serif" font-weight="800">BLUECABI / 블루카비</text>
+ <text x="66" y="117" fill="#90bad5" font-size="21" font-family="Noto Sans CJK KR,Malgun Gothic,Arial,sans-serif" font-weight="600">작업명 · 신규 경찰 변신 로봇 · 콘셉트 DRAFT</text>
+ <rect x="56" y="144" width="617" height="670" rx="26" fill="#143861" stroke="#2d79a7" stroke-width="3"/>
+ <g transform="translate(105 185) scale(1.21)" stroke-linejoin="round" stroke-linecap="round">
+ <ellipse cx="165" cy="452" rx="137" ry="22" fill="#000d21" opacity=".55"/>
+ <path d="M86 145L3 127L28 194L107 189 M244 145L330 127L309 195L226 189" fill="url(#bl)" stroke="#071b57" stroke-width="11"/>
+ <path d="M95 292L78 397L116 430L154 423L170 314 M223 292L238 397L205 432L168 423L159 314" fill="url(#bl)" stroke="#071b57" stroke-width="12"/>
+ <path d="M71 390L39 421L42 451L147 451L148 418L113 386 M255 387L284 421L279 451L176 451L175 417L213 386" fill="url(#bl)" stroke="#071b57" stroke-width="12"/>
+ <path d="M78 160L33 162L9 231L35 292L91 272L102 208 M252 160L297 162L323 231L295 293L239 274L228 208" fill="url(#bl)" stroke="#071b57" stroke-width="12"/>
+ <path d="M27 270L24 316L69 330L100 285L89 266 M301 269L307 317L266 333L233 286L245 268" fill="url(#steel)" stroke="#071b57" stroke-width="9"/>
+ <path d="M75 155L111 131L218 131L254 155L246 268L214 321L117 321L85 268Z" fill="url(#bl)" stroke="#071b57" stroke-width="13"/>
+ <path d="M110 148L225 148L230 257L207 293L124 293L102 257Z" fill="#18304d" stroke="#8deaff" stroke-width="5"/>
+ <path d="M105 72L128 42L201 42L228 72L238 112L223 148L107 148L91 113Z" fill="url(#bl)" stroke="#071b57" stroke-width="11"/>
+ <path d="M110 100L131 84L201 84L219 100L208 128L121 128Z" fill="#132b52" stroke="#8deaff" stroke-width="5"/>
+ <path d="M121 103L150 107L145 115L124 113 M181 108L208 102L202 115L185 115" fill="#b7ffff"/>
+ <path d="M145 45L161 20L174 45" fill="#f6ed7d" stroke="#071b57" stroke-width="7"/>
+ <rect x="93" y="44" width="26" height="13" rx="6" fill="#ff455c" stroke="#071b57" stroke-width="4"/>
+ <rect x="211" y="44" width="26" height="13" rx="6" fill="#5ef4ff" stroke="#071b57" stroke-width="4"/>
+ <path d="M118 185L160 165L213 185L208 238L165 262L121 238Z" fill="#0d2441" stroke="#8deaff" stroke-width="5"/>
+ <path transform="translate(141 186) scale(1.09)" d="M16 0L0 26H13L7 51L37 19H22L29 0Z" fill="#f6ed7d" stroke="#7a5718" stroke-width="1.5"/>
+ <path d="M42 194L84 187L79 222L30 230 M246 188L289 194L297 230L250 221" fill="#8deaff" opacity=".55"/>
+ <path d="M105 338L144 344L137 389L94 385 M220 339L185 344L190 389L230 383" fill="#8deaff" opacity=".45"/>
+ <path d="M66 425L127 429M199 429L263 425" stroke="#8deaff" stroke-width="7" opacity=".8"/>
+ <path d="M112 68L94 39L121 50M216 68L238 40L208 51" fill="url(#bl)" stroke="#071b57" stroke-width="7"/>
+ 
+ </g>
+ <text x="86" y="783" fill="#dbf8ff" font-size="22" font-family="Noto Sans CJK KR,Malgun Gothic,Arial,sans-serif" font-weight="600">전신 원화 / 비인간형 각진 경찰 메카</text>
+ <rect x="704" y="144" width="671" height="244" rx="20" fill="#103555" stroke="#4a80aa" stroke-width="2"/>
+ <text x="730" y="187" fill="#eff9ff" font-size="26" font-family="Noto Sans CJK KR,Malgun Gothic,Arial,sans-serif" font-weight="600">변신 형태 01 — 파란 경찰차</text>
+ <g transform="translate(799 198) scale(1.39)"><ellipse cx="153" cy="124" rx="144" ry="14" fill="#050c1a" opacity=".6"/><path d="M25 83L52 57L93 28H207L251 64L287 81L296 111H13L14 96Z" fill="url(#bl)" stroke="#11265e" stroke-width="9" stroke-linejoin="round"/><path d="M100 34H198L229 70H70Z" fill="#7cdfff" stroke="#11265e" stroke-width="6"/><path d="M155 34L155 70" stroke="#11265e" stroke-width="6"/><circle cx="75" cy="112" r="30" fill="#101c34" stroke="#d0fdff" stroke-width="8"/><circle cx="246" cy="112" r="30" fill="#101c34" stroke="#d0fdff" stroke-width="8"/><path d="M110 87L144 87M180 87L213 87" stroke="#d0fdff" stroke-width="10"/><rect x="132" y="14" width="60" height="17" rx="6" fill="#22355a" stroke="#11265e" stroke-width="5"/><rect x="139" y="17" width="21" height="10" rx="3" fill="#ff5062"/><rect x="165" y="17" width="19" height="10" rx="3" fill="#70f3ff"/><path transform="translate(15 40) scale(0.6)" d="M16 0L0 26H13L7 51L37 19H22L29 0Z" fill="#d0fdff" stroke="#7a5718" stroke-width="1.5"/></g>
+ <rect x="704" y="410" width="671" height="220" rx="20" fill="#103555" stroke="#4a80aa" stroke-width="2"/>
+ <text x="730" y="454" fill="#eff9ff" font-size="26" font-family="Noto Sans CJK KR,Malgun Gothic,Arial,sans-serif" font-weight="600">얼굴과 날개 디자인 규칙</text>
+ <text x="730" y="499" fill="#eff9ff" font-size="19" font-family="Noto Sans CJK KR,Malgun Gothic,Arial,sans-serif" font-weight="600">01  네모난 얼굴이 아닌 뾰족한 헬멧 + 날렵한 바이저</text>
+ <text x="730" y="538" fill="#eff9ff" font-size="19" font-family="Noto Sans CJK KR,Malgun Gothic,Arial,sans-serif" font-weight="600">02  경찰 모자 형태의 상단 갑옷과 작은 사이렌 2개</text>
+ <text x="730" y="577" fill="#eff9ff" font-size="19" font-family="Noto Sans CJK KR,Malgun Gothic,Arial,sans-serif" font-weight="600">03  번개 마크, 작은 돌출 날개, 똑바른 다리</text>
+ <rect x="704" y="652" width="671" height="164" rx="20" fill="#133d59" stroke="#4a80aa" stroke-width="2"/>
+ <text x="730" y="694" fill="#fff4b3" font-size="22" font-family="Noto Sans CJK KR,Malgun Gothic,Arial,sans-serif" font-weight="600">현황: 카탈로그·변신·시계 카드 미구현</text>
+ <text x="730" y="731" fill="#d8edf9" font-size="18" font-family="Noto Sans CJK KR,Malgun Gothic,Arial,sans-serif" font-weight="600">기존 번개 경찰 rb-thunder-police는 별개 개체로 유지</text>
+ <text x="730" y="766" fill="#d8edf9" font-size="18" font-family="Noto Sans CJK KR,Malgun Gothic,Arial,sans-serif" font-weight="600">동일 디자인·상표 복제 금지. 에셋 승인 후 적용.</text>
+ <text x="60" y="858" fill="#8ab9d1" font-size="16" font-family="Noto Sans CJK KR,Malgun Gothic,Arial,sans-serif" font-weight="600">CONCEPT / NOT IN GAME · 2026-11-08 · phj-game</text>
+<rect x="15" y="15" width="1410" height="870" rx="26" fill="none" stroke="#6ca7ca" opacity=".4" stroke-width="2"/></svg>
