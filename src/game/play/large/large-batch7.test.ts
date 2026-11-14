@@ -148,3 +148,17 @@ test("crack: tapping outside the green and leaving a peanut are mistakes; three 
   const c = createCrack();
   assert.equal(tickCrack(c, Number.NaN), c);
 });
+
+test("legendfuse: an order never shows the same part twice in a row", () => {
+  for (let seed = 1; seed <= 200; seed++) {
+    let g = createFuse(seed);
+    for (let round = 0; round < FUSE_GOAL; round++) {
+      for (let i = 1; i < g.order.length; i++)
+        assert.notEqual(g.order[i], g.order[i - 1], `seed ${seed}, round ${round}`);
+      g = tickFuse(g, 0.2);
+      while (g.showing > 0) g = tickFuse(g, 0.2);
+      for (const p of g.order) g = pressPart(g, p);
+      while (g.showing > 0) g = tickFuse(g, 0.2);
+    }
+  }
+});

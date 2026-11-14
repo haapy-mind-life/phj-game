@@ -30,7 +30,10 @@ function newOrder(g: FuseGame): FuseGame {
   const order: Part[] = [];
   while (order.length < lengthFor(g.score)) {
     [r, s] = nextRandom(s);
-    order.push(PARTS[Math.min(3, Math.floor(r * 4))]!);
+    let i = Math.min(3, Math.floor(r * 4));
+    // A part shown twice in a row would read as one long flash, so step to the next part.
+    if (PARTS[i] === order[order.length - 1]) i = (i + 1) % 4;
+    order.push(PARTS[i]!);
   }
   return show({ ...g, order, seed: s });
 }

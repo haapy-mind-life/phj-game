@@ -65,7 +65,8 @@ export function ArcadeShell<G>({ def }: { def: ArcadeDef<G> }) {
     return () => cancelAnimationFrame(frame);
   }, [phase, def]);
   useEffect(() => {
-    if (phase !== "playing" || outcome === "playing") return;
+    // A run can end on the same frame the window blurs; settle it from the pause screen too.
+    if ((phase !== "playing" && phase !== "paused") || outcome === "playing") return;
     setPhase("done");
     if (!session.current || paid.current === session.current) return;
     paid.current = session.current;

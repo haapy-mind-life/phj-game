@@ -580,6 +580,8 @@ const cloud: ArcadeDef<CloudGame> = {
 
 // ── mn-13 파도타기 ──
 const lean = (dir: -1 | 0 | 1, act: (fn: (g: SurfGame) => SurfGame) => void) => ({
+  "data-hold": "",
+  onContextMenu: (e: { preventDefault: () => void }) => e.preventDefault(),
   onPointerDown: () => act((x) => setLean(x, dir)),
   onPointerUp: () => act((x) => setLean(x, 0)),
   onPointerLeave: () => act((x) => setLean(x, 0)),
@@ -1310,6 +1312,8 @@ const dig: ArcadeDef<DigGame> = {
 // ── 큰 게임: 3단계 ──
 const stageHud = (stage: number) => `단계 ${stage}/3`;
 const hold = <G,>(act: (fn: (g: G) => G) => void, on: (g: G) => G, off: (g: G) => G) => ({
+  "data-hold": "",
+  onContextMenu: (e: { preventDefault: () => void }) => e.preventDefault(),
   onPointerDown: () => act(on),
   onPointerUp: () => act(off),
   onPointerLeave: () => act(off),
@@ -1327,7 +1331,8 @@ const champion: ArcadeDef<ChampionGame> = {
       <p>
         ◀ ▶로 차선을 바꿔요. 🪨 바위는 피하고 ⚡ 부스트는 밟아요!
         <br />
-        라이벌 🚙은 부스트 없는 차보다 조금 빨라요. 결승선에 먼저 들어가면 코스 승리, {CHAMP_GOAL}
+        라이벌 🚙은 부스트 없는 차보다 조금 느려요. 바위만 잘 피하면 이길 수 있어요. 결승선에 먼저
+        들어가면 코스 승리, {CHAMP_GOAL}
         코스를 모두 이기면 챔피언! 부딪힘 {CHAMP_HEARTS}번이면 끝.
       </p>
     </>

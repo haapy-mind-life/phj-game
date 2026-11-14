@@ -805,7 +805,7 @@ export function reduceWorld(state: GameState, action: WorldAction): GameState {
     const refund = Math.floor(DECOR.find((d) => d.id === placed.id)!.cost / 2);
     return {
       ...state,
-      money: state.money + refund,
+      money: Math.min(1e12, state.money + refund),
       decor: state.decor.filter((_, i) => i !== action.index),
     };
   }
@@ -833,7 +833,7 @@ export function reduceWorld(state: GameState, action: WorldAction): GameState {
     const bonus = done && !h.completed ? PARTY_BONUS : 0;
     return {
       ...state,
-      money: state.money + CANDY_REWARD + bonus,
+      money: Math.min(1e12, state.money + CANDY_REWARD + bonus),
       halloween: { active: !done, candy: done ? [] : candy, completed: h.completed || done },
     };
   }
