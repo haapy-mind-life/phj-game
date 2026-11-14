@@ -991,3 +991,11 @@
 .dino-book span.got {
   opacity: 1;
 }
+
+/* Press-and-hold buttons: a long press must not open the callout or select text (that cancels the hold). */
+[data-hold] {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
