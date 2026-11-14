@@ -1,4 +1,4 @@
-import { nextRandom, type Outcome } from "../arcade.ts";
+import { countdown, nextRandom, type Outcome } from "../arcade.ts";
 
 // lg-06 태국 여행: three markets. Each has a picture shopping list; tap the goods on the list among
 // the stall's six. Tapping something not on the list is a mistake. Lists grow 3 → 4 → 5 (12 items
@@ -76,7 +76,5 @@ export function buy(g: ThaiGame, good: number): ThaiGame {
   return market({ ...g, score }, (g.stage + 1) as 2 | 3);
 }
 export function tickThai(g: ThaiGame, dt: number): ThaiGame {
-  if (g.outcome !== "playing" || !Number.isFinite(dt) || dt <= 0) return g;
-  const remaining = Math.max(0, g.remaining - Math.min(dt, 0.25));
-  return { ...g, remaining, outcome: remaining === 0 ? "lost" : "playing" };
+  return countdown(g, dt);
 }

@@ -1,4 +1,4 @@
-import { nextRandom, type Outcome } from "../arcade.ts";
+import { countdown, nextRandom, type Outcome } from "../arcade.ts";
 
 // mn-16 친구 구하기: a 4×4 board of road tiles. Tap a tile to turn it a quarter. Make one road from
 // Hyunjun (left of the top-left tile) to the friend (right of the bottom-right tile). Four boards,
@@ -95,9 +95,7 @@ export function turnTile(g: RescueGame, i: number): RescueGame {
   return { ...g, score, turns: g.turns + 1, ...board(g.seed) };
 }
 export function tickRescue(g: RescueGame, dt: number): RescueGame {
-  if (g.outcome !== "playing" || !Number.isFinite(dt) || dt <= 0) return g;
-  const remaining = Math.max(0, g.remaining - Math.min(dt, 0.25));
-  return { ...g, remaining, outcome: remaining === 0 ? "lost" : "playing" };
+  return countdown(g, dt);
 }
 
 /** One way to solve a board: for each road square, the turned tile it needs. Null if none. */

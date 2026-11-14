@@ -1,4 +1,4 @@
-import { nextRandom, type Outcome } from "../arcade.ts";
+import { countdown, nextRandom, type Outcome } from "../arcade.ts";
 
 // mn-09 로봇 조립: tap a part in the tray, then the empty place on the robot outline where it goes.
 // A wrong place is a mistake and the part stays in the tray. Four robots, 3 mistakes, 120 s.
@@ -75,7 +75,5 @@ export function placePart(g: AssembleGame, slot: Slot): AssembleGame {
 export const outline = (g: AssembleGame): Slot[] =>
   SLOTS.filter((s) => g.tray.includes(s) || g.placed.includes(s));
 export function tickAssemble(g: AssembleGame, dt: number): AssembleGame {
-  if (g.outcome !== "playing" || !Number.isFinite(dt) || dt <= 0) return g;
-  const remaining = Math.max(0, g.remaining - Math.min(dt, 0.25));
-  return { ...g, remaining, outcome: remaining === 0 ? "lost" : "playing" };
+  return countdown(g, dt);
 }

@@ -80,11 +80,12 @@ export function nextRandom(seed: number): [number, number] {
 }
 export type Outcome = "playing" | "won" | "lost";
 
-/** A small seeded random source so every engine can be tested move by move. */
-export function seeded(seed: number): () => number {
-  let s = Math.floor(seed) >>> 0 || 1;
-  return () => {
-    s = (s * 1664525 + 1013904223) >>> 0;
-    return s / 4294967296;
-  };
+/** Longest frame a game clock counts, so a stalled tab doesn't eat the time in one jump. */
+export const MAX_FRAME = 0.25;
+
+/** Shared clock for timed games: run the time down; out of time is a loss. Finished games and bad dt stay as they are. */
+export function countdown<G extends { remaining: number; outcome: Outcome }>(g: G, dt: number): G {
+  if (g.outcome !== "playing" || !Number.isFinite(dt) || dt <= 0) return g;
+  const remaining = Math.max(0, g.remaining - Math.min(dt, MAX_FRAME));
+  return { ...g, remaining, outcome: remaining === 0 ? "lost" : "playing" } as G;
 }

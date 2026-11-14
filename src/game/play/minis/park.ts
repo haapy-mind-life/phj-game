@@ -1,4 +1,4 @@
-import { nextRandom, type Outcome } from "../arcade.ts";
+import { countdown, nextRandom, type Outcome } from "../arcade.ts";
 
 // mn-19 자동차 주차: a car parks on a 5×6 lot. Each arrow moves it one square; a cone in the way is
 // a bump and the car stays. Reach the P square to park. Five lots, 3 bumps, 120 s. Every lot is
@@ -92,7 +92,5 @@ export function drive(g: ParkGame, d: Dir): ParkGame {
   return { ...g, score, lot, seed };
 }
 export function tickPark(g: ParkGame, dt: number): ParkGame {
-  if (g.outcome !== "playing" || !Number.isFinite(dt) || dt <= 0) return g;
-  const remaining = Math.max(0, g.remaining - Math.min(dt, 0.25));
-  return { ...g, remaining, outcome: remaining === 0 ? "lost" : "playing" };
+  return countdown(g, dt);
 }

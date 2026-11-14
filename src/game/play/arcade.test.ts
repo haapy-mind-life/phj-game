@@ -6,7 +6,8 @@ import {
   arcadeReward,
   isArcadeKey,
   normalizeArcadeBest,
-  seeded,
+  countdown,
+  nextRandom,
 } from "./arcade.ts";
 import { KART_GAMES } from "./kart-catalog.ts";
 
@@ -56,12 +57,26 @@ test("isArcadeKey knows only the table", () => {
   assert.equal(isArcadeKey(3), false);
 });
 
-test("seeded random repeats for the same seed and stays in [0, 1)", () => {
-  const a = seeded(42),
-    b = seeded(42);
+test("nextRandom repeats for the same seed and stays in [0, 1)", () => {
+  let a = 42,
+    b = 42;
   for (let i = 0; i < 50; i++) {
-    const x = a();
-    assert.equal(x, b());
+    const [x, na] = nextRandom(a);
+    const [y, nb] = nextRandom(b);
+    assert.equal(x, y);
     assert.ok(x >= 0 && x < 1);
+    a = na;
+    b = nb;
   }
+});
+
+test("countdown runs the clock, caps a long frame and ends in a loss at zero", () => {
+  const g = { remaining: 1, outcome: "playing" as const, score: 3 };
+  assert.deepEqual(countdown(g, 0.1), { remaining: 0.9, outcome: "playing", score: 3 });
+  assert.equal(countdown(g, 5).remaining, 0.75);
+  for (const bad of [0, -1, Number.NaN, Infinity]) assert.equal(countdown(g, bad), g);
+  const end = countdown({ remaining: 0.2, outcome: "playing" as const }, 0.25);
+  assert.deepEqual(end, { remaining: 0, outcome: "lost" });
+  const won = { remaining: 0.1, outcome: "won" as const };
+  assert.equal(countdown(won, 0.25), won);
 });

@@ -1,4 +1,4 @@
-import { nextRandom, type Outcome } from "../arcade.ts";
+import { countdown, nextRandom, type Outcome } from "../arcade.ts";
 
 // mn-10 전설 힌트 찾기: a 3×3 map of forest, water and mountain. Two clues — a direction (a row or
 // a column) and a land — point to exactly one square where the legend hides. Six finds, 3 wrong
@@ -68,8 +68,6 @@ export function guess(g: HintGame, cell: number): HintGame {
   return { ...g, score, ...puzzle(g.seed) };
 }
 export function tickHint(g: HintGame, dt: number): HintGame {
-  if (g.outcome !== "playing" || !Number.isFinite(dt) || dt <= 0) return g;
-  const remaining = Math.max(0, g.remaining - Math.min(dt, 0.25));
-  return { ...g, remaining, outcome: remaining === 0 ? "lost" : "playing" };
+  return countdown(g, dt);
 }
 export const lineCells = cellsOf;
