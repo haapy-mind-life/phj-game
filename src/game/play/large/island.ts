@@ -1,4 +1,4 @@
-import { nextRandom, type Outcome } from "../arcade.ts";
+import { countdown, nextRandom, type Outcome } from "../arcade.ts";
 
 // lg-18 보물섬: an island map with picture rows (🌴 🪨 🐚 🦀 🌺) and numbered columns. A clue card
 // gives a row picture and a column number; tap that square to dig up the treasure. The map grows
@@ -61,7 +61,5 @@ export function digIsland(g: IslandGame, row: number, col: number): IslandGame {
   return clue({ ...g, score, stage: islandStage(score) });
 }
 export function tickIsland(g: IslandGame, dt: number): IslandGame {
-  if (g.outcome !== "playing" || !Number.isFinite(dt) || dt <= 0) return g;
-  const remaining = Math.max(0, g.remaining - Math.min(dt, 0.25));
-  return { ...g, remaining, outcome: remaining === 0 ? "lost" : "playing" };
+  return countdown(g, dt);
 }

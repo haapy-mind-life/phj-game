@@ -1,4 +1,4 @@
-import { nextRandom, type Outcome } from "../arcade.ts";
+import { countdown, nextRandom, type Outcome } from "../arcade.ts";
 
 // mn-14 음식 만들기: a recipe card shows ingredients in order; tap them in that order to make the
 // dish. A wrong ingredient is a mistake (the dish keeps its progress). 60 s, 6 dishes, 3 mistakes.
@@ -52,7 +52,5 @@ export function addIngredient(g: CookGame, item: Ingredient): CookGame {
   return { ...g, score, recipe, step: 0, seed };
 }
 export function tickCook(g: CookGame, dt: number): CookGame {
-  if (g.outcome !== "playing" || !Number.isFinite(dt) || dt <= 0) return g;
-  const remaining = Math.max(0, g.remaining - Math.min(dt, 0.25));
-  return { ...g, remaining, outcome: remaining === 0 ? "lost" : "playing" };
+  return countdown(g, dt);
 }

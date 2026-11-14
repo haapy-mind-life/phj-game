@@ -1,4 +1,4 @@
-import { nextRandom, type Outcome } from "../arcade.ts";
+import { countdown, nextRandom, type Outcome } from "../arcade.ts";
 
 // mn-15 방 정리: one thing at a time lands on the floor; tap where it belongs — toy box, bookshelf
 // or wardrobe. 60 s, 12 things, 3 mistakes.
@@ -54,7 +54,5 @@ export function putAway(g: TidyGame, zone: Zone): TidyGame {
   return { ...g, score, thing, seed };
 }
 export function tickTidy(g: TidyGame, dt: number): TidyGame {
-  if (g.outcome !== "playing" || !Number.isFinite(dt) || dt <= 0) return g;
-  const remaining = Math.max(0, g.remaining - Math.min(dt, 0.25));
-  return { ...g, remaining, outcome: remaining === 0 ? "lost" : "playing" };
+  return countdown(g, dt);
 }
