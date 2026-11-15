@@ -11,6 +11,18 @@
   text-decoration: none;
   flex-shrink: 0;
 }
+/* Shared header: keep the game name and the coin badge on one line; only the subtitle wraps. */
+.hj-brand {
+  min-width: 0;
+  white-space: nowrap;
+}
+.hj-brand small {
+  white-space: normal;
+}
+.hj-wallet {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
 .kart-hub {
   max-width: 1100px;
   margin: auto;
@@ -200,6 +212,18 @@
   .hj-kart-link {
     padding: 6px 8px;
     font-size: 13px;
+  }
+  .hj-topbar {
+    gap: 8px;
+  }
+  .hj-wallet {
+    gap: 3px;
+    padding: 8px;
+  }
+}
+@media (max-width: 340px) {
+  .hj-brand {
+    white-space: normal;
   }
 }
 @media (prefers-reduced-motion: reduce) {
