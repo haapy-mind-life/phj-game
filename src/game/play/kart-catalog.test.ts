@@ -3,12 +3,12 @@ import assert from "node:assert/strict";
 import { KART_GAMES, type KartEntry } from "./kart-catalog.ts";
 import { ARCADE } from "./arcade.ts";
 
-test("kart has 20 large and 20 mini candidates with unique stable identities", () => {
-  assert.equal(KART_GAMES.length, 40);
-  assert.equal(KART_GAMES.filter((g) => g.kind === "large").length, 20);
+test("kart has 21 large and 20 mini candidates with unique stable identities", () => {
+  assert.equal(KART_GAMES.length, 41);
+  assert.equal(KART_GAMES.filter((g) => g.kind === "large").length, 21);
   assert.equal(KART_GAMES.filter((g) => g.kind === "mini").length, 20);
-  assert.equal(new Set(KART_GAMES.map((g) => g.id)).size, 40);
-  assert.equal(new Set(KART_GAMES.map((g) => g.name)).size, 40);
+  assert.equal(new Set(KART_GAMES.map((g) => g.id)).size, 41);
+  assert.equal(new Set(KART_GAMES.map((g) => g.name)).size, 41);
   assert.ok(KART_GAMES.every((g) => g.name.startsWith("박현준 ")));
 });
 

@@ -161,6 +161,16 @@ const PLAYERS = {
       const b = document.querySelector('.arcade-action');
       b.dispatchEvent(new PointerEvent(h < target ? 'pointerdown' : 'pointerup', { bubbles: true })); })()`,
   },
+  coaster: {
+    ms: 30,
+    win: `(() => { const f = document.querySelector('.coaster-field'); if (!f) return;
+      const air = Number(f.dataset.air), cool = Number(f.dataset.cooldown);
+      const things = [...f.querySelectorAll('[data-thing]')].map((t) => ({ kind: t.dataset.thing, z: Number(t.dataset.z), high: t.dataset.high === 'true' }));
+      if (cool === 0 && things.some((t) => t.kind === 'villain' && t.z < 0.75)) document.querySelector('.coaster-fire').click();
+      const bar = things.some((t) => t.kind === 'bar' && t.z < 0.2);
+      const highCoin = things.some((t) => t.kind === 'coin' && t.high && t.z < 0.16);
+      if (air === 0 && (bar || highCoin)) document.querySelector('.coaster-jump').click(); })()`,
+  },
   sea: {
     ms: 30,
     win: `(() => { const f = document.querySelector('.sea-field'); if (!f) return;
@@ -403,6 +413,8 @@ const LOSE = {
   // the swimmer bumps into boats, the runner keeps the wrong form.
   champion: async () => {},
   sky: async () => {},
+  // Left alone: bars and villains reach the car, the one wing goes, then it is out.
+  coaster: async () => {},
   sea: async () => {},
   robotrun: async () => {},
   // Left alone: the rival's signals run out, the fusion order waits too long, drones reach the

@@ -38,6 +38,13 @@ export const ARCADE = [
   { key: "night", catalogId: "lg-09", name: "박현준 밤 게임", goal: 9, coinsPerPoint: 3 },
   { key: "feast", catalogId: "lg-12", name: "박현준 먹방 대모험", goal: 6, coinsPerPoint: 5 },
   { key: "dino", catalogId: "lg-20", name: "박현준 공룡 월드", goal: 8, coinsPerPoint: 4 },
+  {
+    key: "coaster",
+    catalogId: "lg-21",
+    name: "박현준 경찰 롤러코스터",
+    goal: 15,
+    coinsPerPoint: 2,
+  },
 ] as const;
 
 export type ArcadeKey = (typeof ARCADE)[number]["key"];

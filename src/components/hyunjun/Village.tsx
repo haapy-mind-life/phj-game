@@ -634,6 +634,7 @@ export function Village() {
     } else if (nearby) {
       returnPosition = { ...pos };
       if ("game" in nearby) setMini(nearby.game);
+      else if ("arcade" in nearby) void nav({ to: "/mini/$game", params: { game: nearby.arcade } });
       else void nav({ to: nearby.target });
     } else if (Math.hypot(pos.x - 1420, pos.y - 1030) < 100) {
       dispatch({ type: "feed-animal", id: "bori" });

@@ -158,6 +158,21 @@ async function startFromTitle(page, width) {
         assert.equal(await page.locator(".we-screen").count(), 0);
         r.plannedGate = "message only, URL and save unchanged";
 
+        // The roller coaster gate (once planned) now opens its kart arcade game.
+        // West of the lake, north above the runner block, then east to the gate.
+        await walk(page, "x", 1650);
+        await walk(page, "y", 200);
+        await walk(page, "x", 2240);
+        await walk(page, "y", 170);
+        assert.match(await action.innerText(), /경찰 롤러코스터 · 시작/);
+        await action.click();
+        await page.waitForURL(/#\/mini\/coaster$/);
+        await page.getByRole("button", { name: "시작하기" }).waitFor();
+        await page.screenshot({ path: path.join(out, `coaster-gate-${w}.png`) });
+        await page.goBack();
+        await page.locator(".adv-player").first().waitFor();
+        r.coasterGate = "opens /mini/coaster";
+
         // /house and back. The house door opens the walk-in home, and /house (furniture)
         // is a button inside it; here the app switches route in place, then the child
         // taps "back to the village" like on any mini game page.

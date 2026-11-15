@@ -41,7 +41,7 @@ export function KartHub() {
       <section aria-labelledby="kart-list-title">
         <h2 id="kart-list-title">다음 모험 둘러보기</h2>
         <p>
-          큰 게임 20개 · 미니게임 20개를 꿈꾸고 있어요.
+          큰 게임 21개 · 미니게임 20개를 꿈꾸고 있어요.
           <br />
           준비 중인 놀이는 아직 시작할 수 없어요.
         </p>

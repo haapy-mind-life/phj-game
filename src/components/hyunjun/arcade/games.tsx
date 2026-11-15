@@ -339,6 +339,16 @@ import {
   tickDino,
   type DinoGame,
 } from "@/game/play/large/dino";
+import {
+  COASTER_GOAL,
+  COINS_PER_WING,
+  MAX_WINGS,
+  createCoaster,
+  fire as coasterFire,
+  jump as coasterJump,
+  tickCoaster,
+  type CoasterGame,
+} from "@/game/play/large/coaster";
 import type { ArcadeDef } from "./ArcadeShell";
 
 const pct = (v: number) => `${(v * 100).toFixed(1)}%`;
@@ -2307,6 +2317,107 @@ const dino: ArcadeDef<DinoGame> = {
   },
 };
 
+// ── lg-21 경찰 롤러코스터 ──
+/** Far (z = 1) things sit up at the horizon and small; near ones low and big. */
+const railBottom = (z: number) => 12 + 58 * z;
+const railScale = (z: number) => 0.35 + 0.65 * (1 - z);
+const coaster: ArcadeDef<CoasterGame> = {
+  key: "coaster",
+  subtitle: "레일 위를 달리는 경찰차!",
+  icon: "🎢",
+  intro: (
+    <>
+      <h2>경찰 롤러코스터</h2>
+      <p>
+        경찰차가 레일을 따라 앞으로 달려요. 🚧 막대가 오면 「점프」, 🤖 악당이 오면 「⚡ 발사」로
+        에너지를 쏴요!
+        <br />
+        🪙 코인 {COINS_PER_WING}개마다 날개가 한 단계 커져요(최대 {MAX_WINGS}단계). 막대나 악당에
+        닿으면 날개가 한 단계 줄고, 날개가 없으면 아웃. 단계마다 5점, {COASTER_GOAL}점이면 성공!
+      </p>
+    </>
+  ),
+  create: createCoaster,
+  tick: tickCoaster,
+  outcome: (g) => g.outcome,
+  score: (g) => g.score,
+  hud: (g) => [stageHud(g.stage), `🪽 ${g.wings}`, `🪙 ${g.coins}`],
+  View: ({ g, act, active }) => (
+    <>
+      <div
+        className={`arcade-field coaster-field${g.bump > 0 ? " bump" : ""}`}
+        data-stage={g.stage}
+        data-air={g.air.toFixed(2)}
+        data-wings={g.wings}
+        data-coins={g.coins}
+        data-cooldown={g.cooldown.toFixed(2)}
+      >
+        <svg
+          className="coaster-rail"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <path d="M20 100 L47 28 M80 100 L53 28" />
+          {[0.15, 0.35, 0.55, 0.75, 0.9].map((t) => (
+            <line
+              key={t}
+              x1={20 + 27 * (1 - t)}
+              x2={80 - 27 * (1 - t)}
+              y1={28 + 72 * t}
+              y2={28 + 72 * t}
+            />
+          ))}
+        </svg>
+        {g.things
+          .filter((t) => !t.done)
+          .map((t) => (
+            <span
+              key={t.id}
+              className={`coaster-thing ${t.kind}${t.high ? " high" : ""}`}
+              style={{
+                bottom: `${railBottom(t.z) + (t.high ? 16 * railScale(t.z) : 0)}%`,
+                transform: `translate(-50%, 50%) scale(${railScale(t.z).toFixed(3)})`,
+              }}
+              data-thing={t.kind}
+              data-z={t.z.toFixed(3)}
+              data-high={t.high}
+              aria-hidden="true"
+            >
+              {t.kind === "bar" ? "🚧" : t.kind === "villain" ? "🤖" : "🪙"}
+            </span>
+          ))}
+        {g.beam > 0 && <span className="coaster-beam" aria-hidden="true" />}
+        <span
+          className={`coaster-car wings-${g.wings}${g.air > 0 ? " up" : ""}`}
+          role="img"
+          aria-label={`내 경찰차 · 날개 ${g.wings}개${g.air > 0 ? " · 점프 중" : ""}`}
+        >
+          <i className="coaster-wing left">{g.wings > 0 ? "🪽" : ""}</i>
+          🚓
+          <i className="coaster-wing right">{g.wings > 0 ? "🪽" : ""}</i>
+        </span>
+      </div>
+      <div className="dodge-controls">
+        <button
+          className="hj-big coaster-jump"
+          disabled={!active || g.air > 0}
+          onClick={() => act(coasterJump)}
+        >
+          ⬆ 점프
+        </button>
+        <button
+          className="hj-big coaster-fire"
+          disabled={!active || g.cooldown > 0}
+          onClick={() => act(coasterFire)}
+        >
+          ⚡ 발사
+        </button>
+      </div>
+    </>
+  ),
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const ARCADE_GAMES: Record<ArcadeKey, ArcadeDef<any>> = {
   balloons,
@@ -2343,4 +2454,5 @@ export const ARCADE_GAMES: Record<ArcadeKey, ArcadeDef<any>> = {
   night,
   feast,
   dino,
+  coaster,
 };

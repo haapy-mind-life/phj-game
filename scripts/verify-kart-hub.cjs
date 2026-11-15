@@ -38,7 +38,7 @@ fs.mkdirSync(out, { recursive: true });
       );
       const hub = async () => {
         await page.getByRole("heading", { name: "박현준 카트", exact: true }).waitFor();
-        assert.equal(await page.locator("[data-game-id]").count(), 40);
+        assert.equal(await page.locator("[data-game-id]").count(), 41);
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
       };
       const save = () => page.evaluate(() => JSON.parse(localStorage.getItem("hyunjun-game-v2")));
