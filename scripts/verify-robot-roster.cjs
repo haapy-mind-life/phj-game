@@ -141,6 +141,32 @@ async function cureAll(g, reach) {
       await btn("소환 시계 닫기").click();
       pass(name, "AC-03 featured six first, the other two kept below");
 
+      // B6 defaults (2026-11-14): Blue Cabi and Golden Kaldkeite are pictures only, never a card.
+      await openWatch("🃏 소환");
+      const soon = page.getByRole("group", { name: "곧 만날 로봇" });
+      assert.deepEqual(
+        await soon
+          .locator("[data-preview-card]")
+          .evaluateAll((els) => els.map((e) => e.dataset.previewCard)),
+        ["pv-bluecabi", "pv-golden-kaldkeite"],
+      );
+      assert.equal(await soon.locator("[data-card]").count(), 0, "preview robots are not cards");
+      const goBefore = await page.locator(".hj-watch-go").first().textContent();
+      await btn("황금 칼드케이트 미리보기").click();
+      const detail = page.locator('[data-preview-detail="pv-golden-kaldkeite"]');
+      await detail.waitFor();
+      assert.match(await detail.textContent(), /변신 9가지/);
+      assert.equal(await page.locator(".hj-watch-go").first().textContent(), goBefore);
+      await detail.scrollIntoViewIfNeeded();
+      await shot("01b-watch-preview");
+      const wide = await page.evaluate(
+        () => document.documentElement.scrollWidth - window.innerWidth,
+      );
+      assert.ok(wide <= 0, `page is ${wide}px too wide with the preview open`);
+      await btn("소환 시계 닫기").click();
+      assert.ok(!JSON.stringify((await saved()).robots || {}).includes("pv-"), "nothing saved");
+      pass(name, "B6 Blue Cabi and Golden Kaldkeite shown as coming soon, no card or save");
+
       // AC-22: an old save still holds everything, with no version change.
       let s = await saved();
       assert.equal(s.version, 3);

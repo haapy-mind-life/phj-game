@@ -14,6 +14,8 @@ import {
 } from "@/game/robot/robot-catalog";
 import { gradeOf, isWatchCardAvailable, type RobotProgress } from "@/game/robot/robot-engine";
 import { FusedRobotArt } from "./FusedRobotArt";
+import { PREVIEW_ROBOTS, type PreviewRobotId } from "@/game/robot/robot-preview";
+import { PreviewRobotArt } from "./PreviewRobotArt";
 import { RobotPortrait } from "./RobotPortrait";
 import { DualRocketArt } from "./RocketDuoArt";
 
@@ -67,6 +69,9 @@ export function RobotWatch({
   const available = ALL_ROBOTS.filter((r) => isWatchCardAvailable(progress, r.id));
   const [selected, setSelected] = useState<RobotSpeciesId>(team[0] ?? "rb-police");
   const [picks, setPicks] = useState<RobotSpeciesId[]>([]);
+  // "Coming soon" robots have their own state: they are pictures, never a summon choice.
+  const [preview, setPreview] = useState<PreviewRobotId | null>(null);
+  const previewRobot = PREVIEW_ROBOTS.find((r) => r.id === preview);
   const chosen = ALL_ROBOTS.find((r) => r.id === selected)!;
   const uses = progress.cards[selected]?.uses ?? 0;
   const roles = picks.length > 2 ? ROLES_3 : ROLES_2;
@@ -177,6 +182,41 @@ export function RobotWatch({
                   {mode === "ride" ? "🚶 따라오게 하기" : "🕹 로봇 타기"}
                 </button>
                 <button onClick={onRecall}>⌚ 시계로 돌려보내기</button>
+              </div>
+            )}
+            <p className="hj-watch-help">🆕 곧 만날 로봇 (아직 소환은 못 해)</p>
+            <div className="hj-watch-cards" role="group" aria-label="곧 만날 로봇">
+              {PREVIEW_ROBOTS.map((r) => (
+                <button
+                  type="button"
+                  key={r.id}
+                  className={preview === r.id ? "chosen" : ""}
+                  aria-pressed={preview === r.id}
+                  onClick={() => setPreview((p) => (p === r.id ? null : r.id))}
+                  aria-label={`${r.workName} 미리보기`}
+                  data-preview-card={r.id}
+                >
+                  <PreviewRobotArt id={r.id} size={46} label={r.workName} />
+                  <b>{r.workName}</b>
+                  <small>곧 만나요</small>
+                </button>
+              ))}
+            </div>
+            {previewRobot && (
+              <div className="hj-preview-detail" data-preview-detail={previewRobot.id}>
+                <PreviewRobotArt
+                  id={previewRobot.id}
+                  size={96}
+                  label={`${previewRobot.workName} 그림`}
+                />
+                <div>
+                  <b>{previewRobot.workName}</b>
+                  <span>{previewRobot.name}</span>
+                  <p>{previewRobot.about}</p>
+                  <small>
+                    변신 {previewRobot.forms.length}가지: {previewRobot.forms.join(" · ")}
+                  </small>
+                </div>
               </div>
             )}
           </>
