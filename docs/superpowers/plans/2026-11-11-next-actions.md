@@ -10,7 +10,7 @@
 | 시작 화면 → 로딩 → 월드 | 배포됨 (PR #53) | [world-entry](../../world-expansion/2026-11-07-world-entry/README.md) |
 | 로켓 · 로켓 X · 듀얼 로켓 | 배포됨 (PR #54 · #56): 자동차 변신, 10초 4단계 합체, 듀얼 로켓 카, 분리 | [rocket-dual-v1](../../robot-fusion/2026-11-08-rocket-dual-v1/README.md) |
 | 카트 미니게임 | **20개 모두 플레이 가능** (PR #57 병합·배포) | [arcade 검증](../../verification/2026-11-10-arcade/README.md) |
-| 카트 큰 게임 | 20개 중 19개 플레이 가능(월드·러너·온실·방 깨기 + 6~9회차 15개, PR #58 병합·배포) + 1개 기존 연결(하우스). **목록 40개 중 준비 중 0** | [큰 게임 검증](../../verification/2026-11-12-large-games/README.md) |
+| 카트 큰 게임 | 21개 중 20개 플레이 가능(월드·러너·온실·방 깨기 + 6~9회차 15개, PR #58 병합·배포 + 2026-11-15 경찰 롤러코스터 `lg-21`) + 1개 기존 연결(하우스). **목록 41개 중 준비 중 0** | [큰 게임 검증](../../verification/2026-11-12-large-games/README.md) |
 | 공개 사이트 검사 | 병합 뒤 공개 Pages에서 `verify-arcade` 205/205 PASS(아케이드 34개 × 360·390). PR #64 뒤 고친 4개 게임 25/25 PASS | PR #58 · #64 병합 기록 |
 | Lovable 제거 | 2026-11-13부터 쓰지 않음. 문서·`.lovable/` 정리(PR #62), 빌드 래퍼·미리보기 로그인 중개 제거와 `bun.lock`을 기본 npm 레지스트리로(PR #63) | PR #62 · #63 |
 | 저장 | 키 `hyunjun-game-v2`, version 3 유지. 미니게임 최고 기록 `arcadeBest` 추가(옛 저장은 0) | `src/lib/world-model.ts` |

@@ -20,6 +20,8 @@ export const PORTALS = [
   { id: "treasure", name: "토토의 보물찾기", x: 550, y: 1300, game: "treasure" },
   { id: "stars", name: "루루의 별빛 공원", x: 1250, y: 400, game: "stars" },
   { id: "fishing", name: "호숫가 낚시", x: 2030, y: 1080, game: "fishing" },
+  // Opens the kart arcade game (/mini/coaster); same spot as the old planned gate.
+  { id: "coaster", name: "경찰 롤러코스터", x: 2240, y: 160, arcade: "coaster" },
   // Places Hyunjun asked for that have no game yet. A planned gate only says so:
   // it never navigates, opens a mini game or changes the save.
   // Spots are open ground away from other doors, stations and robot routes (see tests).
@@ -30,14 +32,6 @@ export const PORTALS = [
     y: 160,
     status: "planned",
     note: "물고기·거북이·펭귄 전시",
-  },
-  {
-    id: "coaster",
-    name: "경찰 롤러코스터",
-    x: 2240,
-    y: 160,
-    status: "planned",
-    note: "레일 위를 달리는 경찰차",
   },
   {
     id: "robot-base",

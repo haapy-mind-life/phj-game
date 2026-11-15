@@ -212,6 +212,17 @@ export const KART_GAMES = [
     game: "dino",
   },
   {
+    id: "lg-21",
+    kind: "large",
+    name: "박현준 경찰 롤러코스터",
+    genre: "러너",
+    description:
+      "앞을 보며 레일 위를 달려요! 점프로 막대를 넘고 에너지로 악당을 멈춰요. 코인 5개면 날개가 커져요",
+    status: "playable",
+    route: "/mini/$game",
+    game: "coaster",
+  },
+  {
     id: "mn-01",
     kind: "mini",
     name: "박현준 별빛 모으기",

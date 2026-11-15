@@ -12,6 +12,7 @@ import {
   stepMini,
   actMini,
 } from "./adventure.ts";
+import { isArcadeKey } from "../play/arcade.ts";
 import { migrateSave, reduceWorld } from "../../lib/world-model.ts";
 
 test("diagonal movement has the same speed and north edge wraps", () => {
@@ -154,7 +155,7 @@ test("planned places are named gates that never launch anything and keep their d
   const planned = PORTALS.filter(isPlannedPortal);
   assert.deepEqual(
     planned.map((g) => g.name),
-    ["박물관", "경찰 롤러코스터", "로봇 기지", "개구리 코인별", "대형 수조", "펭귄 얼음 깨기"],
+    ["박물관", "로봇 기지", "개구리 코인별", "대형 수조", "펭귄 얼음 깨기"],
   );
   for (const g of planned) {
     assert.ok(!("target" in g) && !("game" in g), g.id);
@@ -166,9 +167,14 @@ test("planned places are named gates that never launch anything and keep their d
     assert.equal(nearestPortal(g)?.id, g.id);
   }
   assert.equal(new Set(PORTALS.map((g) => g.id)).size, PORTALS.length);
-  // The playable gates are unchanged.
+  // The playable gates: the old six plus the roller coaster, which opens its arcade game.
   assert.deepEqual(
     PORTALS.filter((g) => !isPlannedPortal(g)).map((g) => g.id),
-    ["house", "runner", "farm", "treasure", "stars", "fishing"],
+    ["house", "runner", "farm", "treasure", "stars", "fishing", "coaster"],
   );
+  const coaster = PORTALS.find((g) => g.id === "coaster")!;
+  assert.ok("arcade" in coaster && isArcadeKey(coaster.arcade));
+  for (const other of PORTALS)
+    if (other.id !== "coaster")
+      assert.ok(Math.hypot(coaster.x - other.x, coaster.y - other.y) > 300);
 });
